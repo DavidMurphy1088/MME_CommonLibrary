@@ -1,6 +1,6 @@
 import Foundation
 
-class TagHigh : ObservableObject {
+public class TagHigh : ObservableObject {
     @Published var content:String
     var popup:String?
     var enablePopup:Bool
@@ -11,7 +11,7 @@ class TagHigh : ObservableObject {
     }
 }
 
-class TimeSlice : ScoreEntry {
+public class TimeSlice : ScoreEntry {
     @Published var entries:[TimeSliceEntry]
     @Published var tagHigh:TagHigh?
     @Published var tagLow:String?

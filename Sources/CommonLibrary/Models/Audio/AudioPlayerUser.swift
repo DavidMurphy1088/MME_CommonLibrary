@@ -3,7 +3,7 @@ import CoreData
 import AVFoundation
 
 ///Subclass of any class using an audio player
-class AudioPlayerUser  {
+public class AudioPlayerUser  {
     var parent:String
     var audioPlayer: AVAudioPlayer!
     let logger = Logger.logger
@@ -12,7 +12,7 @@ class AudioPlayerUser  {
         self.parent = parent
     }
     
-    func stop() {
+    public func stop() {
         if let audioPlayer = audioPlayer {
             audioPlayer.stop()
             let log = "Audio player stopped for user type \(parent)"
@@ -21,7 +21,7 @@ class AudioPlayerUser  {
         }
     }
     
-    func play(data:Data) {
+    public func play(data:Data) {
         do {
             let log:String
             if self.audioPlayer == nil {

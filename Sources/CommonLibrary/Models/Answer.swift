@@ -1,6 +1,6 @@
 import Foundation
 
-enum AnswerState {
+public enum AnswerState {
     case notEverAnswered
     case notRecorded
     case recorded
@@ -10,31 +10,31 @@ enum AnswerState {
 }
 
 ///The answer a student gives to a question
-class Answer : ObservableObject, Codable,Identifiable {
-    var id:UUID
+public class Answer : ObservableObject, Identifiable, Codable {
+    public var id:UUID
     //var questionMode: QuestionMode
-    var correct: Bool = false
-    var explanation = ""
+    public var correct: Bool = false
+    public var explanation = ""
 
     ///Intervals
-    var correctIntervalHalfSteps = 0
-    var correctIntervalName = ""
-    var selectedIntervalName = ""
+    public var correctIntervalHalfSteps = 0
+    public var correctIntervalName = ""
+    public var selectedIntervalName = ""
     
     ///Rhythm
     //var tempo:Int?
-    var values:[Double]?
+    public var values:[Double]?
     
     ///Recording
-    var recordedData: Data?
+    public var recordedData: Data?
     
-    init(ctx:String) { //}, questionMode:QuestionMode) {
+    public init() { //}, questionMode:QuestionMode) {
         id = UUID()
         //self.questionMode = questionMode
     }
     
-    func copyAnwser() -> Answer {
-        let a = Answer(ctx: "copy") //, questionMode: self.questionMode)
+    public func copyAnwser() -> Answer {
+        let a = Answer() //, questionMode: self.questionMode)
         a.correct = self.correct
         //a.selectedInterval = self.selectedInterval
         //a.correctInterval = self.correctInterval
@@ -46,6 +46,5 @@ class Answer : ObservableObject, Codable,Identifiable {
         a.recordedData = self.recordedData
         return a
     }
-
 }
 

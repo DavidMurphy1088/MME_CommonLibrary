@@ -2,15 +2,15 @@ import Foundation
 import AVKit
 import AVFoundation
 
-class ScoreEntry : ObservableObject, Identifiable, Hashable {
-    let id = UUID()
+public class ScoreEntry : ObservableObject, Identifiable, Hashable {
+    public let id = UUID()
     var sequence:Int = 0
 
-    static func == (lhs: ScoreEntry, rhs: ScoreEntry) -> Bool {
+    public static func == (lhs: ScoreEntry, rhs: ScoreEntry) -> Bool {
         return lhs.id == rhs.id
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
     
@@ -75,7 +75,7 @@ class StudentFeedback : ObservableObject {
 //
 //}
 
-class Score : ObservableObject {
+public class Score : ObservableObject {
     let id:UUID
     
     var timeSignature:TimeSignature

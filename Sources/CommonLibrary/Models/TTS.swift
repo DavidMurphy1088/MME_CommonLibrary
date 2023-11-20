@@ -2,13 +2,13 @@ import Foundation
 import AVFoundation
 import SwiftSoup
 
-class TTS : AudioPlayerUser {
-    static let shared = TTS(parent: "TTS")
-    let google = GoogleAPI.shared
+public class TTS : AudioPlayerUser {
+    public static let shared = TTS(parent: "TTS")
+    let googleAPI = GoogleAPI.shared
     var isSpeaking = false
     let dataCache = DataCache()
     
-    override func stop() {
+    public override func stop() {
         super.stop()
         isSpeaking = false
     }
@@ -22,7 +22,7 @@ class TTS : AudioPlayerUser {
         }
     }
 
-    func speakText(contentSection:ContentSection, context:String, htmlContent:String) {
+    public func speakText(contentSection:ContentSection, context:String, htmlContent:String) {
         if isSpeaking {
             isSpeaking = false
             stop()
@@ -41,8 +41,12 @@ class TTS : AudioPlayerUser {
             }
             playAudio = false
         }
-
-        let apiKey:String? = google.getAPIBundleData(key: "APIKey")
+        guard let api = googleAPI else {
+            Logger.logger.reportError(self,"No API")
+            return
+        }
+        let apiKey:String? = api.getAPIBundleData(key: "APIKey")
+        //let apiKey:String? = nil
         let apiUrl = "https://texttospeech.googleapis.com/v1/text:synthesize?key=\(apiKey ?? "")"
         //voices https://cloud.google.com/text-to-speech/docs/voices
         

@@ -1,21 +1,25 @@
 import Foundation
 
 public class ExampleData : ObservableObject {
-    static public var sharedExampleData = ExampleData()
     var logger = Logger.logger
     private let googleAPI = GoogleAPI.shared
-    
     @Published public var dataStatus:RequestStatus = .waiting
-
-    public init() {
+    private let rootContentSection:ContentSection
+    
+    public init(sheetName:String, rootContentSection:ContentSection) {
         self.dataStatus = .waiting
-        //TODO loadData()
+        self.rootContentSection = rootContentSection
+        loadData(sheetName: sheetName)
     }
     
-    func loadData(sheetName:String) {
+    func loadData(sheetName:String)  {
         //TODOMusicianshipTrainerApp.root.subSections = []
         //TOOD let sheetName = Settings.shared.useTestData ? "ContentSheetID_TEST" : "ContentSheetID"
-        googleAPI.getContentSheet(sheetName: sheetName) { status, data in
+        guard let api = self.googleAPI else {
+            self.logger.reportError(self, "API is not set")
+            return
+        }
+        api.getContentSheet(sheetName: sheetName) { status, data in
             if status == .success {
                 if let data = data {
                     struct JSONSheet: Codable {
@@ -44,7 +48,7 @@ public class ExampleData : ObservableObject {
             }
         }
         
-        googleAPI.getContentSheet(sheetName: "MelodiesSheetID") { status, data in
+        api.getContentSheet(sheetName: "MelodiesSheetID") { status, data in
             if status == .success {
                 if let data = data {
                     struct JSONSheet: Codable {
@@ -132,7 +136,6 @@ public class ExampleData : ObservableObject {
         let dataStart = typeIndex + 2
         var contentSectionCount = 0
         var lastContentSectionDepth:Int?
-        
         var levelContents:[ContentSection?] = Array(repeating: nil, count: keyLength)
         
         for rowCells in sheetRows {
@@ -175,8 +178,7 @@ public class ExampleData : ObservableObject {
                 if let keyData = keyData {
                     if !keyData.isEmpty {
                         let keyLevel = cellIndex - keyStart
-//     TODO                   let parent = keyLevel == 0 ? MusicianshipTrainerApp.root : levelContents[keyLevel-1]
-                        let parent =  levelContents[keyLevel-1]
+                        let parent = keyLevel == 0 ? rootContentSection : levelContents[keyLevel-1]
 
                         let contentData:[String]
                         if rowCells.count > dataStart {
@@ -214,6 +216,7 @@ public class ExampleData : ObservableObject {
                 }
             }
         }
+        rootContentSection.debug()
     }
 
     //load data from Google Drive Sheet

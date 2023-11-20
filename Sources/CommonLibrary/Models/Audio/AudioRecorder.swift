@@ -4,8 +4,8 @@ import AVFoundation
 
 // Record and then play audio of a student playing
 
-class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, ObservableObject {
-    static let shared = AudioRecorder()
+public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, ObservableObject {
+    public static let shared = AudioRecorder()
     var audioRecorder: AVAudioRecorder!
     var audioPlayer: AVAudioPlayer! //best for playing smaller local content
     let logger = Logger.logger
@@ -17,7 +17,7 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
     
     @Published var status:String = ""
     
-    func setStatus(_ msg:String) {
+    public func setStatus(_ msg:String) {
         DispatchQueue.main.async {
             self.status = "AudioRecorder::"+msg
         }
@@ -32,11 +32,12 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
             completion(granted)
         }
     }
+    
     func log(_ msg:String) {
         logger.log(self, msg)
     }
     
-    func startRecording(fileName:String)  {
+    public func startRecording(fileName:String)  {
         let outputFileName = audioFilenameStatic
         let audioFilename = getDocumentsDirectory().appendingPathComponent("\(outputFileName).wav")
         
@@ -89,12 +90,12 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
         }
     }
     
-    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+    public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         setStatus("Recording stopped, successfull status:\(flag ? "OK" : "Error")")
         AudioManager.shared.setSession(.playback)
     }
 
-    func stopRecording() {
+    public func stopRecording() {
         Logger.logger.log(self, "Trying to stop recorder")
         if audioRecorder == nil {
             Logger.logger.reportError(self, "audioRecorder is nil at stop")
@@ -107,7 +108,7 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
         AudioManager.shared.setSession(.playback)
     }
     
-    func getRecordedAudio(fileName:String) -> Data? {
+    public func getRecordedAudio(fileName:String) -> Data? {
         let audioFilename = audioFilenameStatic
         let url = getDocumentsDirectory().appendingPathComponent("\(audioFilename).wav")
         do {
@@ -119,7 +120,7 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
         }
     }
 
-    func playRecording(fileName:String) {
+    public func playRecording(fileName:String) {
         //AppDelegate.startAVAudioSession(category: .playback)
         let audioFilename = self.audioFilenameStatic
         let url = getDocumentsDirectory().appendingPathComponent("\(audioFilename).wav")
@@ -141,7 +142,7 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
         }
     }
     
-    func playFromData(data:Data, onDone:@escaping ()->Void) {
+    public func playFromData(data:Data, onDone:@escaping ()->Void) {
         do {
             self.audioPlayer = try AVAudioPlayer(data: data)
             if self.audioPlayer == nil {
@@ -174,18 +175,18 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
         }
     }
     
-    func stopPlaying() {
+    public func stopPlaying() {
         if self.audioPlayer != nil {
             self.audioPlayer.stop()
         }
     }
     
-    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+    public func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         setStatus("audioPlayerDecodeErrorDidOccur, status:\(String(describing: error?.localizedDescription))")
         AudioManager.shared.setSession(.playback)
     }
 
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         setStatus("Playback stopped, status:\(flag ? "OK" : "Error")")
         if let playEndedNotify = self.playEndedNotify {
             playEndedNotify()
@@ -197,7 +198,7 @@ class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDelegate, 
         return paths[0]
     }
     
-    func playAudioFromCloudURL(urlString: String) {
+    public func playAudioFromCloudURL(urlString: String) {
         guard let url = URL(string: urlString) else {
             Logger.logger.reportError(self, "Invalid URL")
             return

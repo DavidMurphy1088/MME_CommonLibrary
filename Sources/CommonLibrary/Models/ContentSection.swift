@@ -2,19 +2,19 @@ import Foundation
 import AVFoundation
 import Combine
 
-enum ExamStatus {
+public enum ExamStatus {
     case notInExam
     case inExam
     case inExamReview
 }
 
-class QuestionStatus: Codable, ObservableObject {
+public class QuestionStatus: Codable, ObservableObject {
     //@Published
-    var status:Int = 0
+    public var status:Int = 0
     init(_ i:Int) {
         self.status = i
     }
-    func setStatus(_ i:Int) {
+    public func setStatus(_ i:Int) {
         DispatchQueue.main.async {
             self.status = i
         }
@@ -22,8 +22,8 @@ class QuestionStatus: Codable, ObservableObject {
 }
 
 public class ContentSectionData: Codable {
-    var type:String
-    var data:[String]
+    public var type:String
+    public var data:[String]
     var row:Int
     init(row:Int, type:String, data:[String]) {
         self.row = row
@@ -33,22 +33,22 @@ public class ContentSectionData: Codable {
 }
 
 public class ContentSection: ObservableObject, Identifiable { //Codable,
-    @Published var selectedIndex:Int? //The row to go into
-    @Published var postitionToIndex:Int? //The row to postion to
+    @Published public var selectedIndex:Int? //The row to go into
+    @Published public var postitionToIndex:Int? //The row to postion to
     
     //Publish changes when a stored answer is set after an example is submitted so the list of examples updates
-    @Published var storedAnswer:Answer?
+    @Published public var storedAnswer:Answer?
 
     public var id = UUID()
-    var parent:ContentSection?
-    var name: String
-    var type:String
-    let contentSectionData:ContentSectionData
-    var subSections:[ContentSection] = []
-    var isActive:Bool
-    var level:Int
-    var questionStatus = QuestionStatus(0)
-    var homeworkIsAssigned:Bool = false
+    public var parent:ContentSection?
+    public var name: String
+    public var type:String
+    public let contentSectionData:ContentSectionData
+    public var subSections:[ContentSection] = []
+    public var isActive:Bool
+    public var level:Int
+    public var questionStatus = QuestionStatus(0)
+    public var homeworkIsAssigned:Bool = false
     
     public init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
         self.parent = parent
@@ -74,7 +74,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         setHomeworkStatus()
     }
     
-    func setHomeworkStatus()  {
+    public func setHomeworkStatus()  {
         //TODO if !UIGlobals.companionAppActive {
             self.homeworkIsAssigned = false
             return
@@ -99,13 +99,13 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         self.homeworkIsAssigned = true
     }
     
-    func setStoredAnswer(answer:Answer, ctx:String) {
+    public func setStoredAnswer(answer:Answer, ctx:String) {
         DispatchQueue.main.async {
             self.storedAnswer = answer
         }
     }
     
-    func setSelected(_ i:Int) {
+    public func setSelected(_ i:Int) {
         DispatchQueue.main.async {
             ///Force the selected Index to trigger a change event
             self.selectedIndex = nil
@@ -124,7 +124,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
     
-    func getGrade() -> Int {
+    public func getGrade() -> Int {
         var grade:Int = 1
         let paths = getPathAsArray()
         for path in paths {
@@ -141,7 +141,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return grade
     }
 
-    func saveAnswerToFile(answer: Answer) {
+    public func saveAnswerToFile(answer: Answer) {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         do {
@@ -185,14 +185,14 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
     
-    func isExamTypeContentSection() -> Bool {
+    public func isExamTypeContentSection() -> Bool {
         if type == "Exam" {
             return true
         }
         return false
     }
 
-    func hasExamModeChildren() -> Bool {
+    public func hasExamModeChildren() -> Bool {
         for s in self.subSections {
             if s.isExamTypeContentSection() {
                 return true
@@ -202,7 +202,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
 
     ///Recursivly search all children with a true test supplied by the caller
-    func deepSearch(testCondition:(_ section:ContentSection)->Bool) -> Bool {
+    public func deepSearch(testCondition:(_ section:ContentSection)->Bool) -> Bool {
         if testCondition(self) {
             return true
         }
@@ -218,7 +218,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
     
     ///Search all parents with a true test supplied by the caller
-    func parentSearch(testCondition:(_ section:ContentSection)->Bool) -> Bool {
+    public func parentSearch(testCondition:(_ section:ContentSection)->Bool) -> Bool {
         if testCondition(self) {
             return true
         }
@@ -234,7 +234,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
     
     ///Recursivly search all children with a true test supplied by the caller
-    func contentSearch(testCondition:(_ section:ContentSection)->Bool) -> [ContentSection] {
+    public func contentSearch(testCondition:(_ section:ContentSection)->Bool) -> [ContentSection] {
         var result:[ContentSection] = []
         if testCondition(self) {
             result.append(self)
@@ -251,19 +251,19 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
 
     
-    func debug() {
-        //let spacer = String(repeating: " ", count: 4 * (level))
-        //print(spacer, "--->", "path:[\(self.getPath())]", "\tname:", self.name, "\ttype:[\(self.type)]")
-//        let sorted:[ContentSection] = subSections.sorted { (c1, c2) -> Bool in
-//            //return c1.loadedRow < c2.loadedRow
-//            return c1.name < c2.name
-//        }
+    public func debug() {
+        let spacer = String(repeating: " ", count: 4 * (level))
+        print(spacer, "--->", "path:[\(self.getPath())]", "\tname:", self.name, "\ttype:[\(self.type)]")
+        let sorted:[ContentSection] = subSections.sorted { (c1, c2) -> Bool in
+            //return c1.loadedRow < c2.loadedRow
+            return c1.name < c2.name
+        }
         for s in self.subSections {
             s.debug()
         }
     }
     
-    func isQuestionType() -> Bool {
+    public func isQuestionType() -> Bool {
         if type.first == "_" {
             return false
         }
@@ -279,7 +279,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
     
-    func getQuestionCount() -> Int {
+    public func getQuestionCount() -> Int {
         var c = 0
         for section in self.subSections {
             if section.isQuestionType() {
@@ -289,7 +289,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return c
     }
     
-    func getNavigableChildSections() -> [ContentSection] {
+    public func getNavigableChildSections() -> [ContentSection] {
         var navSections:[ContentSection] = []
         for section in self.subSections {
             if section.deepSearch(testCondition: {
@@ -305,7 +305,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return navSections
     }
         
-    func getTitle() -> String {
+    public func getTitle() -> String {
         if let path = Bundle.main.path(forResource: "NameToTitleMap", ofType: "plist"),
            let dict = NSDictionary(contentsOfFile: path) as? [String: AnyObject] {
             if let stringValue = dict[self.name] as? String {
@@ -330,7 +330,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return self.name
     }
     
-    func getPath() -> String {
+    public func getPath() -> String {
         var path = ""
         var section = self
         while true {
@@ -348,7 +348,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return path
     }
     
-    func getPathAsArray() -> [String] {
+    public func getPathAsArray() -> [String] {
         var path:[String] = []
         var section = self
         while true {
@@ -365,7 +365,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return path.reversed()
     }
     
-    func getExamTakingStatus() -> ExamStatus {
+    public func getExamTakingStatus() -> ExamStatus {
         guard let parent = parent else {
             return .notInExam
         }
@@ -382,7 +382,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
     
-    func getPathTitle() -> String {
+    public func getPathTitle() -> String {
         var title = ""
         var section = self
         while true {
@@ -400,7 +400,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return title
     }
 
-    func getChildSectionByType(type: String) -> ContentSection? {
+    public func getChildSectionByType(type: String) -> ContentSection? {
         if self.type == type {
             return self
         }
@@ -416,7 +416,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return nil
     }
     
-    func hasStoredAnswers() -> Bool {
+    public func hasStoredAnswers() -> Bool {
         for section in self.subSections {
             if section.storedAnswer != nil {
                 return true
@@ -425,7 +425,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return false
     }
     
-    func getScore(staffCount:Int, onlyRhythm:Bool, warnNotFound:Bool=true) -> Score {
+    public func getScore(staffCount:Int, onlyRhythm:Bool, warnNotFound:Bool=true) -> Score {
         return parseData(staffCount: staffCount, onlyRhythm: onlyRhythm)
     }
     
@@ -554,7 +554,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
         
-    func addTriad(score:Score, timeSlice:TimeSlice, note:Note, triad:String, value:Double) {
+    public func addTriad(score:Score, timeSlice:TimeSlice, note:Note, triad:String, value:Double) {
         let bstaff = Staff(score: score, type: .bass, staffNum: 1, linesInStaff: 5)
         score.createStaff(num: 1, staff: bstaff)
         let key = score.key
@@ -582,14 +582,17 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
     
-    func playExamInstructions(withDelay:Bool, onLoaded: @escaping (_ status:RequestStatus) -> Void, onNarrated: @escaping () -> Void) {
+    public func playExamInstructions(withDelay:Bool, onLoaded: @escaping (_ status:RequestStatus) -> Void, onNarrated: @escaping () -> Void) {
         let filename = "Instructions.m4a"
         var pathSegments = getPathAsArray()
         //remove the exam title from the path
         pathSegments.remove(at: 2)
-        let googleAPI = GoogleAPI.shared
         var dataRecevied = false
-        googleAPI.getAudioDataByFileName(pathSegments: pathSegments, fileName: filename, reportError: true) {status, fromCache, data in
+        guard let api = GoogleAPI.shared else {
+            onLoaded(.failed)
+            return
+        }
+        api.getAudioDataByFileName(pathSegments: pathSegments, fileName: filename, reportError: true) {status, fromCache, data in
             if status == .failed {
                 onLoaded(.failed)
             }

@@ -2,7 +2,7 @@ import Foundation
 import SwiftJWT
 import Alamofire
 
-enum OAuthCallType {
+public enum OAuthCallType {
     case file
     case filesInFolder
     case googleDoc
@@ -14,7 +14,7 @@ public enum RequestStatus {
     case failed
 }
 
-class DataRequest {
+public class DataRequest {
     var callType:OAuthCallType
     var id:String
     var targetExampleKey: String?
@@ -88,39 +88,37 @@ class DataCache {
     
 }
 
-class GoogleAPI {
-    static let shared = GoogleAPI()
+public class GoogleAPI {
+    //public static let shared = GoogleAPI()
+    public static var shared:GoogleAPI?
+    let bundleDictionary:[String: AnyObject]
     let dataCache = DataCache()
     var accessToken:String?
-    
     let logger = Logger.logger
     
-    struct GoogleFile : Codable {
+    public struct GoogleFile : Codable {
         let name: String
         let id: String
         let kind:String
         let parents: [String]?
     }
 
-    private init() {
+    public init(bundleDictionary:NSDictionary) {
+        self.bundleDictionary = bundleDictionary as? [String: AnyObject] ?? [:]
     }
     
     public func getAPIBundleData(key:String) -> String? {
         var data:String? = nil
         let pListName = "GoogleAPI"
-        if let path = Bundle.main.path(forResource: pListName, ofType: "plist"),
-           let dict = NSDictionary(contentsOfFile: path) as? [String: AnyObject] {
-            data = dict[key] as? String
-            return data
-        }
+        data = bundleDictionary[key] as? String
         guard data != nil else {
             logger.reportError(self, "Cannot find key \(key) in \(pListName).plist")
             return nil
         }
-        return nil
+        return data
     }
     
-    func getContentSheet(sheetName:String, onDone: @escaping (_ status:RequestStatus, _ data:Data?) -> Void) {
+    public func getContentSheet(sheetName:String, onDone: @escaping (_ status:RequestStatus, _ data:Data?) -> Void) {
         let sheetKey:String? = getAPIBundleData(key: sheetName)
 
         if let sheetKey = sheetKey {
@@ -312,7 +310,7 @@ class GoogleAPI {
     
     ///Drill down through all folders in the content section path to find the named file
     ///When its found return its data
-    func getDocumentByName(pathSegments:[String],
+    public func getDocumentByName(pathSegments:[String],
                            name:String,
                            reportError:Bool,
                            bypassCache:Bool?=false,

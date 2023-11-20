@@ -1,9 +1,9 @@
 import Foundation
 
-class LogMessage : Identifiable {
-    var id:UUID = UUID()
-    var number:Int
-    var message:String
+public class LogMessage : Identifiable {
+    public var id:UUID = UUID()
+    public var number:Int
+    public var message:String
     init(num:Int, _ msg:String) {
         self.message = msg
         self.number = num
@@ -15,7 +15,7 @@ public class Logger : ObservableObject {
     @Published var loggedMsg:String? = nil
     @Published var errorNo:Int = 0
     @Published public var errorMsg:String? = nil
-    var recordedMsgs:[LogMessage] = []
+    public var recordedMsgs:[LogMessage] = []
     
     public init() {
     }

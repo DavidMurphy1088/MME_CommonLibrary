@@ -1,10 +1,10 @@
 import Foundation
 import SwiftUI
 
-class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashable {
+public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashable {
     @Published var hilite = false
 
-    let id = UUID()
+    public let id = UUID()
     var staffNum:Int //Narrow the display of the note to just one staff
     var timeSlice:TimeSlice
     var sequence:Int = 0 //the timeslice's sequence position
@@ -17,7 +17,7 @@ class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashable {
         self.timeSlice = timeSlice
     }
     
-    static func == (lhs: TimeSliceEntry, rhs: TimeSliceEntry) -> Bool {
+    public static func == (lhs: TimeSliceEntry, rhs: TimeSliceEntry) -> Bool {
         return lhs.id == rhs.id
     }
     
@@ -63,7 +63,7 @@ class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashable {
         self.value = value
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
     
@@ -167,7 +167,7 @@ class NoteStaffPlacement {
     }
 }
 
-class Note : TimeSliceEntry, Comparable {    
+public class Note : TimeSliceEntry, Comparable {
     static let MIDDLE_C = 60 //Midi pitch for C4
     static let OCTAVE = 12
     
@@ -194,7 +194,7 @@ class Note : TimeSliceEntry, Comparable {
     //the note where the quaver beam for this note ends
     var beamEndNote:Note? = nil
     
-    static func < (lhs: Note, rhs: Note) -> Bool {
+    public static func < (lhs: Note, rhs: Note) -> Bool {
         return lhs.midiNumber < rhs.midiNumber
     }
     
