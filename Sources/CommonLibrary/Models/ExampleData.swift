@@ -1,49 +1,20 @@
 import Foundation
 
-enum QuestionType {
-    //intervals
-    case intervalVisual
-    case intervalAural
-    
-    //rhythms
-    case rhythmVisualClap
-    case melodyPlay
-    case rhythmEchoClap
-    
-    case none
-}
-
-enum AgeGroup: Int, CaseIterable, Identifiable {
-    case Group_5To10 = 0
-    case Group_11Plus = 1
-
-    var id: Self { self }
-    
-    var displayName: String {
-        switch self {
-        case .Group_5To10:
-            return "5 to 10"
-        case .Group_11Plus:
-            return "11 Plus"
-        }
-    }
-}
-
-class ExampleData : ObservableObject {
-    static var sharedExampleData = ExampleData()
+public class ExampleData : ObservableObject {
+    static public var sharedExampleData = ExampleData()
     var logger = Logger.logger
     private let googleAPI = GoogleAPI.shared
     
-    @Published var dataStatus:RequestStatus = .waiting
+    @Published public var dataStatus:RequestStatus = .waiting
 
-    private init() {
+    public init() {
         self.dataStatus = .waiting
-        loadData()
+        //TODO loadData()
     }
     
-    func loadData() {
+    func loadData(sheetName:String) {
         //TODOMusicianshipTrainerApp.root.subSections = []
-        let sheetName = Settings.shared.useTestData ? "ContentSheetID_TEST" : "ContentSheetID"
+        //TOOD let sheetName = Settings.shared.useTestData ? "ContentSheetID_TEST" : "ContentSheetID"
         googleAPI.getContentSheet(sheetName: sheetName) { status, data in
             if status == .success {
                 if let data = data {
@@ -233,9 +204,9 @@ class ExampleData : ObservableObject {
                                 contentSection.loadAnswerFromFile()
                             }
                             else {
-                                if UIGlobals.companionAppActive {
-                                    contentSection.loadAnswerFromFile()
-                                }
+                                //TODO if UIGlobals.companionAppActive {
+                                    //contentSection.loadAnswerFromFile()
+                                //}
                             }
                         }
                         //MusicianshipTrainerApp.root.debug()

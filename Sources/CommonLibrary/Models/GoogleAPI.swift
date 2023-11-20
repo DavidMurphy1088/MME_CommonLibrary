@@ -8,7 +8,7 @@ enum OAuthCallType {
     case googleDoc
 }
 
-enum RequestStatus {
+public enum RequestStatus {
     case success
     case waiting
     case failed

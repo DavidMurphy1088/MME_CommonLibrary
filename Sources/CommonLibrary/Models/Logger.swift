@@ -14,7 +14,7 @@ public class Logger : ObservableObject {
     public static var logger = Logger()
     @Published var loggedMsg:String? = nil
     @Published var errorNo:Int = 0
-    @Published var errorMsg:String? = nil
+    @Published public var errorMsg:String? = nil
     var recordedMsgs:[LogMessage] = []
     
     public init() {

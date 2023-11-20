@@ -21,7 +21,7 @@ class QuestionStatus: Codable, ObservableObject {
     }
 }
 
-class ContentSectionData: Codable {
+public class ContentSectionData: Codable {
     var type:String
     var data:[String]
     var row:Int
@@ -32,14 +32,14 @@ class ContentSectionData: Codable {
     }
 }
 
-class ContentSection: ObservableObject, Identifiable { //Codable,
+public class ContentSection: ObservableObject, Identifiable { //Codable,
     @Published var selectedIndex:Int? //The row to go into
     @Published var postitionToIndex:Int? //The row to postion to
     
     //Publish changes when a stored answer is set after an example is submitted so the list of examples updates
     @Published var storedAnswer:Answer?
 
-    var id = UUID()
+    public var id = UUID()
     var parent:ContentSection?
     var name: String
     var type:String
@@ -50,7 +50,7 @@ class ContentSection: ObservableObject, Identifiable { //Codable,
     var questionStatus = QuestionStatus(0)
     var homeworkIsAssigned:Bool = false
     
-    init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
+    public init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
         self.parent = parent
         self.name = name
         self.isActive = isActive
@@ -75,11 +75,10 @@ class ContentSection: ObservableObject, Identifiable { //Codable,
     }
     
     func setHomeworkStatus()  {
-        //let path = contentSection.getPathAsArray()
-        if !UIGlobals.companionAppActive {
+        //TODO if !UIGlobals.companionAppActive {
             self.homeworkIsAssigned = false
             return
-        }
+        //}
         let path = self.getPathAsArray()
         if path.count == 0 {
             return
