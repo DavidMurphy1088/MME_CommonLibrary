@@ -28,9 +28,13 @@ let package = Package(
             name: "CommonLibrary",
             dependencies: [
                 .product(name: "SwiftJWT", package: "Swift-JWT"),
-                                .product(name: "Alamofire", package: "Alamofire"),
-                                .product(name: "SwiftSoup", package: "SwiftSoup")
-            ]),
+                .product(name: "Alamofire", package: "Alamofire"),
+                .product(name: "SwiftSoup", package: "SwiftSoup")
+            ],
+            resources: [
+                .process("Resources"),
+            ]
+        ),
         .testTarget(
             name: "CommonLibraryTests",
             dependencies: ["CommonLibrary"]),

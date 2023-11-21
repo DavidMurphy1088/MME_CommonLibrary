@@ -27,10 +27,34 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         return AVAudioSession.sharedInstance().recordPermission
     }
 
-    func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
-        AVAudioSession.sharedInstance().requestRecordPermission { granted in
-            completion(granted)
+//    func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
+//        AVAudioSession.sharedInstance().requestRecordPermission { granted in
+//            completion(granted)
+//        }
+//    }
+    
+    public func checkAudioPermissions() -> Bool {
+        let permissionStatus = checkMicrophonePermission()
+        //let permissionStatus AVAudioSession.sharedInstance().recordPermission
+        switch permissionStatus {
+        case .granted:
+            log("Mic - Permission granted")
+            return true
+        case .denied:
+            log("Mic - Permission denied")
+        case .undetermined:
+            log("Mic - Permission undetermined")
+//            requestMicrophonePermission { granted in
+//                if granted {
+//                    self.log("Mic - Permission granted after request")
+//                } else {
+//                    self.logger.reportError(self, "Mic - Permission denied after request")
+//                }
+//            }
+        @unknown default:
+            Logger.logger.reportError(self, "Mic - Unknown permission status")
         }
+        return false
     }
     
     func log(_ msg:String) {
@@ -41,24 +65,24 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         let outputFileName = audioFilenameStatic
         let audioFilename = getDocumentsDirectory().appendingPathComponent("\(outputFileName).wav")
         
-        let permissionStatus = checkMicrophonePermission()
-        switch permissionStatus {
-        case .granted:
-            log("Mic - Permission granted")
-        case .denied:
-            log("Mic - Permission denied")
-        case .undetermined:
-            log("Mic - Permission undetermined")
-            requestMicrophonePermission { granted in
-                if granted {
-                    self.log("Mic - Permission granted after request")
-                } else {
-                    self.logger.reportError(self, "Mic - Permission denied after request")
-                }
-            }
-        @unknown default:
-            logger.reportError(self, "Mic - Unknown permission status")
-        }
+//        let permissionStatus = checkMicrophonePermission()
+//        switch permissionStatus {
+//        case .granted:
+//            log("Mic - Permission granted")
+//        case .denied:
+//            log("Mic - Permission denied")
+//        case .undetermined:
+//            log("Mic - Permission undetermined")
+//            requestMicrophonePermission { granted in
+//                if granted {
+//                    self.log("Mic - Permission granted after request")
+//                } else {
+//                    self.logger.reportError(self, "Mic - Permission denied after request")
+//                }
+//            }
+//        @unknown default:
+//            logger.reportError(self, "Mic - Unknown permission status")
+//        }
 
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatLinearPCM,

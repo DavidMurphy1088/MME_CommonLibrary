@@ -89,9 +89,7 @@ class DataCache {
 }
 
 public class GoogleAPI {
-    //public static let shared = GoogleAPI()
-    public static var shared:GoogleAPI?
-    let bundleDictionary:[String: AnyObject]
+    public static let shared = GoogleAPI()
     let dataCache = DataCache()
     var accessToken:String?
     let logger = Logger.logger
@@ -103,19 +101,29 @@ public class GoogleAPI {
         let parents: [String]?
     }
 
-    public init(bundleDictionary:NSDictionary) {
-        self.bundleDictionary = bundleDictionary as? [String: AnyObject] ?? [:]
+    public init() {
     }
     
     public func getAPIBundleData(key:String) -> String? {
-        var data:String? = nil
-        let pListName = "GoogleAPI"
-        data = bundleDictionary[key] as? String
-        guard data != nil else {
-            logger.reportError(self, "Cannot find key \(key) in \(pListName).plist")
+        guard let url = Bundle.module.url(forResource: "GoogleAPI", withExtension: "plist"),
+              let data = try? Data(contentsOf: url) else {
+            logger.reportError(self, "Cannot find Google .plist")
             return nil
         }
-        return data
+
+        do {
+            if let plistContent = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
+                if let value = plistContent[key] as? String {
+                    return value
+                }
+                else {
+                    logger.reportError(self, "no Google .plist value for \(key)")
+                }
+            }
+        } catch {
+            logger.reportError(self, "Cannot read Google .plist")
+        }
+        return nil
     }
     
     public func getContentSheet(sheetName:String, onDone: @escaping (_ status:RequestStatus, _ data:Data?) -> Void) {
@@ -239,8 +247,8 @@ public class GoogleAPI {
         }
 
         var privateKey:String?
-        let bundleName = "Google_OAuth2_Keys"
-        if let url = Bundle.main.url(forResource: bundleName, withExtension: "json") {
+        let bundleName = "GoogleAPI_OAuth2_Keys"
+        if let url = Bundle.module.url(forResource: bundleName, withExtension: "json") {
             do {
                 let data = try Data(contentsOf: url)
                 let decoder = JSONDecoder()

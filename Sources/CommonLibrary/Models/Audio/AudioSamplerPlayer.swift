@@ -39,14 +39,14 @@ class AudioSamplerPlayer {
     private func loadSoundFont() {
         //https://www.rockhoppertech.com/blog/the-great-avaudiounitsampler-workout/#soundfont
         //https://sites.google.com/site/soundfonts4u/
-        let soundFontNames = [("Piano", "Nice-Steinway-v3.8"), ("Guitar", "GuitarAcoustic")]
+        let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
         //let soundFontNames = [("Piano", "VS_Upright_Piano_lite"), ("Guitar", "GuitarAcoustic"), ("Flute", "FLUTE2")]
         
         let samplerFileName = soundFontNames[0].1
         
         ///18May23 -For some unknown reason and after hours of investiagtion this loadSoundbank must oocur before every play, not just at init time
         
-        if let url = Bundle.main.url(forResource:samplerFileName, withExtension:"sf2") {
+        if let url = Bundle.module.url(forResource: samplerFileName, withExtension: "sf2") {
             let ins = 0
             for instrumentProgramNumber in ins..<256 {
                 do {

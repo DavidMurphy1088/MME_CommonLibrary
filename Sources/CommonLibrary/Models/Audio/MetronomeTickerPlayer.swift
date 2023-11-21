@@ -34,8 +34,7 @@ class MetronomeTickerPlayer {
     
     func loadAudioPlayer(name:String, ext:String) -> [AVAudioPlayer] {
         var audioPlayers:[AVAudioPlayer] = []
-        let clapURL:URL?
-        clapURL = Bundle.main.url(forResource: name, withExtension: ext)...
+        let clapURL = Bundle.module.url(forResource: name, withExtension: ext)
 
         if clapURL == nil {
             Logger.logger.reportError(self, "Cannot load resource \(name)")

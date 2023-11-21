@@ -41,11 +41,8 @@ public class TTS : AudioPlayerUser {
             }
             playAudio = false
         }
-        guard let api = googleAPI else {
-            Logger.logger.reportError(self,"No API")
-            return
-        }
-        let apiKey:String? = api.getAPIBundleData(key: "APIKey")
+
+        let apiKey:String? = googleAPI.getAPIBundleData(key: "APIKey")
         //let apiKey:String? = nil
         let apiUrl = "https://texttospeech.googleapis.com/v1/text:synthesize?key=\(apiKey ?? "")"
         //voices https://cloud.google.com/text-to-speech/docs/voices

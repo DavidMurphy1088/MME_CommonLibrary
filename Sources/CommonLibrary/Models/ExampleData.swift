@@ -13,11 +13,7 @@ public class ExampleData : ObservableObject {
     }
     
     func loadData(sheetName:String)  {
-        guard let api = self.googleAPI else {
-            self.logger.reportError(self, "API is not set")
-            return
-        }
-        api.getContentSheet(sheetName: sheetName) { status, data in
+        googleAPI.getContentSheet(sheetName: sheetName) { status, data in
             if status == .success {
                 if let data = data {
                     struct JSONSheet: Codable {
@@ -45,7 +41,7 @@ public class ExampleData : ObservableObject {
             }
         }
         
-        api.getContentSheet(sheetName: "MelodiesSheetID") { status, data in
+        googleAPI.getContentSheet(sheetName: "MelodiesSheetID") { status, data in
             if status == .success {
                 if let data = data {
                     struct JSONSheet: Codable {

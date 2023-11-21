@@ -306,7 +306,9 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
         
     public func getTitle() -> String {
-        if let path = Bundle.main.path(forResource: "NameToTitleMap", ofType: "plist"),
+        //This appears to be unused ???? Nov 2023 - can it be removed???
+        //if let path = Bundle.main.path(forResource: "NameToTitleMap", ofType: "plist"),
+        if let path = Bundle.module.path(forResource: "NameToTitleMap", ofType: "plist"),
            let dict = NSDictionary(contentsOfFile: path) as? [String: AnyObject] {
             if let stringValue = dict[self.name] as? String {
                 return stringValue
@@ -588,11 +590,8 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         //remove the exam title from the path
         pathSegments.remove(at: 2)
         var dataRecevied = false
-        guard let api = GoogleAPI.shared else {
-            onLoaded(.failed)
-            return
-        }
-        api.getAudioDataByFileName(pathSegments: pathSegments, fileName: filename, reportError: true) {status, fromCache, data in
+
+        GoogleAPI.shared.getAudioDataByFileName(pathSegments: pathSegments, fileName: filename, reportError: true) {status, fromCache, data in
             if status == .failed {
                 onLoaded(.failed)
             }

@@ -36,7 +36,9 @@ public class NoteLayoutPositions: ObservableObject {
 
 public class BarLayoutPositions: ObservableObject {
     @Published public var positions:[BarLine: CGRect] = [:]
-    
+    public init() {
+        
+    }
     public func storePosition(barLine:BarLine, rect: CGRect, ctx:String) {
         DispatchQueue.main.async {
             let rectCopy = rect //CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))

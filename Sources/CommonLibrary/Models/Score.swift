@@ -89,15 +89,14 @@ public class Score : ObservableObject {
     public var staffs:[Staff] = []
     
     public var studentFeedback:StudentFeedback? = nil
-    var tempo:Int?
-    //var lineSpacing = 15.0
+    public var tempo:Int?
     public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 15.0
 
     private var totalStaffLineCount:Int = 0
     static var accSharp = "\u{266f}"
     static var accNatural = "\u{266e}"
     static var accFlat = "\u{266d}"
-    var label:String? = nil
+    public var label:String? = nil
         
     public init(key:Key, timeSignature:TimeSignature, linesPerStaff:Int) {
         self.id = UUID()
@@ -584,7 +583,7 @@ public class Score : ObservableObject {
         //debugScore("end of beaming", withBeam: true)
     }
     
-    func copyEntries(from:Score, count:Int? = nil) {
+    public func copyEntries(from:Score, count:Int? = nil) {
         let staff = self.staffs[0]
         createStaff(num: 0, staff: Staff(score: self, type: staff.type, staffNum: 0, linesInStaff: staff.linesInStaff))
 
@@ -616,7 +615,7 @@ public class Score : ObservableObject {
         }
     }
     
-    func errorCount() -> Int {
+    public func errorCount() -> Int {
         var cnt = 0
         for timeSlice in self.getAllTimeSlices() {
             //let entries = timeSlice.getTimeSliceEntries()
@@ -629,7 +628,7 @@ public class Score : ObservableObject {
         return cnt
     }
     
-    func isNextTimeSliceANote(fromScoreEntryIndex:Int) -> Bool {
+    public func isNextTimeSliceANote(fromScoreEntryIndex:Int) -> Bool {
         if fromScoreEntryIndex > self.scoreEntries.count - 1 {
             return false
         }
@@ -649,7 +648,7 @@ public class Score : ObservableObject {
     }
     
     ///Return a score based on the question score but modified to show where a tapped duration differs from the question
-    func fitScoreToQuestionScore(tappedScore:Score, tolerancePercent:Double) -> (Score, StudentFeedback) {
+    public func fitScoreToQuestionScore(tappedScore:Score, tolerancePercent:Double) -> (Score, StudentFeedback) {
         let outputScore = Score(key: self.key, timeSignature: self.timeSignature, linesPerStaff: 1)
         let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: 1)
         outputScore.createStaff(num: 0, staff: staff)

@@ -8,15 +8,15 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     static private var nextInstrument = 0
     
     let id = UUID()
-    @Published var clapCounter = 0
-    @Published var tempoName:String = ""
-    @Published var tempo:Int = 60
-    @Published var allowChangeTempo:Bool = false
-    @Published var tickingIsActive = false
+    @Published public var clapCounter = 0
+    @Published public var tempoName:String = ""
+    @Published public var tempo:Int = 60
+    @Published public var allowChangeTempo:Bool = false
+    @Published public var tickingIsActive = false
     @Published public var speechEnabled = false
 
-    let tempoMinimumSetting = 60
-    let tempoMaximumSetting = 120
+    public let tempoMinimumSetting = 60
+    public let tempoMaximumSetting = 120
     var setCtr = 0
 
     private var clapCnt = 0
