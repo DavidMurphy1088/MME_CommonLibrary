@@ -13,8 +13,6 @@ public class ExampleData : ObservableObject {
     }
     
     func loadData(sheetName:String)  {
-        //TODOMusicianshipTrainerApp.root.subSections = []
-        //TOOD let sheetName = Settings.shared.useTestData ? "ContentSheetID_TEST" : "ContentSheetID"
         guard let api = self.googleAPI else {
             self.logger.reportError(self, "API is not set")
             return
@@ -31,7 +29,6 @@ public class ExampleData : ObservableObject {
                         let sheetRows = jsonData.values
                         self.loadSheetData(sheetRows: sheetRows)
                         Logger.logger.log(self, "Loaded \(sheetRows.count) sheet rows")
-                        //TODO MusicianshipTrainerApp.root.debug()
                         self.setDataReady(way: status)
                     }
                     catch {
@@ -216,7 +213,7 @@ public class ExampleData : ObservableObject {
                 }
             }
         }
-        rootContentSection.debug()
+        //rootContentSection.debug()
     }
 
     //load data from Google Drive Sheet

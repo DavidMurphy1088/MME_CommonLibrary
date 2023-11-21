@@ -1,23 +1,23 @@
-class Key : Equatable, Hashable {
-    var keySig: KeySignature
-    var type: KeyType
+public class Key : Equatable, Hashable {
+    public var keySig: KeySignature
+    public var type: KeyType
     
-    enum KeyType {
+    public enum KeyType {
         case major
         case minor
     }
         
-    static func == (lhs: Key, rhs: Key) -> Bool {
+    public static func == (lhs: Key, rhs: Key) -> Bool {
         return (lhs.type == rhs.type) && (lhs.keySig.accidentalCount == rhs.keySig.accidentalCount) &&
         (lhs.keySig.accidentalType == rhs.keySig.accidentalType)
     }
     
-    init(type: KeyType, keySig:KeySignature) {
+    public init(type: KeyType, keySig:KeySignature) {
         self.keySig = keySig
         self.type = type
     }
     
-    func hasNote(note:Int) -> Bool {
+    public func hasNote(note:Int) -> Bool {
         var result:Bool = false
         for n in keySig.sharps {
             let octaves = Note.getAllOctaves(note: n)
@@ -30,7 +30,7 @@ class Key : Equatable, Hashable {
     }
     
     ///Return the chord triad type for a scale degree
-    func getTriadType(scaleOffset: Int) -> Chord.ChordType {
+    public func getTriadType(scaleOffset: Int) -> Chord.ChordType {
         if self.type == KeyType.major {
             if ([0, 5, 7].contains(scaleOffset)) {
                 return Chord.ChordType.major
@@ -51,13 +51,13 @@ class Key : Equatable, Hashable {
         }
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(type)
         hasher.combine(keySig.accidentalCount)
     }
     
     ///Return the key's description
-    func getKeyName() -> String {
+    public func getKeyName() -> String {
         var desc = ""
         if keySig.accidentalType == AccidentalType.sharp {
             switch self.keySig.accidentalCount {
@@ -104,7 +104,7 @@ class Key : Equatable, Hashable {
         return desc
     }
     
-    func getKeyTagName() -> String {
+    public func getKeyTagName() -> String {
         let keyTag:String
         switch keySig.accidentalCount {
         case 1:
@@ -123,7 +123,7 @@ class Key : Equatable, Hashable {
         return keyTag
     }
     
-    func firstScaleNote() -> Int {
+    public func firstScaleNote() -> Int {
         var base = 60
         switch keySig.accidentalCount {
         case 0:
@@ -144,7 +144,7 @@ class Key : Equatable, Hashable {
         return base
     }
     
-    func getScaleStartMidi() -> Int {
+    public func getScaleStartMidi() -> Int {
         let rootMidi:Int
         switch keySig.accidentalCount {
         case 1:
@@ -163,7 +163,7 @@ class Key : Equatable, Hashable {
         return rootMidi
     }
     
-    func makeTriadAt(timeSlice:TimeSlice, rootMidi:Int, value:Double, staffNum:Int) -> [Note] {
+    public func makeTriadAt(timeSlice:TimeSlice, rootMidi:Int, value:Double, staffNum:Int) -> [Note] {
         var result:[Note] = []
         result.append(Note(timeSlice:timeSlice, num: rootMidi, value: value, staffNum: staffNum))
         result.append(Note(timeSlice:timeSlice, num: rootMidi + 4, value: value, staffNum: staffNum))

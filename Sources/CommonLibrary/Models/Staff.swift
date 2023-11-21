@@ -5,8 +5,8 @@ import AVFoundation
 //https://mammothmemory.net/music/sheet-music/reading-music/treble-clef-and-bass-clef.html
 
 ///Used to record view positions of notes as they are drawn by a view so that a 2nd drwing pass can draw quaver beams to the right points
-class NoteLayoutPositions: ObservableObject {
-    @Published var positions:[Note: CGRect] = [:]
+public class NoteLayoutPositions: ObservableObject {
+    @Published public var positions:[Note: CGRect] = [:]
 
     var id:Int
     static var nextId = 0
@@ -21,7 +21,7 @@ class NoteLayoutPositions: ObservableObject {
         return lp
     }
     
-    func storePosition(notes: [Note], rect: CGRect) {
+    public func storePosition(notes: [Note], rect: CGRect) {
         if notes.count > 0 {
             if notes[0].beamType != .none {
                 let rectCopy = CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))
@@ -34,9 +34,10 @@ class NoteLayoutPositions: ObservableObject {
     }
 }
 
-class BarLayoutPositions: ObservableObject {
-    @Published var positions:[BarLine: CGRect] = [:]
-    func storePosition(barLine:BarLine, rect: CGRect, ctx:String) {
+public class BarLayoutPositions: ObservableObject {
+    @Published public var positions:[BarLine: CGRect] = [:]
+    
+    public func storePosition(barLine:BarLine, rect: CGRect, ctx:String) {
         DispatchQueue.main.async {
             let rectCopy = rect //CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))
             self.positions[barLine] = rectCopy
@@ -44,7 +45,7 @@ class BarLayoutPositions: ObservableObject {
     }
 }
 
-enum StaffType {
+public enum StaffType {
     case treble
     case bass
 }
@@ -53,9 +54,9 @@ class StaffPlacementsByKey {
     var staffPlacement:[NoteStaffPlacement] = []
 }
 
-class NoteOffsetsInStaffByKey {
+public class NoteOffsetsInStaffByKey {
     var noteOffsetByKey:[String] = []
-    init () {
+    public init () {
         //Defines which staff line (and accidental) is used to show a midi pitch in each key,
         //assuming key signature is not taken in account (it will be later in the note display code...)
         //offset, sign. sign = ' ' or -1=flat, 1=sharp (=natural,????)
@@ -115,24 +116,24 @@ class NoteOffsetsInStaffByKey {
     }
 }
 
-class Staff : ObservableObject, Identifiable {
-    let id = UUID()
+public class Staff : ObservableObject, Identifiable {
+    public let id = UUID()
     @Published var publishUpdate = 0
-    @Published var noteLayoutPositions:NoteLayoutPositions
-    @Published var isHidden:Bool = false
+    @Published public var noteLayoutPositions:NoteLayoutPositions
+    @Published public var isHidden:Bool = false
 
     let score:Score
-    var type:StaffType
-    var staffNum:Int
+    public var type:StaffType
+    public var staffNum:Int
     var lowestNoteValue:Int
     var highestNoteValue:Int
-    var middleNoteValue:Int
+    public var middleNoteValue:Int
     var staffOffsets:[Int] = []
     var noteStaffPlacement:[NoteStaffPlacement]=[]
-    var linesInStaff:Int
+    public var linesInStaff:Int
     let noteOffsetsInStaffByKey = NoteOffsetsInStaffByKey()
     
-    init(score:Score, type:StaffType, staffNum:Int, linesInStaff:Int) {
+    public init(score:Score, type:StaffType, staffNum:Int, linesInStaff:Int) {
         self.score = score
         self.type = type
         self.staffNum = staffNum

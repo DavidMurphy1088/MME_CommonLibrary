@@ -1,9 +1,9 @@
 import Foundation
 
-class TimeSignature {
-    var top = 1
-    var bottom = 4
-    var isCommonTime = false
+public class TimeSignature {
+    public var top = 1
+    public var bottom = 4
+    public var isCommonTime = false
     
     init(top:Int, bottom: Int) {
         self.top = top

@@ -1,14 +1,14 @@
 
 import Foundation
 
-class Melody : Identifiable {
-    let id = UUID()
+public class Melody : Identifiable {
+    public let id = UUID()
     let halfSteps:Int
-    let name:String
+    public let name:String
     var timeSlices:[TimeSlice]
-    var data:[String]
+    public var data:[String]
 
-    init (halfSteps:Int, name:String) {
+    public init (halfSteps:Int, name:String) {
         self.name = name
         self.halfSteps = halfSteps
         self.timeSlices = []
@@ -26,7 +26,7 @@ class Melody : Identifiable {
 //    }
 }
 
-class Melodies {
+public class Melodies {
     static public let shared = Melodies()
     var melodies:[Melody] = []
     
@@ -35,7 +35,7 @@ class Melodies {
     }
     
     ///Return a list of melodies for the given interval
-    func getMelodies(halfSteps:Int) -> [Melody] {
+    public func getMelodies(halfSteps:Int) -> [Melody] {
         var melodies : [Melody] = []
         for melody in self.melodies {
             if melody.halfSteps == halfSteps {

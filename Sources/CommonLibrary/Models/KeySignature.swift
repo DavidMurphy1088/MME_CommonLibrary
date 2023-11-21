@@ -2,10 +2,10 @@ import Foundation
 import AVKit
 import AVFoundation
 
-class KeySignature {
-    var accidentalType:AccidentalType
+public class KeySignature {
+    public var accidentalType:AccidentalType
     var sharps:[Int] = [] //Notes of this pitch dont require individual accidentals, their accidental is implied by the key signature
-    var accidentalCount:Int
+    public var accidentalCount:Int
     var maxAccidentals = 7
     
     init(type:AccidentalType, keyName:String) {

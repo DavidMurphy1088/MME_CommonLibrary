@@ -1,13 +1,13 @@
 
 import Foundation
 
-class BarEditor: ObservableObject {
+public class BarEditor: ObservableObject {
     let score:Score
     var onEdit: ((_ wasChanged:Bool) -> Void)?
     
-    @Published var selectedBarStates:[Bool] = []
+    @Published public var selectedBarStates:[Bool] = []
 
-    enum BarModifyType {
+    public enum BarModifyType {
         case delete
         //case beat
         //case silent
@@ -21,7 +21,7 @@ class BarEditor: ObservableObject {
         self.onEdit = onEdit
     }
     
-    func setAllBarStates() {
+    public func setAllBarStates() {
         DispatchQueue.main.async { [self] in
             self.selectedBarStates = Array(repeating: false, count: score.getBarCount())
             for state in 0..<selectedBarStates.count {
@@ -30,7 +30,7 @@ class BarEditor: ObservableObject {
         }
     }
     
-    func toggleState(_ i:Int) {
+    public func toggleState(_ i:Int) {
         DispatchQueue.main.async { [self] in
             if !selectedBarStates[i] {
                 for s in 0..<self.selectedBarStates.count {
@@ -43,7 +43,7 @@ class BarEditor: ObservableObject {
     
     ///Modify the target bar number in the input score according the way specified
     ///Leave all the rest of the inut score unmodiifed
-    func reWriteBar(targetBar: Int, way: BarModifyType) {
+    public func reWriteBar(targetBar: Int, way: BarModifyType) {
         if way == .doNothing {
             if let notify = self.onEdit {
                 score.barEditor = nil
@@ -158,7 +158,7 @@ class BarEditor: ObservableObject {
         }
     }
     
-    func hiliteNotesInBar(bar:Int, way:Bool) {
+    public func hiliteNotesInBar(bar:Int, way:Bool) {
         var currentBarNo = 0
         for entry in score.scoreEntries {
             if currentBarNo == bar {

@@ -1,9 +1,9 @@
 import Foundation
 
 public class TagHigh : ObservableObject {
-    @Published var content:String
-    var popup:String?
-    var enablePopup:Bool
+    @Published public var content:String
+    public var popup:String?
+    public var enablePopup:Bool
     init(content:String, popup:String?, enablePopup:Bool) {
         self.content = content
         self.popup = popup
@@ -12,11 +12,11 @@ public class TagHigh : ObservableObject {
 }
 
 public class TimeSlice : ScoreEntry {
-    @Published var entries:[TimeSliceEntry]
-    @Published var tagHigh:TagHigh?
-    @Published var tagLow:String?
+    @Published public var entries:[TimeSliceEntry]
+    @Published public var tagHigh:TagHigh?
+    @Published public var tagLow:String?
     @Published var notesLength:Int?
-    @Published var statusTag:StatusTag = .noTag
+    @Published public var statusTag:StatusTag = .noTag
 
     var score:Score
     var footnote:String?
@@ -26,26 +26,26 @@ public class TimeSlice : ScoreEntry {
     //Used when recording a tap sequence into a score
     var tapDuration:Double
     
-    init(score:Score) {
+    public init(score:Score) {
         self.score = score
         self.entries = []
         tapDuration = 0.0
     }
     
-    func setStatusTag(_ tag: StatusTag) {
+    public func setStatusTag(_ tag: StatusTag) {
         DispatchQueue.main.async {
             self.statusTag = tag
         }
     }
 
-    func getValue() -> Double {
+    public func getValue() -> Double {
         if entries.count > 0 {
             return entries[0].getValue()
         }
         return 0
     }
     
-    func addNote(n:Note) {
+    public func addNote(n:Note) {
         n.timeSlice = self
         self.entries.append(n)
 
@@ -56,13 +56,13 @@ public class TimeSlice : ScoreEntry {
         score.addStemAndBeamCharaceteristics()
     }
     
-    func addRest(rest:Rest) {
+    public func addRest(rest:Rest) {
         self.entries.append(rest)
         score.updateStaffs()
         score.addStemAndBeamCharaceteristics()
     }
 
-    func addChord(c:Chord) {
+    public func addChord(c:Chord) {
         for n in c.getNotes() {
             self.addNote(n: n)
         }
@@ -70,7 +70,7 @@ public class TimeSlice : ScoreEntry {
         score.updateStaffs()
     }
     
-    func setTags(high:TagHigh, low:String) {
+    public func setTags(high:TagHigh, low:String) {
         //DispatchQueue.main.async {
             self.tagHigh = high
             self.tagLow = low
@@ -93,7 +93,7 @@ public class TimeSlice : ScoreEntry {
         //}
     }
     
-    func anyNotesRotated() -> Bool {
+    public func anyNotesRotated() -> Bool {
         for n in entries {
             if n is Note {
                 let note:Note = n as! Note

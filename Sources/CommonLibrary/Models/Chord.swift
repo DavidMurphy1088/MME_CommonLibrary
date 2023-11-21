@@ -1,16 +1,16 @@
-class Chord : Identifiable {
+public class Chord : Identifiable {
     private var notes:[Note] = []
     
-    enum ChordType {
+    public enum ChordType {
         case major
         case minor
         case diminished
     }
     
-    init() {
+    public init() {
     }
     
-    func makeTriad(timeSlice:TimeSlice, root: Int, type:ChordType, staffNum: Int) {
+    public func makeTriad(timeSlice:TimeSlice, root: Int, type:ChordType, staffNum: Int) {
         notes.append(Note(timeSlice:timeSlice, num: root, staffNum: staffNum))
         if type == ChordType.major {
             notes.append(Note(timeSlice:timeSlice, num: root+4, staffNum: staffNum))
@@ -26,7 +26,7 @@ class Chord : Identifiable {
         }
     }
     
-    func addNote(note:Note) {
+    public func addNote(note:Note) {
         self.notes.append(note)
         self.notes.sort()
         //check for adjoing 2nds which have to be displayed twisted
@@ -39,13 +39,13 @@ class Chord : Identifiable {
         }
     }
     
-    func getNotes() -> [Note] {
+    public func getNotes() -> [Note] {
         return self.notes
     }
 
     /// Dont double the 3rd
     /// Keep each voice within one octave of the one below except for tenor down to base
-    func makeSATBFourNote(timeSlice:TimeSlice) -> Chord {
+    public func makeSATBFourNote(timeSlice:TimeSlice) -> Chord {
         let result = Chord()
         var desiredPitch = Note.MIDDLE_C - Note.OCTAVE
         let baseNote = Note.getClosestOctave(note: self.notes[0].midiNumber, toPitch: desiredPitch)
@@ -130,8 +130,7 @@ class Chord : Identifiable {
 //    }
     
     ///Return a chord based on the notes of the toChordTriad that is a voice led cadence from the self chord
-    ///TODO - add rules to ensue 3rd always added and avoid parallet 5ths and octaves
-    func makeCadenceWithVoiceLead(timeSlice:TimeSlice, toChordTriad: Chord) -> Chord {
+    public func makeCadenceWithVoiceLead(timeSlice:TimeSlice, toChordTriad: Chord) -> Chord {
         var result:[Int] = []
         
         let destinationRoot = toChordTriad.notes[0].midiNumber
@@ -172,7 +171,7 @@ class Chord : Identifiable {
         return resultChord
     }
     
-    func moveClosestTo(pitch: Int, index: Int) {
+    public func moveClosestTo(pitch: Int, index: Int) {
         let pitch = Note.getClosestOctave(note: self.notes[index].midiNumber, toPitch: pitch)
         let offset = self.notes[index].midiNumber - pitch
         for i in 0...self.notes.count-1 {
@@ -180,7 +179,7 @@ class Chord : Identifiable {
         }
     }
     
-    func toStr() -> String {
+    public func toStr() -> String {
         var s = ""
         for note in self.notes {
             //var n = (note.num % Note.noteNames.count)...
@@ -189,7 +188,7 @@ class Chord : Identifiable {
         return s
     }
         
-    func order() {
+    public func order() {
         notes.sort {
             $0.midiNumber < $1.midiNumber
         }

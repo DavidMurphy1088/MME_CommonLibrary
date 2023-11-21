@@ -2,12 +2,12 @@ import Foundation
 import SwiftUI
 
 public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashable {
-    @Published var hilite = false
+    @Published public var hilite = false
 
     public let id = UUID()
-    var staffNum:Int //Narrow the display of the note to just one staff
-    var timeSlice:TimeSlice
-    var sequence:Int = 0 //the timeslice's sequence position
+    public var staffNum:Int //Narrow the display of the note to just one staff
+    public var timeSlice:TimeSlice
+    public var sequence:Int = 0 //the timeslice's sequence position
 
     private var value:Double = Note.VALUE_QUARTER
 
@@ -21,7 +21,7 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
         return lhs.id == rhs.id
     }
     
-    func isDotted() -> Bool {
+    public func isDotted() -> Bool {
         return [0.75, 1.5, 3.0].contains(value)
     }
     
@@ -30,12 +30,12 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
 //        return true
 //    }
     
-    func getValue() -> Double {
+    public func getValue() -> Double {
         return self.value
     }
     
     //Cause notes that are set for specifc staff to be transparent on other staffs
-    func getColor(staff:Staff, log:Bool? = false) -> Color {
+    public func getColor(staff:Staff, log:Bool? = false) -> Color {
         var out:Color? = nil
 //        guard let timeSlice = timeSlice else {
 //            return Color.black
@@ -112,54 +112,54 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
     }
 }
 
-class BarLine : ScoreEntry {
+public class BarLine : ScoreEntry {
 }
 
-class Tie : ScoreEntry {
+public class Tie : ScoreEntry {
 }
 
-class Rest : TimeSliceEntry {    
-    override init(timeSlice:TimeSlice, value:Double, staffNum:Int) {
+public class Rest : TimeSliceEntry {
+    public override init(timeSlice:TimeSlice, value:Double, staffNum:Int) {
         super.init(timeSlice:timeSlice, value: value, staffNum: staffNum)
     }
     
-    init(r:Rest) {
+    public init(r:Rest) {
         super.init(timeSlice: r.timeSlice, value: r.getValue(), staffNum: r.staffNum)
     }
 }
 
-enum AccidentalType {
+public enum AccidentalType {
     case sharp
     case flat
 }
 
-enum HandType {
+public enum HandType {
     case left
     case right
 }
 
-enum QuaverBeamType {
+public enum QuaverBeamType {
     case none
     case start
     case middle
     case end
 }
 
-enum StemDirection {
+public enum StemDirection {
     case up
     case down
 }
 
-enum StatusTag {
+public enum StatusTag {
     case noTag
     case inError
     case afterError //e.g. all rhythm after a rhythm error is moot
     case hilightAsCorrect //hilight the correct note that was expected
 }
 
-class NoteStaffPlacement {
-    var offsetFromStaffMidline:Int
-    var accidental: Int?
+public class NoteStaffPlacement {
+    public var offsetFromStaffMidline:Int
+    public var accidental: Int?
     
     init(offsetFroMidLine:Int, accidental:Int?=nil) {
         self.offsetFromStaffMidline = offsetFroMidLine
@@ -171,25 +171,25 @@ public class Note : TimeSliceEntry, Comparable {
     static let MIDDLE_C = 60 //Midi pitch for C4
     static let OCTAVE = 12
     
-    static let VALUE_SEMIQUAVER = 0.25
-    static let VALUE_QUAVER = 0.5
-    static let VALUE_QUARTER = 1.0
-    static let VALUE_HALF = 2.0
-    static let VALUE_WHOLE = 4.0
+    public  static let VALUE_SEMIQUAVER = 0.25
+    public static let VALUE_QUAVER = 0.5
+    public static let VALUE_QUARTER = 1.0
+    public static let VALUE_HALF = 2.0
+    public static let VALUE_WHOLE = 4.0
 
-    var midiNumber:Int
-    var isOnlyRhythmNote = false
-    var accidental:Int? = nil ///< 0 = flat, ==0 natural, > 0 sharp
-    var rotated:Bool = false ///true if note must be displayed vertically rotated due to closeness to a neighbor.
+    public var midiNumber:Int
+    public var isOnlyRhythmNote = false
+    public var accidental:Int? = nil ///< 0 = flat, ==0 natural, > 0 sharp
+    public var rotated:Bool = false ///true if note must be displayed vertically rotated due to closeness to a neighbor.
     
     ///Placements for the note on treble and bass staff
     var noteStaffPlacements:[NoteStaffPlacement?] = [nil, nil]
     
     ///Quavers in a beam have either a start, middle or end beam type. A standlone quaver type has type beamEnd. A non quaver has beam type none.
-    var beamType:QuaverBeamType = .none
+    public var beamType:QuaverBeamType = .none
     
-    var stemDirection:StemDirection = .up
-    var stemLength:Double = 0.0
+    public var stemDirection:StemDirection = .up
+    public var stemLength:Double = 0.0
     
     //the note where the quaver beam for this note ends
     var beamEndNote:Note? = nil
@@ -202,13 +202,13 @@ public class Note : TimeSliceEntry, Comparable {
         return (note1 % 12) == (note2 % 12)
     }
     
-    init(timeSlice:TimeSlice, num:Int, value:Double = Note.VALUE_QUARTER, staffNum:Int, accidental:Int?=nil) {
+    public init(timeSlice:TimeSlice, num:Int, value:Double = Note.VALUE_QUARTER, staffNum:Int, accidental:Int?=nil) {
         self.midiNumber = num
         super.init(timeSlice:timeSlice, value: value, staffNum: staffNum)
         self.accidental = accidental
     }
     
-    init(note:Note) {
+    public init(note:Note) {
         self.midiNumber = note.midiNumber
         super.init(timeSlice:note.timeSlice, value: note.getValue(), staffNum: note.staffNum)
         self.accidental = note.accidental
@@ -221,7 +221,7 @@ public class Note : TimeSliceEntry, Comparable {
         }
     }
         
-    func setIsOnlyRhythm(way: Bool) {
+    public func setIsOnlyRhythm(way: Bool) {
         self.isOnlyRhythmNote = way
         if self.isOnlyRhythmNote {
             self.midiNumber = Note.MIDDLE_C + Note.OCTAVE - 1
@@ -229,7 +229,7 @@ public class Note : TimeSliceEntry, Comparable {
         
     }
     
-    static func getNoteName(midiNum:Int) -> String {
+    public static func getNoteName(midiNum:Int) -> String {
         var name = ""
         let note = midiNum % 12 //self.midiNumber % 12
         switch note {
@@ -264,7 +264,7 @@ public class Note : TimeSliceEntry, Comparable {
         return name
     }
     
-    static func getAllOctaves(note:Int) -> [Int] {
+    public static func getAllOctaves(note:Int) -> [Int] {
         var notes:[Int] = []
         for n in 0...88 {
             if note >= n {
@@ -281,7 +281,7 @@ public class Note : TimeSliceEntry, Comparable {
         return notes
     }
     
-    static func getClosestOctave(note:Int, toPitch:Int, onlyHigher: Bool = false) -> Int {
+    public static func getClosestOctave(note:Int, toPitch:Int, onlyHigher: Bool = false) -> Int {
         let pitches = Note.getAllOctaves(note: note)
         var closest:Int = note
         var minDist:Int?
@@ -301,7 +301,7 @@ public class Note : TimeSliceEntry, Comparable {
     }
     
     ///Find the first note for this quaver group
-    func getBeamStartNote(score:Score, np: NoteLayoutPositions) -> Note {
+    public func getBeamStartNote(score:Score, np: NoteLayoutPositions) -> Note {
         let endNote = self
         if endNote.beamType != .end {
             return endNote
@@ -354,7 +354,7 @@ public class Note : TimeSliceEntry, Comparable {
         }
     }
     
-    func getNoteDisplayCharacteristics(staff:Staff) -> NoteStaffPlacement {
+    public func getNoteDisplayCharacteristics(staff:Staff) -> NoteStaffPlacement {
         return self.noteStaffPlacements[staff.staffNum]!
     }
     

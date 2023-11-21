@@ -2,7 +2,7 @@ import SwiftUI
 import CoreData
 import AVFoundation
 
-class Metronome: AudioPlayerUser, ObservableObject  {
+public class Metronome: AudioPlayerUser, ObservableObject  {
     
     static private var shared:Metronome = Metronome()
     static private var nextInstrument = 0
@@ -13,7 +13,7 @@ class Metronome: AudioPlayerUser, ObservableObject  {
     @Published var tempo:Int = 60
     @Published var allowChangeTempo:Bool = false
     @Published var tickingIsActive = false
-    @Published var speechEnabled = false
+    @Published public var speechEnabled = false
 
     let tempoMinimumSetting = 60
     let tempoMaximumSetting = 120
@@ -32,27 +32,27 @@ class Metronome: AudioPlayerUser, ObservableObject  {
     private let speech = SpeechSynthesizer.shared
     private var onDoneFunction:(()->Void)? = nil
     
-    static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String) -> Metronome {
+    public static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String) -> Metronome {
         shared.setTempo(tempo: initialTempo, context: "getMetronomeWithSettings - \(ctx)")
         shared.allowChangeTempo = allowChangeTempo
         return Metronome.shared
     }
 
-    static func getMetronomeWithCurrentSettings(ctx:String) -> Metronome {
+    public static func getMetronomeWithCurrentSettings(ctx:String) -> Metronome {
         return Metronome.shared
     }
 
-    private init() {
+    public init() {
         super.init(parent: "Metronome")
     }
     
-    func setSpeechEnabled(enabled:Bool) {
+    public func setSpeechEnabled(enabled:Bool) {
         DispatchQueue.main.async {
             self.speechEnabled = enabled
         }
     }
     
-    func startTicking(score:Score) {
+    public func startTicking(score:Score) {
         //let audioSamplerMIDI = AudioSamplerPlayer.shared.sampler
         //let audioTicker:AudioSamplerPlayer = AudioSamplerPlayer(timeSignature: score.timeSignature)
         //setTempo(tempo: self.tempo)
@@ -64,7 +64,7 @@ class Metronome: AudioPlayerUser, ObservableObject  {
         }
     }
     
-    func stopTicking() {
+    public func stopTicking() {
         //self.tickingIsActive = false
         DispatchQueue.main.async {
             //Logger.logger.log(self, "set stopTicking")
@@ -72,7 +72,7 @@ class Metronome: AudioPlayerUser, ObservableObject  {
         }
     }
 
-    func setTempo(tempo: Int, context:String, allowBeyondLimits:Bool = false) {
+    public func setTempo(tempo: Int, context:String, allowBeyondLimits:Bool = false) {
         //https://theonlinemetronome.com/blogs/12/tempo-markings-defined
 
         var tempoToSet:Int
@@ -140,13 +140,13 @@ class Metronome: AudioPlayerUser, ObservableObject  {
         }
     }
     
-    func setAllowTempoChange(allow:Bool) {
+    public func setAllowTempoChange(allow:Bool) {
         DispatchQueue.main.async {
             self.allowChangeTempo = allow
         }
     }
     
-    func playScore(score:Score, rhythmNotesOnly:Bool=false, onDone: (()->Void)? = nil) {
+    public func playScore(score:Score, rhythmNotesOnly:Bool=false, onDone: (()->Void)? = nil) {
 //        let audioSamplerMIDI = AudioSamplerPlayer.shared.sampler
 //        AudioSamplerPlayer.shared.startSampler()
         
@@ -169,14 +169,14 @@ class Metronome: AudioPlayerUser, ObservableObject  {
         }
     }
     
-    func stopPlayingScore() {
+    public func stopPlayingScore() {
         DispatchQueue.main.async {
             self.score = nil
             //AudioSamplerPlayer.shared.stopSampler()
         }
     }
 
-    func noteCountSpeechWord(currentTimeValue:Double) -> String {
+    public func noteCountSpeechWord(currentTimeValue:Double) -> String {
         var word = ""
         if currentTimeValue.truncatingRemainder(dividingBy: 1) == 0 {
             let cvInt = Int(currentTimeValue)

@@ -42,11 +42,6 @@ public class Logger : ObservableObject {
         let msg = String(describing: type(of: reporter)) + ":" + msg
         print("Logger ------>", msg)
         recordedMsgs.append(LogMessage(num: recordedMsgs.count, msg))
-//      TODO  if !MusicianshipTrainerApp.productionMode {
-//            DispatchQueue.main.async {
-//                self.loggedMsg = msg
-//            }
-//        }
     }
     
 }

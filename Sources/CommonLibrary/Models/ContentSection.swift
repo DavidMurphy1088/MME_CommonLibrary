@@ -24,8 +24,8 @@ public class QuestionStatus: Codable, ObservableObject {
 public class ContentSectionData: Codable {
     public var type:String
     public var data:[String]
-    var row:Int
-    init(row:Int, type:String, data:[String]) {
+    public var row:Int
+    public init(row:Int, type:String, data:[String]) {
         self.row = row
         self.type = type
         self.data = data
@@ -429,7 +429,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         return parseData(staffCount: staffCount, onlyRhythm: onlyRhythm)
     }
     
-    func parseData(staffCount:Int, onlyRhythm:Bool, warnNotFound:Bool=true) -> Score {
+    public func parseData(staffCount:Int, onlyRhythm:Bool, warnNotFound:Bool=true) -> Score {
         let data = self.contentSectionData.data
         var key:Key?
         var timeSignature:TimeSignature?

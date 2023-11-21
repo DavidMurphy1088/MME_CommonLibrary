@@ -14,7 +14,7 @@ public class ScoreEntry : ObservableObject, Identifiable, Hashable {
         hasher.combine(id)
     }
     
-    func getTimeSliceEntries() -> [TimeSliceEntry] {
+    public func getTimeSliceEntries() -> [TimeSliceEntry] {
         var result:[TimeSliceEntry] = []
         if self is TimeSlice {
             let ts:TimeSlice = self as! TimeSlice
@@ -28,7 +28,7 @@ public class ScoreEntry : ObservableObject, Identifiable, Hashable {
         return result
     }
     
-    func getTimeSliceNotes(staffNum:Int? = nil) -> [Note] {
+    public func getTimeSliceNotes(staffNum:Int? = nil) -> [Note] {
         var result:[Note] = []
         if self is TimeSlice {
             let ts:TimeSlice = self as! TimeSlice
@@ -51,11 +51,11 @@ public class ScoreEntry : ObservableObject, Identifiable, Hashable {
     }
 }
 
-class StudentFeedback : ObservableObject {
-    var correct:Bool = false
-    var feedbackExplanation:String? = nil
-    var feedbackNotes:String? = nil
-    var tempo:Int? = nil
+public class StudentFeedback : ObservableObject {
+    public var correct:Bool = false
+    public var feedbackExplanation:String? = nil
+    public var feedbackNotes:String? = nil
+    public var tempo:Int? = nil
 }
 
 //class StaffLayoutSize: ObservableObject {
@@ -78,20 +78,20 @@ class StudentFeedback : ObservableObject {
 public class Score : ObservableObject {
     let id:UUID
     
-    var timeSignature:TimeSignature
-    var key:Key
-    @Published var barLayoutPositions:BarLayoutPositions
-    @Published var barEditor:BarEditor?
+    public var timeSignature:TimeSignature
+    public var key:Key
+    @Published public var barLayoutPositions:BarLayoutPositions
+    @Published public var barEditor:BarEditor?
 
-    @Published var scoreEntries:[ScoreEntry] = []
+    @Published public var scoreEntries:[ScoreEntry] = []
     
     let ledgerLineCount =  2 //3//4 is required to represent low E
-    var staffs:[Staff] = []
+    public var staffs:[Staff] = []
     
-    var studentFeedback:StudentFeedback? = nil
+    public var studentFeedback:StudentFeedback? = nil
     var tempo:Int?
     //var lineSpacing = 15.0
-    var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 15.0
+    public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 15.0
 
     private var totalStaffLineCount:Int = 0
     static var accSharp = "\u{266f}"
@@ -99,7 +99,7 @@ public class Score : ObservableObject {
     static var accFlat = "\u{266d}"
     var label:String? = nil
         
-    init(key:Key, timeSignature:TimeSignature, linesPerStaff:Int) {
+    public init(key:Key, timeSignature:TimeSignature, linesPerStaff:Int) {
         self.id = UUID()
         self.timeSignature = timeSignature
         totalStaffLineCount = linesPerStaff + (2*ledgerLineCount)
@@ -108,7 +108,7 @@ public class Score : ObservableObject {
         //self.staffLayoutSize = StaffLayoutSize()
     }
 
-    func createTimeSlice() -> TimeSlice {
+    public func createTimeSlice() -> TimeSlice {
         let ts = TimeSlice(score: self)
         ts.sequence = self.scoreEntries.count
         self.scoreEntries.append(ts)
@@ -121,17 +121,17 @@ public class Score : ObservableObject {
         return ts
     }
 
-    func createBarEditor(onEdit: @escaping (_ wasChanged:Bool) -> Void) {
+    public func createBarEditor(onEdit: @escaping (_ wasChanged:Bool) -> Void) {
         self.barEditor = BarEditor(score: self, onEdit: onEdit)
     }
     
-    func getStaffHeight() -> Double {
+    public func getStaffHeight() -> Double {
         //leave enough space above and below the staff for the Timeslice view to show its tags
         let height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing
         return height
     }
     
-    func getBarCount() -> Int {
+    public func getBarCount() -> Int {
         var count = 0
         for entry in self.scoreEntries {
             if entry is BarLine {
@@ -141,11 +141,11 @@ public class Score : ObservableObject {
         return count + 1
     }
     
-    func getTotalStaffLineCount() -> Int {
+    public func getTotalStaffLineCount() -> Int {
         return self.totalStaffLineCount
     }
     
-    func getAllTimeSlices() -> [TimeSlice] {
+    public func getAllTimeSlices() -> [TimeSlice] {
         var result:[TimeSlice] = []
         for scoreEntry in self.scoreEntries {
             if scoreEntry is TimeSlice {
@@ -156,7 +156,7 @@ public class Score : ObservableObject {
         return result
     }
     
-    func addTriadNotes() {
+    public func addTriadNotes() {
         let taggedSlices = searchTimeSlices{ (timeSlice: TimeSlice) -> Bool in
             return timeSlice.tagHigh != nil
         }
@@ -174,7 +174,7 @@ public class Score : ObservableObject {
         }
     }
     
-    func getTimeSlicesForBar(bar:Int) -> [TimeSlice] {
+    public func getTimeSlicesForBar(bar:Int) -> [TimeSlice] {
         var result:[TimeSlice] = []
         var barNum = 0
         for scoreEntry in self.scoreEntries {
@@ -191,7 +191,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    func debugScorezz(_ ctx:String, withBeam:Bool) {
+    public func debugScorezz(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -266,7 +266,7 @@ public class Score : ObservableObject {
 //         return result
 //     }
     
-    func setHiddenStaff(num:Int, isHidden:Bool) {
+    public func setHiddenStaff(num:Int, isHidden:Bool) {
         DispatchQueue.main.async {
             if self.staffs.count > num {
                 //self.hiddenStaffNo = num
@@ -278,13 +278,13 @@ public class Score : ObservableObject {
         }
     }
     
-    func setStudentFeedback(studentFeedack:StudentFeedback? = nil) {
+    public func setStudentFeedback(studentFeedack:StudentFeedback? = nil) {
         //DispatchQueue.main.async {
             self.studentFeedback = studentFeedack
         //}
     }
 
-    func getLastTimeSlice() -> TimeSlice? {
+    public func getLastTimeSlice() -> TimeSlice? {
         var ts:TimeSlice?
         for index in stride(from: scoreEntries.count - 1, through: 0, by: -1) {
             let element = scoreEntries[index]
@@ -296,13 +296,13 @@ public class Score : ObservableObject {
         return ts
     }
 
-    func updateStaffs() {
+    public func updateStaffs() {
         for staff in staffs {
             staff.update()
         }
     }
     
-    func createStaff(num:Int, staff:Staff) {
+    public func createStaff(num:Int, staff:Staff) {
         if self.staffs.count <= num {
             self.staffs.append(staff)
         }
@@ -311,37 +311,37 @@ public class Score : ObservableObject {
         }
     }
     
-    func getStaff() -> [Staff] {
+    public func getStaff() -> [Staff] {
         return self.staffs
     }
     
-    func setKey(key:Key) {
+    public func setKey(key:Key) {
         DispatchQueue.main.async {
             self.key = key
             self.updateStaffs()
         }
     }
     
-    func addBarLine() {
+    public func addBarLine() {
         let barLine = BarLine()
         barLine.sequence = self.scoreEntries.count
         self.scoreEntries.append(barLine)
     }
     
-    func addTie() {
+    public func addTie() {
         let tie = Tie()
         tie.sequence = self.scoreEntries.count
         self.scoreEntries.append(tie)
     }
 
-    func clear() {
+    public func clear() {
         self.scoreEntries = []
         for staff in staffs  {
             staff.clear()
         }
     }
     
-    func getEntryForSequence(sequence:Int) -> ScoreEntry? {
+    public func getEntryForSequence(sequence:Int) -> ScoreEntry? {
         for entry in self.scoreEntries {
             if entry.sequence == sequence {
                 return entry
