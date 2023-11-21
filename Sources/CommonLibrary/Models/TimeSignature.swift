@@ -5,7 +5,7 @@ public class TimeSignature {
     public var bottom = 4
     public var isCommonTime = false
     
-    init(top:Int, bottom: Int) {
+    public init(top:Int, bottom: Int) {
         self.top = top
         self.bottom = bottom
     }

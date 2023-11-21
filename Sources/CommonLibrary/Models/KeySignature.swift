@@ -8,7 +8,7 @@ public class KeySignature {
     public var accidentalCount:Int
     var maxAccidentals = 7
     
-    init(type:AccidentalType, keyName:String) {
+    public init(type:AccidentalType, keyName:String) {
         self.accidentalType = type
         self.accidentalCount = 0
         if keyName != "" {
