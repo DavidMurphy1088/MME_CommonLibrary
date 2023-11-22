@@ -2,7 +2,7 @@ import Foundation
 import AVKit
 import AVFoundation
 
-class AudioSamplerPlayer {
+public class AudioSamplerPlayer {
     static private var shared = AudioSamplerPlayer()
     private var sampler = AVAudioUnitSampler()
     private var stopPlayingNotes = false
@@ -75,7 +75,7 @@ class AudioSamplerPlayer {
         stopPlayingNotes = true
     }
     
-    func play(note: UInt8) {
+    public func play(note: UInt8) {
         sampler.startNote(note, withVelocity: 127, onChannel: 0)
     }
 

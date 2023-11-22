@@ -25,17 +25,29 @@ public struct MetronomeView: View {
                         metronome.stopTicking()
                     }
                 }, label: {
-                    Image("metronome")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                    ///Needs more hiehgt on phone to even show
-                        .frame(height: UIDevice.current.userInterfaceIdiom == .phone ? frameHeight * 0.8 : frameHeight * 0.5)
-                        .padding(.horizontal, frameHeight * 0.1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: frameHeight * 0.1)
-                                .stroke(metronome.tickingIsActive ? Color.blue : Color.clear, lineWidth: 2)
-                        )
-                        .padding(.horizontal, frameHeight * 0.1)
+                    if let imageURL = Bundle.module.url(forResource: "metronome", withExtension: "png") {
+                        if let imageData = try? Data(contentsOf: imageURL),
+                           let uiImage = UIImage(data: imageData) {
+//                            Image(uiImage: uiImage)
+//                                .resizable()
+//                                .scaledToFit()
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                            ///Needs more hiehgt on phone to even show
+                                .frame(height: UIDevice.current.userInterfaceIdiom == .phone ? frameHeight * 0.8 : frameHeight * 0.5)
+                                .padding(.horizontal, frameHeight * 0.1)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: frameHeight * 0.1)
+                                        .stroke(metronome.tickingIsActive ? Color.blue : Color.clear, lineWidth: 2)
+                                )
+                                .padding(.horizontal, frameHeight * 0.1)
+                        } else {
+                            Text("Failed to load image")
+                        }
+                    } else {
+                        Text("Image not found")
+                    }
                 })
                 
                 if UIDevice.current.userInterfaceIdiom == .pad {

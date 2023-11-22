@@ -1,13 +1,17 @@
 import SwiftUI
 import Combine
 
-struct CountdownTimerView: View {
+public struct CountdownTimerView: View {
     let score:Score
     @State private var timeRemaining = 30
     @State private var timer: AnyCancellable?
     @State private var isActive = false
-
-    var body: some View {
+    
+    public init(score:Score) {
+        self.score = score
+    }
+    
+    public var body: some View {
         HStack(spacing: 20) {
             Button(action: {
                 if self.isActive {
@@ -36,18 +40,24 @@ struct CountdownTimerView: View {
             .foregroundColor(.white)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             
-            CircularProgressView(progress: CGFloat(timeRemaining) / 30.0, timeRemaining: timeRemaining)
+            CircularProgressView(progress: CGFloat(timeRemaining) / 30.0,
+                                 timeRemaining: timeRemaining)
                 .frame(width: score.lineSpacing * 3, height: score.lineSpacing * 3)
                 .padding(20)
         }
     }
 }
 
-struct CircularProgressView: View {
+public struct CircularProgressView: View {
     var progress: CGFloat
     var timeRemaining: Int
-
-    var body: some View {
+    
+    public init(progress: CGFloat, timeRemaining: Int) {
+        self.progress = progress
+        self.timeRemaining = timeRemaining
+    }
+    
+    public var body: some View {
         ZStack {
             Circle()
                 .stroke(lineWidth: 5)
