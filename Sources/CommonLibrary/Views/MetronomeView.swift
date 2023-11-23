@@ -85,8 +85,11 @@ public struct MetronomeView: View {
                         if UIDevice.current.userInterfaceIdiom == .pad {
                             Text("Practice Tool")
                         }
-                        Image(systemName: "questionmark.circle")
-                            .font(UIDevice.current.userInterfaceIdiom == .pad ? .largeTitle : .title3)
+                        Button(action: {
+                        }) {
+                            Image(systemName: "questionmark.circle")
+                                //.font(UIDevice.current.userInterfaceIdiom == .pad ? .largeTitle : .title3)
+                        }
                     }
                 }
                 .padding()

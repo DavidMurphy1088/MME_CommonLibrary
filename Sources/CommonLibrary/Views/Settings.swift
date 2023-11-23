@@ -118,7 +118,7 @@ public class Settings : ObservableObject {
         showReloadHTMLButton = UserDefaults.standard.getBoolean(key: UserDefaultKeys.showReloadHTMLButton)
         useTestData = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useTestData)
         useAnimations = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useAnimations)
-        soundOnTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useAnimations)
+        soundOnTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.soundOnTaps)
         useUpstrokeTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useUpstrokeTaps)
     }
     

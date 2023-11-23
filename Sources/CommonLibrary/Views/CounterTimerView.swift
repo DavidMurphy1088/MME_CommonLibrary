@@ -70,7 +70,7 @@ public struct CircularProgressView: View {
                 .rotationEffect(.degrees(-90))
                 .aspectRatio(contentMode: .fit)
 
-            Text("\(timeRemaining)")
+            Text("\(timeRemaining)").foregroundColor(timeRemaining == 0 ? Color.red : Color.black)
                 //.font(.footnote)
         }
     }

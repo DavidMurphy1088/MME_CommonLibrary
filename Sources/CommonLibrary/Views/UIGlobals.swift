@@ -36,7 +36,7 @@ public class UIGlobals {
     public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 52 : 18)
     //static let correctAnswerFont = Font.title2
 
-    public static func showDeviceOrientation() {
+    public static func showDeviceOrientation() -> Bool {
         let orientation = UIDevice.current.orientation
         print("showDeviceOrientation --> IS PORTRAIT", orientation.isPortrait,"IS LANDSCAPE", orientation.isLandscape,
               "isGeneratingDeviceOrientationNotifications", UIDevice.current.isGeneratingDeviceOrientationNotifications,
@@ -57,6 +57,7 @@ public class UIGlobals {
         default:
             print("Unknown")
         }
+        return true
     }
     public static var rhythmTolerancePercent:Double = 30.0
     public static var rhythmTapSoundOn = false
@@ -170,25 +171,6 @@ class UICommons {
     static let buttonPadding:Double = 8
     static let colorAnswer = Color.green.opacity(0.4)
 }
-
-//struct UIHiliteText : View {
-//    @State var text:String
-//    @State var answerMode:Int?
-//
-//    var body: some View {
-//        Text(text)
-//        .foregroundColor(.black)
-//        .padding(UICommons.buttonPadding)
-//        .background(
-//            RoundedRectangle(cornerRadius: UICommons.buttonCornerRadius, style: .continuous).fill(answerMode == nil ? Color.blue.opacity(0.4) : UICommons.colorAnswer)
-//        )
-//        .overlay(
-//            RoundedRectangle(cornerRadius: UICommons.buttonCornerRadius, style: .continuous).strokeBorder(Color.blue, lineWidth: 1)
-//        )
-//        .padding()
-//    }
-//
-//}
 
 
 
