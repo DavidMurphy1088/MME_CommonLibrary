@@ -13,6 +13,7 @@ enum UserDefaultKeys {
     static let useAnimations = "useAnimations"
     static let soundOnTaps = "soundOnTaps"
     static let useUpstrokeTaps = "useUpstrokeTaps"
+    static let companionOn = "companionOn"
 }
 
 extension UserDefaults {
@@ -99,6 +100,7 @@ public class Settings : ObservableObject {
     @Published public var colorBackground = UIGlobals.colorBackgroundDefault
     @Published public var soundOnTaps = true
     @Published public var useUpstrokeTaps = false //Turned off for the moment. Possibly will never use and always use downstrokes
+    @Published public var companionOn = false 
 
     public static var shared = Settings()
     
@@ -120,6 +122,7 @@ public class Settings : ObservableObject {
         useAnimations = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useAnimations)
         soundOnTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.soundOnTaps)
         useUpstrokeTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useUpstrokeTaps)
+        companionOn = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.companionOn)
     }
     
     public init(copy settings: Settings) {
@@ -132,6 +135,7 @@ public class Settings : ObservableObject {
         self.colorBackground = settings.colorBackground
         self.soundOnTaps = settings.soundOnTaps
         self.useUpstrokeTaps = settings.useUpstrokeTaps
+        self.companionOn = settings.companionOn
     }
     
     public func getAgeGroup() -> String {
@@ -148,6 +152,7 @@ public class Settings : ObservableObject {
         UserDefaults.standard.setBoolean(key: UserDefaultKeys.useAnimations, useAnimations)
         UserDefaults.standard.setBoolean(key: UserDefaultKeys.soundOnTaps, soundOnTaps)
         UserDefaults.standard.setBoolean(key: UserDefaultKeys.useUpstrokeTaps, useUpstrokeTaps)
+        UserDefaults.standard.setBoolean(key: UserDefaultKeys.companionOn, companionOn)
     }
     
 }

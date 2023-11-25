@@ -33,8 +33,7 @@ public class UIGlobals {
     public static let fontiPhone = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 24 : 16)
 
     public static let navigationFont =    Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 26 : 18)
-    public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 52 : 18)
-    //static let correctAnswerFont = Font.title2
+    public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 40 : 18)
 
     public static func showDeviceOrientation() -> Bool {
         let orientation = UIDevice.current.orientation
@@ -61,7 +60,6 @@ public class UIGlobals {
     }
     public static var rhythmTolerancePercent:Double = 30.0
     public static var rhythmTapSoundOn = false
-    public static var companionAppActive = false
 }
 
 public func hintButtonView(_ txt:String, selected:Bool = false) -> some View {

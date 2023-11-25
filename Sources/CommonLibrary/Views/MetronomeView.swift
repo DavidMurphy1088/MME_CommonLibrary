@@ -88,7 +88,6 @@ public struct MetronomeView: View {
                         Button(action: {
                         }) {
                             Image(systemName: "questionmark.circle")
-                                //.font(UIDevice.current.userInterfaceIdiom == .pad ? .largeTitle : .title3)
                         }
                     }
                 }

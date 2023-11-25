@@ -1,6 +1,11 @@
 import Foundation
-import AVFoundation
 import Combine
+import SwiftUI
+import WebKit
+import AVFoundation
+import AVKit
+import UIKit
+
 
 public enum ExamStatus {
     case notInExam
@@ -49,7 +54,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     public var level:Int
     public var questionStatus = QuestionStatus(0)
     public var homeworkIsAssigned:Bool = false
-    
+
     public init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
         self.parent = parent
         self.name = name
@@ -74,11 +79,11 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         setHomeworkStatus()
     }
     
-    public func setHomeworkStatus()  {
-        //TODO if !UIGlobals.companionAppActive {
+    private func setHomeworkStatus()  {
+        if !Settings.shared.companionOn {
             self.homeworkIsAssigned = false
             return
-        //}
+        }
         let path = self.getPathAsArray()
         if path.count == 0 {
             return
@@ -101,6 +106,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     
     public func setStoredAnswer(answer:Answer, ctx:String) {
         DispatchQueue.main.async {
+            print("============= storedAnswer", ctx)
             self.storedAnswer = answer
         }
     }
@@ -616,6 +622,58 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                 }
             }
         }
+    }
+    
+    func getTotalAnswerScore() -> Int {
+        var score = 0
+        for s in getNavigableChildSections() {
+            if let answer = s.storedAnswer {
+                if answer.correct {
+                    score += 1
+                }
+            }
+        }
+        return score
+    }
+    
+    public func getGradeImage() -> Image? {
+        var name = ""
+        if isExamTypeContentSection() {
+            //test section group header
+            if !hasStoredAnswers() {
+                return nil
+            }
+            else {
+                if self.getTotalAnswerScore() == getNavigableChildSections().count {
+                    name = "checkmark_ok" //grade_a"
+                }
+                else {
+                    name = "checkmark_ok" //grade_b"
+                }
+            }
+        }
+        else {
+            //individual tests
+            if !homeworkIsAssigned {
+                return nil
+            }
+            else {
+                if let answer = storedAnswer {
+                    if answer.correct {
+                        name = "grade_a"
+                    }
+                    else {
+                        name = "grade_b"
+                    }
+                }
+                else {
+                    name = "todo_transparent"
+                }
+            }
+        }
+        var image:Image
+        image = Image(name)
+        return image
     }
 }
 

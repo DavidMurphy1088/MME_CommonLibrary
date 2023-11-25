@@ -199,9 +199,9 @@ public class ExampleData : ObservableObject {
                                 contentSection.loadAnswerFromFile()
                             }
                             else {
-                                //TODO if UIGlobals.companionAppActive {
-                                    //contentSection.loadAnswerFromFile()
-                                //}
+                                if Settings.shared.companionOn {
+                                    contentSection.loadAnswerFromFile()
+                                }
                             }
                         }
                         //MusicianshipTrainerApp.root.debug()
