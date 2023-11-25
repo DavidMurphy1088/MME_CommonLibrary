@@ -39,8 +39,9 @@ public class AudioSamplerPlayer {
     private func loadSoundFont() {
         //https://www.rockhoppertech.com/blog/the-great-avaudiounitsampler-workout/#soundfont
         //https://sites.google.com/site/soundfonts4u/
-        let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
-        //let soundFontNames = [("Piano", "VS_Upright_Piano_lite"), ("Guitar", "GuitarAcoustic"), ("Flute", "FLUTE2")]
+        //let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
+        /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
+        let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
         
         let samplerFileName = soundFontNames[0].1
         
@@ -51,17 +52,21 @@ public class AudioSamplerPlayer {
             for instrumentProgramNumber in ins..<256 {
                 do {
                     try sampler.loadSoundBankInstrument(at: url, program: UInt8(instrumentProgramNumber), bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB), bankLSB: UInt8(kAUSampler_DefaultBankLSB))
-                    //sampler.
+                    //try sampler.loadInstrument(at: url)
+                    print("================", sampler.reverbBlend, sampler.description)
                     break
                 }
                 catch {
+                    break
                 }
             }
         }
         else {
             Logger.logger.reportError(self, "Cannot loadSoundBankInstrument \(samplerFileName)")
         }
-        
+        if sampler == nil {
+            Logger.logger.reportError(self, "No soundfont loaded")
+        }
 //        do {
 //            try audioEngine.start()
 //        }
