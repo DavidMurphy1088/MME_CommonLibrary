@@ -1,0 +1,60 @@
+https://stackoverflow.com/questions/70613514/how-can-i-display-my-app-documents-in-the-files-app-for-iphone'
+
+What is SiriKit - If you're a developer, you can also integrate Siri into your app using the SiriKit framework. This allows users to interact with your app using voice commands. To test SiriKit in your app, you'll need to have a development profile and run your app on a physical device that supports Siri. You can find more information on SiriKit development in the Apple Developer Documentation.
+
+Sound Fonts
+    //http://www.mirbsd.org/~tg/soundfont/
+    //https://sites.google.com/site/soundfonts4u/
+    
+MIDI percussion https://freewavesamples.com/roland-r-8-castanet
+
+Sequencer - https://onlinesequencer.net/
+
+Wveform editor https://audiomass.co/
+
+Image background trasnparent
+https://retoucher.online/upload
+
+Grayscale
+https://onlinepngtools.com/convert-png-to-grayscale
+
+Images
+https://www.flaticon.com/
+
+Audio file type converter
+https://products.aspose.app/slides/video/wav-to-pcm
+
+it's important to note that SwiftUI views are often re-created multiple times during their lifetime.
+This happens when the view's state changes or when it needs to be re-rendered due to changes in the environment or parent views.
+But a state change in a view does not recall its init()
+
+Its appears to be that if a view uses a geometry reader any child view that does not explctyly position itself does not center but goes to a zero postion
+
+- Minimum iOS required set to IOS 15, goes back to Sep  2021
+
+============ AUDIO ANALYSIS 14June ===========
+
+NoteOnsetAnalyser.class
+
+Rhythm detection quite good for a clean syntheised paino recording of 10 notes. Genrated by onlinesequencer
+
+Pitch detection all over the place. Very sensitive to smal changes in the paramters for FFT
+
+SoundAnalyseView has tools to viualize a recorded waveform.
+- segment the signal into chunks for note onset analysis
+- feed segments of the audio frames into FFT. Use Hamming window smoothing for frame data into FFT
+- perform PeakInterpolation to interpret resutls from FFT frequency domain to determine the dominant pitch
+
+Next Ideas
+- try techniques other than FFT - ask GPT
+- e.g. have code for YIN algorithm but results need review
+- try rhythm  note onset with a regualr recording of piano
+- review other apps if they can do it. Ask GPT
+- check open source Sonic Visualizer for pitch detection https://www.sonicvisualiser.org/doc/reference/4.5.2/en/
+- SV does do correct pitch determination using Pane-Peak Freq spectrum
+- If we knw the pitch of the first note in the example can we use that to pick right freuency of all the freqs for the next note. in Ex1 pitch jumps are small
+
+======= TestFlight ============
+- set prod mode one
+- change sheet to use production data
+

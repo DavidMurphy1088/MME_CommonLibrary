@@ -58,7 +58,7 @@ public class UIGlobals {
         }
         return true
     }
-    public static var rhythmTolerancePercent:Double = 30.0
+    public static var rhythmTolerancePercent:Double = 45.0 //B+
     public static var rhythmTapSoundOn = false
 }
 

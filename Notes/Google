@@ -1,0 +1,37 @@
+Custom URL
+We have a primary domain 'musicmastereducation.co.nz' managed under Google Admin/Account/Domains/ManageDomains. Squarespace is the registrar.
+
+We have a Google Sites site at sites.google.com/musicmastereducation.co.nz/musicianship-trainer-beta
+
+We want that the content of this Google site be rendered when a user visits musicmastereducation.co.nz
+
+So we tried adding a custom URL to our Google site musicianship-trainer-beta and then see -
+
+Set up CNAME record with your domain host
+To use testsite.musicmastereducation.co.nz, follow these steps:
+
+Sign in to your domain hosting service (e.g. Google Domains)
+Navigate to your DNS management page for musicmastereducation.co.nz
+>>>Find the CNAME settings and enter testsite as the CNAME value or alias
+Set the CNAME destination to ghs.googlehosted.com
+Save changes and click Add Custom URL below
+
+However there is no CNAME settings available in our domain managment under Google Workspace Admin. Must this setting be done somehow via Squarespace? If so please send the relevant instructions. If so do we have to pay a trqansfer fee to Squarespace?
+
+
+https://support.google.com/a/answer/7392423?hl=en-GB&product_name=UnuFlow&hl=en-GB&visit_id=638370117540742045-3163630724&rd=1&src=supportwidget0&authuser=0
+
+MAP Google Sites to DNS
+https://admin.google.com/ac/apps/sites/address?hl=en_GB
+
+=====================================
+How to map a Google Site to the domain name
+https://knowledge.workspace.google.com/kb/how-to-map-a-google-site-to-the-domain-name-000006219
+
+Use Sites to create a Custom URL
+https://admin.google.com/ac/apps/sites/address?hl=en_GB
+this maps a custom URL to a Google Sites site
+
+The custom URL must be backed by a CNAME entry at
+https://domains.google.com/registrar/musicmastereducation.co.nz/dns
+=====================================

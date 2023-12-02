@@ -1,0 +1,88 @@
+Using swift I have an AVAudioFile of 10 seconds of a simple piano melody with 10 notes. I know the exact frames in the audio file where each note starts. How can I calculate the pitch the note was played at?
+
+Using swift I have an AVAudioFile of 10 seconds of a simple piano melody recorded with 10 notes. How can I use AudioKit to 1) determine the start and duration of each note in the audio file and 2) determie the pictch of each note.
+
+Using swift I have a short AVAudioFile of a simple piano melody recorded with 10 notes. How can I  1) determine the start and duration of each note in the audio file and 2) determie the pictch of each note. Please give example code that uses Apple's Swift code. Please ensure the example code provided will compile without errors.
+
+very simple example which plays an audio file of recorded piano notes using an AudioKit AVAudioFile through an AudioEngine. The code must inlcude an amplitude detector to that is triggerd on every note. The detector's closure code must also be able to know the frame number in teh audio file at which the note occurred.
+
+I have frame values from one second of an audo AVAudioFile that contains a piano note played. How do I measure the pitch of the note that was played in Apple's Swift code
+
+which algorithm in Swift is recommended for performPitchDetection given that the duration of the AVAudioFile frame values is 1 second long and that the sound recordoed is that of a single note played on a piano
+
+What is the recommended algorithm to prepare input from a short AVAudioFile of a simple melody for note onset analysis
+
+Using swift I have a short AVAudioFile of a simple piano melody recorded with 10 notes. I know the positions of the note onsets quite accuraltey.
+What algorithms can I use to determine the pitch of each note. Please also describe any techniques that would help 'clean up' the audio signal to make pitch anaalsis more accurate.
+
+I know the positions in the signal where notes start. If I use FFT -
+1) What segments of the AVAudioFile input buffer should I provide as input to FFT
+2) Should any preporcessing be done on those segments before they are input to FFT
+3) What technieus should I use to analyse the resulting FFT time domain to determine the note's pitch
+
+If I read an AVAudioFile into an AVAudioPCMBuffer buffer what characteristics of the signal does each value in the buffer represent.
+- amplitude
+
+Please provide Swift code to apply the Hamming windowing function to the signal before it is input to the FFT. The Hamming function that applies Hamming will input an array of Float values that represent the audio signal's' amplitude starting at the note's' start position. The Hamming function should apply apply Hamming windowing to the signal and then output an array of Floats that will be input to the FFT
+
+what advantage does Hamming windowing provide and how does it work
+
+give sample Swift code that can analyse the output of an FFT and return the MIDI pitch of the note. The function should input the values output from the FFT transform
+
+is there a website or tool that can take a recording of a simple pinao melody and determine the rhythm and pitch of the notes recorded?
+
+==================
+Using swift I have an AVAudioFile of 10 seconds of a simple piano melody with 10 notes. The sampling rate is 44100 per second for the input frame buffer which is a AVAudioPCMBuffer. I need to analyse the input frame values in the audio file to detect note onsets. I smooth the input buffer to reduce noise by segmenting the inout buffer into fixed length segments. What would be the recommended length in millsecnds of ech segment?
+Determine the average duration of a single note in your piano melody. Let's say it's approximately 1 second.
+
+Choose a fraction of the note duration as the segment length. For example, you can start with a segment length of 100 milliseconds (0.1 seconds), which is one-tenth of the average note duration.
+
+Adjust the segment length based on the characteristics of your audio data and the desired level of precision. If you find that the segments are too short and capturing too much noise, you can increase the segment length. Conversely, if the segments are too long and missing rapid note transitions, you can decrease the segment length.
+
+===========================
+Using swift I have an AVAudioFile of 10 seconds of a simple piano melody with 10 notes. The sampling rate is 44100 per second for the input frame buffer which is a AVAudioPCMBuffer. I need to analyse the input frame values in the audio file to detect note onsets. I smooth the input buffer to reduce noise by segmenting the input buffer into fixed length segments. What is the best appraoch to detect note onsets in the array of segments
+
+-Normalization: Normalize the audio samples to ensure consistent signal levels across different segments. This can involve scaling the amplitude of the samples to a desired range, such as -1.0 to 1.0. Normalization helps mitigate variations in loudness and facilitates accurate analysis.
+Filtering: Apply filters to remove unwanted noise or emphasize specific frequency ranges relevant to the piano notes. Some common filtering techniques include:
+
+Low-pass filter: Removes high-frequency components, retaining only the lower frequencies relevant to the piano notes.
+High-pass filter: Removes low-frequency components, keeping only the higher frequencies.
+Band-pass filter: Passes a specific range of frequencies and attenuates others. You can use a band-pass filter to focus on the frequency range of the piano notes.
+=====================
+
+My XCode Swift ios application needs to be able to read documents from my Google Drive account using the Google Docs API. A user using my ios application cannot be required to authenticate to Google with their own credentials. So the ios applcation cannnot use an OAuth 2.0 Client ID. Therefore, authentication must be done using a Google Service Account. (Also the Google Docs API does not support authentication by API keys.). What is the recommmend set of Swift libraries to use in my ioS application to provide authentication for the Google Docs API? Please also list where these libraries can be installed from and how they should be installed into my XCode application project. Please also supply some simpe example Swift code that shows how to call teh Google Docs API using a Google Service account.
+
+
+=================
+I have an iOS app in the App Store teaching music theory that will have possibly 1000's of users. There will also be a Goole Play app using the same information. For each user the app needs to store informaton about their account and their repsonses to each test question. The repsonse will include audio files of their music playing.
+Which service should I use to store all this user information.
+
+>>Google Cloud Platform (GCP): Google's Firebase is a mobile and web app development platform that provides a suite of services, including Cloud Firestore for storing structured data, and Google Cloud Storage for storing unstructured data like audio files. Firebase also provides user authentication services that could be useful for managing user accounts. Firebase's integration with other Google services, including Google Analytics, can be beneficial if you're already invested in the Google ecosystem. The Cloud Storage for Firebase SDKs are also cross-platform, so you can use the same service for both your iOS and Android applications.
+
+=============
+My ios app needs to access audio and video files from html running inside a WKWebView inside the app. Which service should I use to store these audio video files
+Which specific services within Google Cloud Storage should I use to be able to provide URLs to HTML links running inside WKWebView. These linkes use <video> abd <audio> tags
+
+===========
+Librosa
+brian.mcfee@nyu.edu
+===========
+using librosa input a short 10 second .wav file of a student playing a simple melody on a piano.
+
+Detect the location of each note onset. Tweak the algorithm to ensure that adjoining note onsets area always at least 0.25 second apart.
+for each each onset print the time in seconds of the onset and the the length of time in seconds since the last note onset
+
+For each note onset calculate the frequency spectogragh of the note onset.
+
+Calulate the frequency spectogragh as it would be heard by a human.
+Then calculate 2 most dominant frequencies at each note onset.
+Print the results showing the number of each note onset, the time difference in seconds since the last note onset and the 2 most dominant frequencies in hertz at each note onset
+
+========== Licensing ========
+We have a music education app in the Apple appstore that we license individually. i.e. people pay $50 to download a licensed version of the app.
+
+But now we have been asked by a school offering music classes that the students (about 20) in each class can use our app. How can we license the app so the school buys a class license that provides the app free to students in the class. But stops students making the app freely available to their friends.
+
+would a backend system that generates activation codes be compliant with Apple's app store licensing agreemnet. We ask since Apple would received no money from this type of activation code licensing.
+
+I have a Google Sites at link https://sites.google.com/musicmastereducation.co.nz/musicianship-trainer-beta/home. I also own the domain musicmastereducation.co.nz and it is listed as verified on Googe workspace 'Manage domains'. How do I make settings so that the Google sites musicianship-trainer-beta site is called up when the user goes to musicmastereducation.co.nz

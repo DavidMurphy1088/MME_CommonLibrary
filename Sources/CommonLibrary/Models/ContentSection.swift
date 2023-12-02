@@ -106,7 +106,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     
     public func setStoredAnswer(answer:Answer, ctx:String) {
         DispatchQueue.main.async {
-            print("============= storedAnswer", ctx)
+            //print("============= storedAnswer", ctx)
             self.storedAnswer = answer
         }
     }
