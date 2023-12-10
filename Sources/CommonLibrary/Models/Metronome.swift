@@ -10,14 +10,18 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     let id = UUID()
     @Published public var clapCounter = 0
     @Published public var tempoName:String = ""
-    @Published public var tempo:Int = 60
+    @Published private var tempo:Int = 60
     @Published public var allowChangeTempo:Bool = false
     @Published public var tickingIsActive = false
     @Published public var speechEnabled = false
 
-    public let tempoMinimumSetting = 60
-    public let tempoMaximumSetting = 120
+    public var tempoMinimumSetting = 60
+    public var tempoMaximumSetting = 120
     var setCtr = 0
+
+    let midiSampler:AVAudioUnitSampler = AudioSamplerPlayer.getShared().getSampler()
+    let audioTickerMetronomeTick:MetronomeTickerPlayer = MetronomeTickerPlayer(tickStyle: true)
+    let audioClapper:MetronomeTickerPlayer = MetronomeTickerPlayer(tickStyle: false)
 
     private var clapCnt = 0
     private var isThreadRunning = false
@@ -32,9 +36,16 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     private let speech = SpeechSynthesizer.shared
     private var onDoneFunction:(()->Void)? = nil
     
-    public static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String) -> Metronome {
+    public static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String,
+                                                minTempo:Int? = nil, maxTempo:Int? = nil) -> Metronome {
         shared.setTempo(tempo: initialTempo, context: "getMetronomeWithSettings - \(ctx)")
         shared.setAllowTempoChange(allow: allowChangeTempo)
+        if let tempo = minTempo {
+            shared.tempoMinimumSetting = tempo
+        }
+        if let tempo = maxTempo {
+            shared.tempoMaximumSetting = tempo
+        }
         return Metronome.shared
     }
 
@@ -48,6 +59,10 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     
     public func log(_ msg:String) {
         print("========= Metronome", msg)
+    }
+    
+    public func getTempo() -> Int {
+        return self.tempo
     }
     
     public func setSpeechEnabled(enabled:Bool) {
@@ -211,20 +226,8 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         self.isThreadRunning = true
         AudioManager.shared.setSession(.playback)
         ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
-        log("start 1")
-        AudioSamplerPlayer.reset()
-        log("start 2")
+        //AudioSamplerPlayer.reset()
 
-        let midiSampler = AudioSamplerPlayer.getShared().getSampler()
-        log("start 3")
-
-        let audioTickerMetronomeTick:MetronomeTickerPlayer = MetronomeTickerPlayer(timeSignature: timeSignature, tickStyle: true)
-        log("start 4")
-
-        let audioClapper:MetronomeTickerPlayer = MetronomeTickerPlayer(timeSignature: timeSignature, tickStyle: false)
-        log("start 5")
-
-        
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             var loopCtr = 0
             var keepRunning = true
@@ -241,7 +244,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
                         //log("next loop \(loopCtr) do tick")
-                        audioTickerMetronomeTick.soundTick(silent: false)
+                        audioTickerMetronomeTick.soundTick(timeSignature: timeSignature, silent: false)
                         ticksPlayed += 1
                     }
                 }
@@ -255,7 +258,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                                 let entry = timeSlice.entries[0]
                                 if currentNoteTimeToLive >= entry.getValue() {
                                     if entry is Rest {
-                                        audioClapper.soundTick(noteValue: entry.getValue(), silent: true)
+                                        audioClapper.soundTick(timeSignature: timeSignature, noteValue: entry.getValue(), silent: true)
                                     }
                                     else {
                                         for note in timeSlice.getTimeSliceNotes() {
@@ -264,7 +267,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                                             }
                                             else {
                                                 if note.isOnlyRhythmNote  {
-                                                    audioClapper.soundTick(noteValue: note.getValue(), silent: false)
+                                                    audioClapper.soundTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
                                                 }
                                                 else {
                                                     midiSampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))

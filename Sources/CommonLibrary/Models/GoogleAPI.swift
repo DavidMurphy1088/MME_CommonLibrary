@@ -367,9 +367,9 @@ public class GoogleAPI {
                 return
             }
         }
-        if log {
-            logger.log(self, "start load \(cacheKey)")
-        }
+//        if log {
+//            logger.log(self, "start load \(cacheKey)")
+//        }
         let rootFolderId = getAPIBundleData(key: "GoogleDriveDataFolderID") //NZMEB
         guard let rootFolderId = rootFolderId else {
             self.logger.reportError(self, "No folder Id")

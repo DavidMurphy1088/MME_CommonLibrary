@@ -12,25 +12,25 @@ public class AudioSamplerPlayer {
         sampler = AVAudioUnitSampler()
         audioEngine.attach(sampler)
         audioEngine.connect(sampler, to: audioEngine.mainMixerNode, format: nil)
-
         do {
             try audioEngine.start()
         } catch {
             Logger.logger.reportError(self, "Could not start the audio engine: \(error)")
         }
         loadSoundFont()
+        print("======== AudioSamplerPlayer init - attached AVAudioUnitSampler to AVAudioEngine, started engine, loaded sound font")
     }
     
     static public func getShared() -> AudioSamplerPlayer {
         return AudioSamplerPlayer.shared
     }
     
-    static public func reset() {
-        let audioEngine = AudioManager.shared.audioEngine
-        audioEngine.disconnectNodeInput(getShared().sampler )
-        audioEngine.disconnectNodeOutput(getShared().sampler )
-        AudioSamplerPlayer.shared = AudioSamplerPlayer()
-    }
+//    static public func reset() {
+//        let audioEngine = AudioManager.shared.audioEngine
+//        audioEngine.disconnectNodeInput(getShared().sampler )
+//        audioEngine.disconnectNodeOutput(getShared().sampler )
+//        AudioSamplerPlayer.shared = AudioSamplerPlayer()
+//    }
     
     public func getSampler() -> AVAudioUnitSampler {
         return sampler
@@ -52,8 +52,6 @@ public class AudioSamplerPlayer {
             for instrumentProgramNumber in ins..<256 {
                 do {
                     try sampler.loadSoundBankInstrument(at: url, program: UInt8(instrumentProgramNumber), bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB), bankLSB: UInt8(kAUSampler_DefaultBankLSB))
-                    //try sampler.loadInstrument(at: url)
-                    print("================", sampler.reverbBlend, sampler.description)
                     break
                 }
                 catch {

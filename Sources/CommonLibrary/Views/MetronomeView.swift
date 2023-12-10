@@ -5,13 +5,16 @@ public struct MetronomeView: View {
     let timeSignature:TimeSignature
     let helpText:String
     var frameHeight:Double
+    var backgroundColor:Color
+    
     @State var isPopupPresented:Bool = false
     @ObservedObject var metronome = Metronome.getMetronomeWithCurrentSettings(ctx: "MetronomeView")
     
-    public init(timeSignature:TimeSignature, helpText:String, frameHeight:Double) {
+    public init(timeSignature:TimeSignature, helpText:String, frameHeight:Double, backgroundColor:Color) {
         self.timeSignature = timeSignature
         self.helpText = helpText
         self.frameHeight = frameHeight
+        self.backgroundColor = backgroundColor
     }
     
     public var body: some View {
@@ -37,6 +40,7 @@ public struct MetronomeView: View {
                             ///Needs more hiehgt on phone to even show
                                 .frame(height: UIDevice.current.userInterfaceIdiom == .phone ? frameHeight * 0.8 : frameHeight * 0.5)
                                 .padding(.horizontal, frameHeight * 0.1)
+                                .padding(.vertical, frameHeight * 0.1)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: frameHeight * 0.1)
                                         .stroke(metronome.tickingIsActive ? Color.blue : Color.clear, lineWidth: 2)
@@ -58,10 +62,10 @@ public struct MetronomeView: View {
 //                        .frame(width: frameHeight / 6.0)
 //                }
                 if UIDevice.current.userInterfaceIdiom == .pad {
-                    Text("=\(Int(metronome.tempo)) BPM").foregroundColor(.black)
+                    Text("\(Int(metronome.getTempo())) BPM").foregroundColor(.black)
                 }
                 else {
-                    Text("\(Int(metronome.tempo))").foregroundColor(.black)
+                    Text("\(Int(metronome.getTempo()))").foregroundColor(.black)
                 }
                 
                 if UIDevice.current.userInterfaceIdiom == .pad {
@@ -70,7 +74,7 @@ public struct MetronomeView: View {
                 
                 if metronome.allowChangeTempo {
                     Slider(value: Binding<Double>(
-                        get: { Double(metronome.tempo) },
+                        get: { Double(metronome.getTempo()) },
                         set: {
                             metronome.setTempo(tempo: Int($0), context: "Metronome View, Slider change")
                         }
@@ -83,12 +87,9 @@ public struct MetronomeView: View {
                 }) {
                     VStack {
                         if UIDevice.current.userInterfaceIdiom == .pad {
-                            Text("Practice Tool")
+                            Text("Metronome")
                         }
-                        Button(action: {
-                        }) {
-                            Image(systemName: "questionmark.circle")
-                        }
+                        Image(systemName: "questionmark.circle")
                     }
                 }
                 .padding()
@@ -112,7 +113,7 @@ public struct MetronomeView: View {
 //        .overlay(
 //            RoundedRectangle(cornerRadius: UIGlobals.cornerRadius).stroke(Color(UIGlobals.borderColor), lineWidth: UIGlobals.borderLineWidth)
 //        )
-        .background(Settings.shared.colorInstructions)
+        .background(backgroundColor)
     }
 }
 
