@@ -11,7 +11,7 @@ public struct CountdownTimerView: View {
     @State var timeRemaining = 0.0
     @State private var timer: AnyCancellable?
     @State private var isActive = false
-    
+        
     public init(size:Double, timerColor:Color, timeLimit:Binding<Double>,
                 startNotification: (() -> Void)?, endNotification: (() -> Void)?) {
         self.size = size
@@ -25,12 +25,10 @@ public struct CountdownTimerView: View {
         HStack(spacing: 20) {
             Button(action: {
                 if self.isActive {
-                    self.timer?.cancel()
-                    self.timer = nil
+                    //self.timer?.cancel()
+                    //self.timer = nil
+                    timeRemaining = 0
                 } else {
-                    if timeRemaining == 0 {
-                        //timeRemaining = 30
-                    }
                     timeRemaining = timeLimit.wrappedValue
                     if let startNotification = startNotification {
                         startNotification()
@@ -85,8 +83,7 @@ struct CircularProgressView: View {
                 .rotationEffect(.degrees(-90))
                 .aspectRatio(contentMode: .fit)
             
-            Text("\(timeRemaining)")
-            //.font(.footnote)
+            Text("\(timeRemaining)").font(.title2)//.padding()
         }
     }
 }

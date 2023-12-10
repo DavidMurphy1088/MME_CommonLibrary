@@ -1,4 +1,11 @@
-public class Key : Equatable, Hashable {
+import SwiftUI
+import WebKit
+import AVFoundation
+import AVKit
+import UIKit
+
+public class Key : ObservableObject, Equatable, Hashable, Identifiable {
+    public let id = UUID()
     public var keySig: KeySignature
     public var type: KeyType
     
@@ -15,6 +22,27 @@ public class Key : Equatable, Hashable {
     public init(type: KeyType, keySig:KeySignature) {
         self.keySig = keySig
         self.type = type
+    }
+    
+    static public func getAllKeys(type:AccidentalType) -> [Key] {
+        var result:[Key] = []
+        if type == .sharp {
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .sharp, count: 0)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .sharp, count: 1)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .sharp, count: 2)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .sharp, count: 3)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .sharp, count: 4)))
+        }
+        if type == .flat {
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .flat, count: 0)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .flat, count: 1)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .flat, count: 2)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .flat, count: 3)))
+            result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .flat, count: 4)))
+            //result.append(Key(type: Key.KeyType.major, keySig: KeySignature(type: .flat, count: 7)))
+            //result.append(Key(type: Key.KeyType.minor, keySig: KeySignature(type: .flat, count: 7)))
+        }
+        return result
     }
     
     public func hasNote(note:Int) -> Bool {
@@ -57,7 +85,7 @@ public class Key : Equatable, Hashable {
     }
     
     ///Return the key's description
-    public func getKeyName() -> String {
+    public func getKeyName(withType:Bool) -> String {
         var desc = ""
         if keySig.accidentalType == AccidentalType.sharp {
             switch self.keySig.accidentalCount {
@@ -82,24 +110,28 @@ public class Key : Equatable, Hashable {
             case 1:
                 desc = self.type == KeyType.major ? "F" : "D"
             case 2:
-                desc = self.type == KeyType.major ? "B"+Score.accFlat : "G"
+                desc = self.type == KeyType.major ? "B♭" : "G"
             case 3:
-                desc = self.type == KeyType.major ? "E"+Score.accFlat : "C"
+                desc = self.type == KeyType.major ? "E♭" : "C"
             case 4:
-                desc = self.type == KeyType.major ? "A"+Score.accFlat : "F"
+                desc = self.type == KeyType.major ? "A♭" : "F"
             case 5:
-                desc = self.type == KeyType.major ? "D"+Score.accFlat : "B"+Score.accFlat
+                desc = self.type == KeyType.major ? "D♭" : "B♭"
             case 6:
-                desc = self.type == KeyType.major ? "G"+Score.accFlat : "E"+Score.accFlat
+                desc = self.type == KeyType.major ? "G♭" : "E♭"
+            case 7:
+                desc = self.type == KeyType.major ? "B" : "A♭"
             default:
                 desc = "unknown"
             }
         }
-        switch self.type {
-        case KeyType.major:
-            desc += " Major"
-        case KeyType.minor:
-            desc += " Minor"
+        if withType {
+            switch self.type {
+            case KeyType.major:
+                desc += " Major"
+            case KeyType.minor:
+                desc += " Minor"
+            }
         }
         return desc
     }
@@ -144,24 +176,24 @@ public class Key : Equatable, Hashable {
         return base
     }
     
-    public func getScaleStartMidi() -> Int {
-        let rootMidi:Int
-        switch keySig.accidentalCount {
-        case 1:
-            rootMidi = 43
-        case 2:
-            rootMidi = 50
-        case 3:
-            rootMidi = 45
-        case 4:
-            rootMidi = 52
-        case 5:
-            rootMidi = 47
-        default:
-            rootMidi = 48
-        }
-        return rootMidi
-    }
+//    public func getScaleStartMidi() -> Int {
+//        let rootMidi:Int
+//        switch keySig.accidentalCount {
+//        case 1:
+//            rootMidi = 43
+//        case 2:
+//            rootMidi = 50
+//        case 3:
+//            rootMidi = 45
+//        case 4:
+//            rootMidi = 52
+//        case 5:
+//            rootMidi = 47
+//        default:
+//            rootMidi = 48
+//        }
+//        return rootMidi
+//    }
     
     public func makeTriadAt(timeSlice:TimeSlice, rootMidi:Int, value:Double, staffNum:Int) -> [Note] {
         var result:[Note] = []

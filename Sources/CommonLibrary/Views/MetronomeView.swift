@@ -2,14 +2,14 @@ import SwiftUI
 import CoreData
 
 public struct MetronomeView: View {
-    let score:Score
+    let timeSignature:TimeSignature
     let helpText:String
     var frameHeight:Double
     @State var isPopupPresented:Bool = false
     @ObservedObject var metronome = Metronome.getMetronomeWithCurrentSettings(ctx: "MetronomeView")
     
-    public init(score:Score, helpText:String, frameHeight:Double) {
-        self.score = score
+    public init(timeSignature:TimeSignature, helpText:String, frameHeight:Double) {
+        self.timeSignature = timeSignature
         self.helpText = helpText
         self.frameHeight = frameHeight
     }
@@ -19,7 +19,7 @@ public struct MetronomeView: View {
             HStack {
                 Button(action: {
                     if metronome.tickingIsActive == false {
-                        metronome.startTicking(score: score)
+                        metronome.startTicking(timeSignature: timeSignature)
                     }
                     else {
                         metronome.stopTicking()
@@ -50,13 +50,13 @@ public struct MetronomeView: View {
                     }
                 })
                 
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    Image("note_transparent")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .scaledToFit()
-                        .frame(width: frameHeight / 6.0)
-                }
+//                if UIDevice.current.userInterfaceIdiom == .pad {
+//                    Image("note_transparent")
+//                        .resizable()
+//                        .aspectRatio(contentMode: .fit)
+//                        .scaledToFit()
+//                        .frame(width: frameHeight / 6.0)
+//                }
                 if UIDevice.current.userInterfaceIdiom == .pad {
                     Text("=\(Int(metronome.tempo)) BPM").foregroundColor(.black)
                 }

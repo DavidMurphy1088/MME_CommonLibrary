@@ -442,7 +442,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         var key:Key?
         var timeSignature:TimeSignature?
         var score:Score?
-        let defaultScore = Score(key: Key(type: .major, keySig: KeySignature(type: .sharp, keyName: "")), timeSignature: TimeSignature(top: 4, bottom: 4), linesPerStaff: 1)
+        let defaultScore = Score(key: Key(type: .major, keySig: KeySignature(type: .sharp, count: 0)), timeSignature: TimeSignature(top: 4, bottom: 4), linesPerStaff: 1)
 
         let tuples:[String] = data
         
@@ -453,7 +453,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
             let parts = tuple.components(separatedBy: ",")
 
             if i == 0 {
-                let keySignature = KeySignature(type: .sharp, keyName: parts[0])
+                let keySignature = KeySignature(keyName: parts[0], type: Key.KeyType.major)
                 key = Key(type: .major, keySig: keySignature)
                 continue
             }

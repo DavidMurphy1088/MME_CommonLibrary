@@ -67,18 +67,12 @@ public class AudioSamplerPlayer {
         if sampler == nil {
             Logger.logger.reportError(self, "No soundfont loaded")
         }
-//        do {
-//            try audioEngine.start()
-//        }
-//        catch let error {
-//            Logger.logger.reportError(self, "Cant create MIDI sampler \(error.localizedDescription)")
-//        }
     }
     
-    public func stopPlaying()  {
-        AudioSamplerPlayer.reset()
-        stopPlayingNotes = true
-    }
+//    public func stopPlaying()  {
+//        AudioSamplerPlayer.reset()
+//        stopPlayingNotes = true
+//    }
     
     public func play(note: UInt8) {
         sampler.startNote(note, withVelocity: 127, onChannel: 0)

@@ -51,7 +51,7 @@ public class BarEditor: ObservableObject {
                 return
             }
         }
-        let newScore =  Score(key: Key(type: .major, keySig: KeySignature(type: .sharp, keyName: "")),
+        let newScore =  Score(key: Key(type: .major, keySig: KeySignature(type: .sharp, count: 0)),
                               timeSignature: TimeSignature(top: score.timeSignature.top, bottom: score.timeSignature.bottom),
                               linesPerStaff: 5)
         let staff = Staff(score: newScore, type: .treble, staffNum: 0, linesInStaff: 1)

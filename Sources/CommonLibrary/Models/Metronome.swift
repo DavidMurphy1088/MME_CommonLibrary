@@ -34,7 +34,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     
     public static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String) -> Metronome {
         shared.setTempo(tempo: initialTempo, context: "getMetronomeWithSettings - \(ctx)")
-        shared.allowChangeTempo = allowChangeTempo
+        shared.setAllowTempoChange(allow: allowChangeTempo)
         return Metronome.shared
     }
 
@@ -46,20 +46,25 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         super.init(parent: "Metronome")
     }
     
+    public func log(_ msg:String) {
+        print("========= Metronome", msg)
+    }
+    
     public func setSpeechEnabled(enabled:Bool) {
         DispatchQueue.main.async {
             self.speechEnabled = enabled
         }
     }
     
-    public func startTicking(score:Score) {
+    public func startTicking(timeSignature:TimeSignature) {
         //let audioSamplerMIDI = AudioSamplerPlayer.shared.sampler
         //let audioTicker:AudioSamplerPlayer = AudioSamplerPlayer(timeSignature: score.timeSignature)
         //setTempo(tempo: self.tempo)
         DispatchQueue.main.async {
             self.tickingIsActive = true
             if !self.isThreadRunning {
-                self.startPlayThreadRunning(timeSignature: score.timeSignature)
+                self.log("start thread")
+                self.startPlayThreadRunning(timeSignature: timeSignature)
             }
         }
     }
@@ -206,26 +211,36 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         self.isThreadRunning = true
         AudioManager.shared.setSession(.playback)
         ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
+        log("start 1")
         AudioSamplerPlayer.reset()
-        let midiSampler = AudioSamplerPlayer.getShared().getSampler()
-        let audioTickerMetronomeTick:MetronomeTickerPlayer = MetronomeTickerPlayer(timeSignature: timeSignature, tickStyle: true)
-        let audioClapper:MetronomeTickerPlayer = MetronomeTickerPlayer(timeSignature: timeSignature, tickStyle: false)
+        log("start 2")
 
+        let midiSampler = AudioSamplerPlayer.getShared().getSampler()
+        log("start 3")
+
+        let audioTickerMetronomeTick:MetronomeTickerPlayer = MetronomeTickerPlayer(timeSignature: timeSignature, tickStyle: true)
+        log("start 4")
+
+        let audioClapper:MetronomeTickerPlayer = MetronomeTickerPlayer(timeSignature: timeSignature, tickStyle: false)
+        log("start 5")
+
+        
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             var loopCtr = 0
             var keepRunning = true
             var currentTimeValue = 0.0
-            //var noteValueSpeechWord:String? = nil
             var ticksPlayed = 0
             var firstNote = true
             var tieWasFound = false
-            //let sleepTime1 = (60.0 / Double(self.tempo)) * shortestNoteValue
 
             while keepRunning {
                 ///Sound the metronome tick. %4 because its counting at semiquaver intervals
                 ///Make sure score playing is synched to the metronome tick
+                ///
+                
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
+                        //log("next loop \(loopCtr) do tick")
                         audioTickerMetronomeTick.soundTick(silent: false)
                         ticksPlayed += 1
                     }

@@ -13,7 +13,7 @@ public struct ToolsView: View {
     public var body: some View {
         VStack {
             HStack {
-                MetronomeView(score:score, helpText: helpMetronome, frameHeight: score.lineSpacing * 6)
+                MetronomeView(timeSignature:score.timeSignature, helpText: helpMetronome, frameHeight: score.lineSpacing * 6)
                     //.padding(.horizontal)
                     .padding()
 //                VoiceCounterView(frameHeight: frameHeight)

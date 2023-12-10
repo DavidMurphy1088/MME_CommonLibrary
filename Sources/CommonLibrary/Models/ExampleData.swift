@@ -85,7 +85,7 @@ public class ExampleData : ObservableObject {
             if name.count == 0 {
                 continue
             }
-            let score = Score(key: Key(type: .major, keySig: KeySignature(type: .sharp, keyName: "")), timeSignature: TimeSignature(top: 4, bottom: 4), linesPerStaff: 1)
+            let score = Score(key: Key(type: .major, keySig: KeySignature(type: .sharp, count: 0)), timeSignature: TimeSignature(top: 4, bottom: 4), linesPerStaff: 1)
             score.createStaff(num: 0, staff: Staff(score: score, type: .treble, staffNum: 0, linesInStaff: 5))
             let melody = Melody(halfSteps: halfSteps, name: name)
             for i in 3..<rowCells.count {
