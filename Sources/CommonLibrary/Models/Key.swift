@@ -8,6 +8,7 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
     public let id = UUID()
     public var keySig: KeySignature
     public var type: KeyType
+    public var lowestNote = 0
     
     public enum KeyType {
         case major
@@ -22,6 +23,50 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
     public init(type: KeyType, keySig:KeySignature) {
         self.keySig = keySig
         self.type = type
+        if keySig.accidentalType == .sharp {
+            switch keySig.accidentalCount {
+            case 0:
+                lowestNote = 24
+            case 1:
+                lowestNote = 31
+            case 2:
+                lowestNote = 26
+            case 3:
+                lowestNote = 33
+            case 4:
+                lowestNote = 28
+            case 5:
+                lowestNote = 35
+            case 6:
+                lowestNote = 30 //F#
+            case 7:
+                lowestNote = 25 //C#
+            default:
+                lowestNote = 0
+            }
+        }
+        else {
+            switch keySig.accidentalCount {
+            case 0:
+                lowestNote = 24
+            case 1:
+                lowestNote = 29
+            case 2:
+                lowestNote = 34
+            case 3:
+                lowestNote = 27
+            case 4:
+                lowestNote = 32
+            case 5:
+                lowestNote = 25
+            case 6:
+                lowestNote = 30
+            case 7:
+                lowestNote = 35
+            default:
+                lowestNote = 0
+            }
+        }
     }
     
     static public func getAllKeys(type:AccidentalType) -> [Key] {
@@ -45,7 +90,7 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
         return result
     }
     
-    public func hasNote(note:Int) -> Bool {
+    public func hasKeySignatureNote(note:Int) -> Bool {
         var result:Bool = false
         for n in keySig.sharps {
             let octaves = Note.getAllOctaves(note: n)
@@ -136,25 +181,6 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
         return desc
     }
     
-    public func getKeyTagName() -> String {
-        let keyTag:String
-        switch keySig.accidentalCount {
-        case 1:
-            keyTag = "G"
-        case 2:
-            keyTag = "D"
-        case 3:
-            keyTag = "A"
-        case 4:
-            keyTag = "E"
-        case 5:
-            keyTag = "B"
-        default:
-            keyTag = "C"
-        }
-        return keyTag
-    }
-    
     public func firstScaleNote() -> Int {
         var base = 60
         switch keySig.accidentalCount {
@@ -176,24 +202,24 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
         return base
     }
     
-//    public func getScaleStartMidi() -> Int {
-//        let rootMidi:Int
-//        switch keySig.accidentalCount {
-//        case 1:
-//            rootMidi = 43
-//        case 2:
-//            rootMidi = 50
-//        case 3:
-//            rootMidi = 45
-//        case 4:
-//            rootMidi = 52
-//        case 5:
-//            rootMidi = 47
-//        default:
-//            rootMidi = 48
-//        }
-//        return rootMidi
-//    }
+    public func getKeyTagName() -> String {
+        let keyTag:String
+        switch keySig.accidentalCount {
+        case 1:
+            keyTag = "G"
+        case 2:
+            keyTag = "D"
+        case 3:
+            keyTag = "A"
+        case 4:
+            keyTag = "E"
+        case 5:
+            keyTag = "B"
+        default:
+            keyTag = "C"
+        }
+        return keyTag
+    }
     
     public func makeTriadAt(timeSlice:TimeSlice, rootMidi:Int, value:Double, staffNum:Int) -> [Note] {
         var result:[Note] = []

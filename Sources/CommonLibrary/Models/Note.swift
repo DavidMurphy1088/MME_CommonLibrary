@@ -386,7 +386,7 @@ public class Note : TimeSliceEntry, Comparable {
         else {
             //Determine if the note's accidental is implied by the key signature
             //Or a note has to have a natural accidental to offset the key signture
-            let keySignatureHasNote = staff.score.key.hasNote(note: self.midiNumber)
+            let keySignatureHasNote = staff.score.key.hasKeySignatureNote(note: self.midiNumber)
             if let defaultAccidental = defaultNoteData.accidental {
                 if !keySignatureHasNote {
                     if !barAlreadyHasNote {
@@ -395,7 +395,7 @@ public class Note : TimeSliceEntry, Comparable {
                 }
             }
             else {
-                let keySignatureHasNote = staff.score.key.hasNote(note: self.midiNumber + 1)
+                let keySignatureHasNote = staff.score.key.hasKeySignatureNote(note: self.midiNumber + 1)
                 if keySignatureHasNote {
                     if !barAlreadyHasNote {
                         offsetAccidental = 0
