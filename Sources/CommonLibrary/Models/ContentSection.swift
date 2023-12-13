@@ -567,7 +567,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         score.createStaff(num: 1, staff: bstaff)
         let key = score.key
         
-        var pitch = key.firstScaleNote()
+        var pitch = key.centralMidi
         if triad == "V" {
             pitch += 7
         }

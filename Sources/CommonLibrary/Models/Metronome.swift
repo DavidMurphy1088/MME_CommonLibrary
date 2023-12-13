@@ -17,6 +17,10 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
 
     public var tempoMinimumSetting = 60
     public var tempoMaximumSetting = 120
+    
+    public var tickTimes:[Date] = []
+    public var nextTickTime:Date?
+    
     var setCtr = 0
 
     let midiSampler:AVAudioUnitSampler = AudioSamplerPlayer.getShared().getSampler()
@@ -222,12 +226,17 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         return word
     }
     
+    private func getSleepTime() -> Double {
+        return (60.0 / Double(self.tempo)) * shortestNoteValue
+    }
+    
     private func startPlayThreadRunning(timeSignature:TimeSignature) {
         self.isThreadRunning = true
         AudioManager.shared.setSession(.playback)
         ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
         //AudioSamplerPlayer.reset()
-
+        tickTimes = []
+        
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             var loopCtr = 0
             var keepRunning = true
@@ -347,8 +356,14 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                 }
 
                 if keepRunning {
-                    let sleepTime = (60.0 / Double(self.tempo)) * shortestNoteValue
-                    Thread.sleep(forTimeInterval: sleepTime)
+                    let sleepTime = getSleepTime()
+                    ///Add more granularity to tickTime so timed tests can get more accurate note durations
+                    for _ in 0..<2 {
+                        Thread.sleep(forTimeInterval: sleepTime / 2.0)
+                        let now = Date()
+                        tickTimes.append(Date())
+                        nextTickTime = now.addingTimeInterval(sleepTime / 2.0)
+                    }
                     loopCtr += 1
                 }
             }

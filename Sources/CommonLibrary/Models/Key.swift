@@ -8,7 +8,9 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
     public let id = UUID()
     public var keySig: KeySignature
     public var type: KeyType
-    public var lowestNote = 0
+    
+    ///The midi closest to middle C
+    public var centralMidi = 0
     
     public enum KeyType {
         case major
@@ -26,45 +28,51 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
         if keySig.accidentalType == .sharp {
             switch keySig.accidentalCount {
             case 0:
-                lowestNote = 24
+                centralMidi = 60
             case 1:
-                lowestNote = 31
+                centralMidi = 55 ///G
             case 2:
-                lowestNote = 26
+                centralMidi = 62
             case 3:
-                lowestNote = 33
+                centralMidi = 57
             case 4:
-                lowestNote = 28
+                centralMidi = 64
             case 5:
-                lowestNote = 35
+                centralMidi = 59 //B major
             case 6:
-                lowestNote = 30 //F#
+                centralMidi = 66 //F# major
             case 7:
-                lowestNote = 25 //C#
+                centralMidi = 61 //C#
             default:
-                lowestNote = 0
+                centralMidi = 60
             }
         }
         else {
             switch keySig.accidentalCount {
             case 0:
-                lowestNote = 24
+                centralMidi = 60 //C
             case 1:
-                lowestNote = 29
+                centralMidi = 65 //F
             case 2:
-                lowestNote = 34
+                centralMidi = 58 //B flat
             case 3:
-                lowestNote = 27
+                centralMidi = 63 //E flat
             case 4:
-                lowestNote = 32
+                centralMidi = 56 //A flat
             case 5:
-                lowestNote = 25
+                centralMidi = 61 //D flat
             case 6:
-                lowestNote = 30
+                centralMidi = 66 //G flat
             case 7:
-                lowestNote = 35
+                centralMidi = 59 //B
             default:
-                lowestNote = 0
+                centralMidi = 60
+            }
+        }
+        if type == .minor {
+            centralMidi -= 3
+            if 60 - centralMidi > 6 {
+                centralMidi += 12
             }
         }
     }
@@ -180,28 +188,7 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
         }
         return desc
     }
-    
-    public func firstScaleNote() -> Int {
-        var base = 60
-        switch keySig.accidentalCount {
-        case 0:
-            base = 48
-        case 1:
-            base = 43
-        case 2:
-            base = 50
-        case 3:
-            base = 45
-        case 4:
-            base = 40
-        case 5:
-            base = 47
-        default:
-            base = 60
-        }
-        return base
-    }
-    
+
     public func getKeyTagName() -> String {
         let keyTag:String
         switch keySig.accidentalCount {
@@ -241,7 +228,7 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
         default:
             rootPos = 0
         }
-        let firstPitch = firstScaleNote() + rootPos
+        let firstPitch = centralMidi + rootPos
         for offset in [0, 4, 7] {
             let name = Note.getNoteName(midiNum: firstPitch + offset)
             if result.count > 0 {
