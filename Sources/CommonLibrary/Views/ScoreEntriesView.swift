@@ -223,7 +223,7 @@ struct ScoreEntriesView: View {
                     .coordinateSpace(name: "VStack")
                     //IMPORTANT - keep this since the quaver beam code needs to know exactly the note view width
                 }
-                //.coordinateSpace(name: "ForEach")
+
                 ///Spacing before end of staff
                 Text(" ")
                     .frame(width:1.5 * noteWidth)

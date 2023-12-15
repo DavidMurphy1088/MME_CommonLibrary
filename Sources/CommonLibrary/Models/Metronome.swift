@@ -61,9 +61,9 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         super.init(parent: "Metronome")
     }
     
-    public func log(_ msg:String) {
-        print("========= Metronome", msg)
-    }
+//    public func log(_ msg:String) {
+//        print("========= Metronome", msg)
+//    }
     
     public func getTempo() -> Int {
         return self.tempo
@@ -82,7 +82,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         DispatchQueue.main.async {
             self.tickingIsActive = true
             if !self.isThreadRunning {
-                self.log("start thread")
+                //self.log("start thread")
                 self.startPlayThreadRunning(timeSignature: timeSignature)
             }
         }
@@ -235,7 +235,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         AudioManager.shared.setSession(.playback)
         ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
         //AudioSamplerPlayer.reset()
-        tickTimes = []
+        //tickTimes = []
         
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             var loopCtr = 0
