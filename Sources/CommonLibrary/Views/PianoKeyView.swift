@@ -6,7 +6,7 @@ protocol InsideKeyViewType: View {
     init(key :PianoKey)
 }
 
-struct PianoKeyOulineView : View {
+public struct PianoKeyOulineView : View {
     @ObservedObject var piano:Piano
     @ObservedObject var pianoKey:PianoKey
     
@@ -23,7 +23,7 @@ struct PianoKeyOulineView : View {
         }
     }
     
-    var body: some View {
+    public var body: some View {
         ZStack {
             GeometryReader { geometry in
                 let height = pianoKey.color == .white ? geometry.size.height : geometry.size.height * 0.6
@@ -71,7 +71,7 @@ struct PianoKeyOulineView : View {
     }
 }
 
-struct PianoKeyView<PianoUser>: View where PianoUser: PianoUserProtocol {
+public struct PianoKeyView<PianoUser>: View where PianoUser: PianoUserProtocol {
     let id:Int
     @ObservedObject var piano:Piano
     @ObservedObject var pianoKey:PianoKey
@@ -84,13 +84,12 @@ struct PianoKeyView<PianoUser>: View where PianoUser: PianoUserProtocol {
         }
     }
         
-    var body: some View {
+    public var body: some View {
         VStack {
             ZStack {
                 PianoKeyOulineView(piano: piano, pianoKey: pianoKey)
                     //.border(Color .green)
                 VStack {
-                    //Text("\(pianoKey.midi)")
                     user.getKeyDisplayView(key:pianoKey)
                         .offset(y: pianoKey.color == .white ? 1.5 * userOffset : 0 - userOffset)
                 }

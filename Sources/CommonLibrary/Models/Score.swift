@@ -221,50 +221,6 @@ public class Score : ObservableObject {
         }
     }
     
-    ///Return the first timeslice index of where the scores differ
-//    func getFirstDifferentTimeSlicex(compareScore:Score) -> Int? {
-//         var result:Int? = nil
-//         var scoreCtr = 0
-//
-//         let scoreTimeSlices = self.getAllTimeSlices()
-//         let compareTimeSlices = compareScore.getAllTimeSlices()
-//
-//         for scoreTimeSlice in scoreTimeSlices {
-//
-//             if compareTimeSlices.count <= scoreCtr {
-//                 result = scoreCtr
-//                 break
-//             }
-//
-//             let compareEntry = compareTimeSlices[scoreCtr]
-//             let compareNotes = compareEntry.getTimeSliceEntries()
-//             let scoreNotes = scoreTimeSlice.getTimeSliceEntries()
-//
-//             if compareNotes.count == 0 || scoreNotes.count == 0 {
-//                 result = scoreCtr
-//                 break
-//             }
-//
-//             if scoreCtr == scoreTimeSlices.count - 1 {
-//                 if scoreNotes[0].getValue() > compareNotes[0].getValue() {
-//                     result = scoreCtr
-//                     break
-//                 }
-//                 else {
-//                     compareNotes[0].setValue(value: scoreNotes[0].getValue())
-//                 }
-//             }
-//             else {
-//                 if scoreNotes[0].getValue() != compareNotes[0].getValue() {
-//                     result = scoreCtr
-//                     break
-//                 }
-//             }
-//             scoreCtr += 1
-//         }
-//         return result
-//     }
-    
     public func setHiddenStaff(num:Int, isHidden:Bool) {
         DispatchQueue.main.async {
             if self.staffs.count > num {

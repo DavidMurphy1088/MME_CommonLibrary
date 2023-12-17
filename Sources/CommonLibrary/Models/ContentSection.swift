@@ -6,7 +6,6 @@ import AVFoundation
 import AVKit
 import UIKit
 
-
 public enum ExamStatus {
     case notInExam
     case inExam
@@ -14,7 +13,6 @@ public enum ExamStatus {
 }
 
 public class QuestionStatus: Codable, ObservableObject {
-    //@Published
     public var status:Int = 0
     init(_ i:Int) {
         self.status = i
@@ -106,7 +104,6 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     
     public func setStoredAnswer(answer:Answer, ctx:String) {
         DispatchQueue.main.async {
-            //print("============= storedAnswer", ctx)
             self.storedAnswer = answer
         }
     }

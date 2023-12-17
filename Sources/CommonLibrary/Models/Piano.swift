@@ -3,70 +3,33 @@ import CommonLibrary
 import Combine
 import Foundation
 
-protocol PianoUserProtocol: View {
+///A protocol for views that use the piano that need custom handling of the key view or key pressed action
+public protocol PianoUserProtocol: View {
     associatedtype KeyDisplayView: View
     associatedtype KeyActionHandler: View
     init()
     func getKeyDisplayView(key:PianoKey) -> KeyDisplayView
     func getActionHandler(piano:Piano) -> KeyActionHandler
+    func receiveNotificationOfKeyPress(key:PianoKey) -> Void
 }
 
-//class Fingers {
-//    let hand:Int
-//    private let midis = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86]
-//    private var fingers:[Int:Int] = [:]
-//
-//    init(hand:Int) {
-//        self.hand = hand
-//        if hand == 1 {
-//            fingers[68] = 3
-//            fingers[70] = 2
-//            fingers[72] = 1
-//            fingers[73] = 4
-//            fingers[75] = 3
-//            fingers[77] = 2
-//            fingers[72] = 1
-//        }
-//    }
-//
-//    func getFinger(index:Int) -> Int? {
-//        if index < 0 {
-//            return nil
-//        }
-//        var midi = midis[index]
-//        if index < 5  {
-//            return nil
-//        }
-//        if index > 11 {
-//            return nil
-//        }
-//        midi = midi - (hand == 0 ? 0:1)
-//        var f:Int? = nil
-//        if fingers.keys.contains(midi) {
-//            f = fingers[midi]
-//        }
-//        print(index, "Midi", midi, "fin", f)
-//        return f
-//    }
-//}
-
-enum KeyColor {
+public enum KeyColor {
     case white
     case black
 }
 
-class PianoKey: ObservableObject, Equatable {
-    static func == (lhs: PianoKey, rhs: PianoKey) -> Bool {
-        return lhs.midi == rhs.midi
-    }
-    
+public class PianoKey: ObservableObject, Equatable {
     @Published var wasLastKeyPressed = false
     @Published var wasPressed = false
     @Published var changed = false
 
-    let midi:Int
-    let color:KeyColor
+    public let midi:Int
+    public let color:KeyColor
 
+    public static func == (lhs: PianoKey, rhs: PianoKey) -> Bool {
+        return lhs.midi == rhs.midi
+    }
+    
     init(midi:Int) {
         self.midi = midi
         let offset = midi % 12
@@ -80,34 +43,51 @@ class PianoKey: ObservableObject, Equatable {
     }
     
     ///Caller forces the key's view to update
-    func redisplay() {
+    public func redisplay() {
         self.changed.toggle()
     }
 }
 
-class Piano: ObservableObject {
+public class Piano: ObservableObject {
+    let id = UUID()
     var startMidi = 0
     @Published var keys:[PianoKey]
     let midiSampler = AudioSamplerPlayer.getShared().getSampler()
     var lastGestureTime:Date? = nil
     @Published var lastMidiPressed:Int?
-    private var stopScale = false
+    var soundNotes = true
     
-    init(startMidi:Int, number:Int) {
+    public init(startMidi:Int, number:Int, soundNotes:Bool) {
         self.startMidi = startMidi
         keys = []
+        self.soundNotes = soundNotes
         for i in 0...number {
             let key = PianoKey(midi: startMidi + i)
             keys.append(key)
         }
     }
     
-//    func test() {
-//        DispatchQueue.main.async {
-//            self.keys[0].wasPressed = true
-//        }
-//    }
+    public func getKeys() -> [PianoKey] {
+        return keys
+    }
+    public static func midiIsBlack(midi:Int) -> Bool {
+        let offset = midi % 12
+        return [1,3,6,8,10].contains(offset)
+    }
     
+    public func getKeyForMidi(midi:Int) -> PianoKey? {
+        for key in self.keys {
+            if key.midi == midi {
+                return key
+            }
+        }
+        return nil
+    }
+    
+    public func getLastMidiPressed() -> Int? {
+        return lastMidiPressed
+    }
+
     func setWasLastKeyPressed(pressedKey:PianoKey, notifyWatchers:Bool = true) {
         DispatchQueue.main.async {
             pressedKey.setLastKeyPressed(way: true)
@@ -115,15 +95,8 @@ class Piano: ObservableObject {
             if notifyWatchers {
                 self.lastMidiPressed = pressedKey.midi
             }
-
             for key in self.keys {
-                if key.midi == pressedKey.midi {
-//                    let timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
-//                        self.hilightedKey = nil
-                    //}
-                    //self.av.play(note: UInt8(key.midi))
-                }
-                else {
+                if key.midi != pressedKey.midi {
                     if key.wasLastKeyPressed {
                         key.setLastKeyPressed(way: false)
                         break
@@ -133,7 +106,7 @@ class Piano: ObservableObject {
         }
     }
     
-    func clearLastPressed() {
+    public func clearLastPressed() {
         DispatchQueue.main.async {
             for key in self.keys {
                 key.setLastKeyPressed(way: false)
@@ -150,7 +123,7 @@ class Piano: ObservableObject {
         return false
     }
 
-    func processGesture(key:PianoKey, gesture: DragGesture.Value)  {
+    public func processGesture(key:PianoKey, gesture: DragGesture.Value) -> Bool {
         var doTap = false
         if let lastTime = lastGestureTime {
             let diff = gesture.time.timeIntervalSince(lastTime)
@@ -163,11 +136,18 @@ class Piano: ObservableObject {
         }
         if doTap {
             self.lastGestureTime = gesture.time
+            if self.soundNotes {
+                self.playNote(midi: key.midi)
+            }
             setWasLastKeyPressed(pressedKey: key)
+            return true
+        }
+        else {
+            return false
         }
     }
 
-    func setAllKeysUnPressed() {
+    public func setAllKeysUnPressed() {
         DispatchQueue.main.async {
             self.lastMidiPressed = nil
             for index in 0..<self.keys.count {
@@ -187,13 +167,22 @@ class Piano: ObservableObject {
         }
         return PianoKey(midi: 0)
     }
+    
+    public func pressKey(midi:Int) {
+        for key in keys {
+            if key.midi == midi {
+                self.setWasLastKeyPressed(pressedKey: key, notifyWatchers: false)
+                self.playNote(midi: midi)
+                break
+            }
+        }
+    }
 
-    func playNote(midi:Int) {
+    public func playNote(midi:Int) {
         midiSampler.startNote(UInt8(midi), withVelocity:64, onChannel:UInt8(0))
     }
     
     func debug1(_ ctx:String, midi:Int? = nil) {
-        print("=========Piano Keys", ctx)
         for key in self.keys {
             var show = true
             if let midi = midi {
@@ -207,46 +196,5 @@ class Piano: ObservableObject {
             }
         }
     }
-    
-    func stopPlayScale() {
-        self.stopScale = true
-    }
-    
-    func playScale(scale:Scale, 
-                   metronome:Metronome,
-                   tempoAdjust:Double,
-                   ascending:Bool, octaves:Int = 2,
-                   notifyNotePlayed: (Int)->Void,
-                   endNotify: @escaping ()->Void ) {
-        self.stopScale = false
-        DispatchQueue.global(qos: .background).async {
-            var count = 0
-            for i in 0..<self.keys.count {
-                let index = ascending ? i : self.keys.count - i - 1
-                let key = self.keys[index]
-                if key.midi < scale.startMidi {
-                    continue
-                }
-                if key.midi > scale.startMidi + scale.noteCount {
-                    break
-                }
-                if scale.isMidiInScale(midi: key.midi) {
-                    //self.lastMidiPressed = key.midi
-                    self.playNote(midi: key.midi)
-                    self.setWasLastKeyPressed(pressedKey: key, notifyWatchers: false)
-                    Thread.sleep(forTimeInterval: (60.0 / tempoAdjust) / Double(metronome.getTempo()))
-                    count += 1
-                    if self.stopScale {
-                        break
-                    }
-                    if count >= (octaves * 7) + 1 {
-                        break
-                    }
-                    //break
-                }
-            }
-            endNotify()
-        }
-    }
-    
+
 }

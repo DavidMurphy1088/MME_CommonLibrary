@@ -18,7 +18,6 @@ public class AudioSamplerPlayer {
             Logger.logger.reportError(self, "Could not start the audio engine: \(error)")
         }
         loadSoundFont()
-        print("======== AudioSamplerPlayer init - attached AVAudioUnitSampler to AVAudioEngine, started engine, loaded sound font")
     }
     
     static public func getShared() -> AudioSamplerPlayer {

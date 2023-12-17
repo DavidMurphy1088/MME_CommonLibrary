@@ -3,8 +3,9 @@ import SwiftUI
 import CommonLibrary
 import Combine
 
-struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
+public struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
     @ObservedObject var piano:Piano
+    let user:any PianoUserProtocol
 
     @State var whiteKeyWidth = 1.0
     @State var blackKeyWidth = 0.0
@@ -13,9 +14,10 @@ struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
     @State var anyKeyPressed:Bool = false
     @State var handViewHeight = 0.0
     @State var explanationShowing = false
-    
-    init(piano:Piano) {
+
+    public init(piano:Piano, user:any PianoUserProtocol) {
         self.piano = piano
+        self.user = user
     }
         
     func getBlackSpacing(index:Int) -> CGFloat {
@@ -38,26 +40,28 @@ struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
         }
     }
         
-    var body: some View {
+    public var body: some View {
         VStack {
             buttonsView()
-            let user = PianoUser()
+            //let user = PianoUser()
             ZStack(alignment: .topLeading) { // Aligning to the top and leading edge
 
                 ///White notes
                 HStack(spacing: 0) {
                     ForEach(0..<piano.keys.count, id: \.self) { index in
                         if piano.keys[index].color == .white {
-                            PianoKeyView<PianoUser>(id: index, piano: piano, pianoKey: piano.keys[index], user: user)
+                            PianoKeyView<PianoUser>(id: index, piano: piano, pianoKey: piano.keys[index], user: user as! PianoUser)
                                 .frame(width: whiteKeyWidth, height: whiteKeyHeight)
                                 .gesture(
                                     DragGesture(minimumDistance: 0)
                                         .onChanged(
                                             { gesture in
-                                                piano.processGesture(key:piano.keys[index], gesture: gesture)
-                                                if piano.keys[index].midi == 69 {
-                                                    explanationShowing = true
+                                                if piano.processGesture(key:piano.keys[index], gesture: gesture) {
+                                                    user.receiveNotificationOfKeyPress(key: piano.keys[index])
                                                 }
+//                                                if piano.keys[index].midi == 69 {
+//                                                    explanationShowing = true
+//                                                }
                                             }
                                         )
                                 )
@@ -70,13 +74,15 @@ struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
                 HStack(spacing: 0) {
                     ForEach(0..<piano.keys.count, id: \.self) { index in
                         if piano.keys[index].color == .black {
-                            PianoKeyView<PianoUser>(id: index, piano: piano, pianoKey: piano.keys[index], user: user)
+                            PianoKeyView<PianoUser>(id: index, piano: piano, pianoKey: piano.keys[index], user: user as! PianoUser)
                             .frame(width: blackKeyWidth, height: whiteKeyHeight * 1.0)
                             .gesture(
                                 DragGesture(minimumDistance: 0)
                                     .onChanged(
                                         { gesture in
-                                            piano.processGesture(key:piano.keys[index], gesture: gesture)
+                                            if piano.processGesture(key:piano.keys[index], gesture: gesture) {
+                                                user.receiveNotificationOfKeyPress(key: piano.keys[index])
+                                            }
                                         }
                                     )
                                 )
@@ -91,7 +97,9 @@ struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
                 HStack {
                     ///Spacers throw off alignment of keyboard in center of screen
                     //Spacer()
-                    user.getActionHandler(piano: piano)
+                    if let user = user as? PianoUser {
+                        user.getActionHandler(piano: piano)
+                    }
                     //Spacer()
                 }
             }
@@ -111,12 +119,18 @@ struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
     }
 }
 
-struct PianoView<PianoUserView>: View where PianoUserView: PianoUserProtocol {
+public struct PianoView<PianoUserView>: View where PianoUserView: PianoUserProtocol {
     @ObservedObject var piano:Piano
-
-    var body: some View {
+    let user:PianoUserView
+    
+    public init(piano:Piano, user:PianoUserView) {
+        self.piano = piano
+        self.user = user
+    }
+    
+    public var body: some View {
         VStack {
-            KeyboardView<PianoUserView>(piano: piano)
+            KeyboardView<PianoUserView>(piano: piano, user: user)
                 //.border(Color .blue)
         }
     }
