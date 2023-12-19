@@ -9,6 +9,16 @@ public enum AnswerState {
     case submittedAnswer
 }
 
+//public class SightReadingNote { //Codable {
+//    var midi: Int
+//    var date: Date
+//    init(midi:Int, date:Date) {
+//        self.midi = midi
+//        self.date = date
+//    }
+//}
+
+
 ///The answer a student gives to a question
 public class Answer : ObservableObject, Identifiable, Codable {
     public var id:UUID
@@ -28,7 +38,11 @@ public class Answer : ObservableObject, Identifiable, Codable {
     ///Recording
     public var recordedData: Data?
     
-    public init() { //}, questionMode:QuestionMode) {
+    ///Sight reading
+    public var sightReadingNotePitches:[Int] = []
+    public var sightReadingNoteTimes:[Date] = []
+
+    public init() {
         id = UUID()
         //self.questionMode = questionMode
     }
@@ -36,14 +50,14 @@ public class Answer : ObservableObject, Identifiable, Codable {
     public func copyAnwser() -> Answer {
         let a = Answer() //, questionMode: self.questionMode)
         a.correct = self.correct
-        //a.selectedInterval = self.selectedInterval
-        //a.correctInterval = self.correctInterval
         a.correctIntervalName = self.correctIntervalName
         a.correctIntervalHalfSteps = self.correctIntervalHalfSteps
         a.selectedIntervalName = self.selectedIntervalName
         a.explanation = self.explanation
         a.values = self.values
         a.recordedData = self.recordedData
+        a.sightReadingNotePitches = self.sightReadingNotePitches
+        a.sightReadingNoteTimes = self.sightReadingNoteTimes
         return a
     }
 }

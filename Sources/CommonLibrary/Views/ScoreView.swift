@@ -145,6 +145,9 @@ public struct ScoreView: View {
             if let feedback = score.studentFeedback {
                 FeedbackView(score: score, studentFeedback: feedback)
             }
+            if let label = score.label {
+                Text(label).font(.title).foregroundColor(.blue)
+            }
             
             VStack {
                 ForEach(score.getStaff(), id: \.self.id) { staff in

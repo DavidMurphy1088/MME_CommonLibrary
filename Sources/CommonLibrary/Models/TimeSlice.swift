@@ -24,7 +24,7 @@ public class TimeSlice : ScoreEntry {
     var beatNumber:Double = 0.0 //the beat in the bar that the timeslice is at
     
     //Used when recording a tap sequence into a score
-    var tapDuration:Double
+    public var tapDuration:Double
     
     public init(score:Score) {
         self.score = score

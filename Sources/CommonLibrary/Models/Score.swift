@@ -190,7 +190,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScorezz(_ ctx:String, withBeam:Bool) {
+    public func debugScore(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -604,9 +604,10 @@ public class Score : ObservableObject {
     }
     
     ///Return a score based on the question score but modified to show where a tapped duration differs from the question
-    public func fitScoreToQuestionScore(tappedScore:Score, tolerancePercent:Double) -> (Score, StudentFeedback) {
-        let outputScore = Score(key: self.key, timeSignature: self.timeSignature, linesPerStaff: 1)
-        let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: 1)
+    public func fitScoreToQuestionScore(userScore:Score, onlyRhythm:Bool, tolerancePercent:Double) -> (Score, StudentFeedback) {
+        let linesInStaff = onlyRhythm ? 1 : 5
+        let outputScore = Score(key: self.key, timeSignature: self.timeSignature, linesPerStaff: linesInStaff)
+        let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: linesInStaff)
         outputScore.createStaff(num: 0, staff: staff)
             
         var errorsFlagged = false
@@ -615,12 +616,12 @@ public class Score : ObservableObject {
         //let outputScoreTimeSliceValues = outputScore.scoreEntries
         var tapIndex = 0
         var explanation = ""
-        //tappedScore.debugScore("StartFit", withBeam: false)
+        userScore.debugScore("StartFit", withBeam: false)
+        let noteType = onlyRhythm ? "tap" : "note"
+        
         for questionIndex in 0..<self.scoreEntries.count {
             guard let questionTimeSlice:TimeSlice = self.scoreEntries[questionIndex] as? TimeSlice else {
-                //if !errorsFlagged {
-                    outputScore.addBarLine()
-                //}
+                outputScore.addBarLine()
                 continue
             }
             if questionTimeSlice.entries.count == 0 {
@@ -641,13 +642,13 @@ public class Score : ObservableObject {
                 outputTimeSlice.statusTag = .afterError
             }
             else {
-                if tapIndex >= tappedScore.getAllTimeSlices().count {
+                if tapIndex >= userScore.getAllTimeSlices().count {
                     errorsFlagged = true
-                    explanation = "• There was no tap"
+                    explanation = "• There was no \(noteType)"
                     outputTimeSlice.statusTag = .inError
                 }
                 else {
-                    let tap = tappedScore.getAllTimeSlices()[tapIndex]
+                    let tap = userScore.getAllTimeSlices()[tapIndex]
                     let delta = questionNoteDuration * tolerancePercent * 0.01
                     let lowBound = questionNoteDuration - delta
                     let hiBound = questionNoteDuration + delta
@@ -667,7 +668,7 @@ public class Score : ObservableObject {
                             explanation += ""
                         }
                         //explanation += "\n• Your tap was a \(tapName) and was too "
-                        explanation += "\n• Your tap was too "
+                        explanation += "\n• Your \(noteType) was too "
                         if questionNoteDuration > tap.getValue() {
                             explanation += "short 🫢"
                         }
