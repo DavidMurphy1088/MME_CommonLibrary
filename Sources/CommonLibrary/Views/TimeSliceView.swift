@@ -194,8 +194,7 @@ public struct TimeSliceView: View {
         //.border(Color.red)
     }
     
-
-    func NoteView(note:Note, noteFrameWidth:Double, geometry: GeometryProxy, inError:Bool) -> some View {
+    func NoteView(note:Note, noteFrameWidth:Double, geometry: GeometryProxy, statusTag:StatusTag) -> some View {
         ZStack {
             let placement = note.getNoteDisplayCharacteristics(staff: staff)
             let offsetFromStaffMiddle = placement.offsetFromStaffMidline
@@ -203,8 +202,8 @@ public struct TimeSliceView: View {
             let noteEllipseMidpoint:Double = geometry.size.height/2.0 - Double(offsetFromStaffMiddle) * lineSpacing / 2.0
             let noteValueUnDotted = note.isDotted() ? note.getValue() * 2.0/3.0 : note.getValue()
             
-            if inError {
-                Text("X").bold().font(.system(size: lineSpacing * 3.0)).foregroundColor(.red)
+            if statusTag == .rhythmError  {
+                Text("X").bold().font(.system(size: lineSpacing * 2.0)).foregroundColor(.red)
                     .position(x: noteFrameWidth/2 - (note.rotated ? noteWidth : 0), y: noteEllipseMidpoint)
             }
             else {
@@ -274,7 +273,7 @@ public struct TimeSliceView: View {
                 ForEach(getTimeSliceEntries(), id: \.id) { entry in
                     VStack {
                         if entry is Note {
-                            NoteView(note: entry as! Note, noteFrameWidth: noteFrameWidth, geometry: geometry, inError: timeSlice.statusTag == .inError)
+                            NoteView(note: entry as! Note, noteFrameWidth: noteFrameWidth, geometry: geometry, statusTag: timeSlice.statusTag)
                             //.border(Color.green)
                         }
                         if entry is Rest {

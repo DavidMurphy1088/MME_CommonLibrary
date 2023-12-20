@@ -86,7 +86,7 @@ struct ScoreEntriesView: View {
     ///Return the start and end points for te quaver beam based on the note postions that were reported
     func getBeamLine(endNote:Note, noteWidth:Double, startNote:Note, stemLength:Double) -> (CGPoint, CGPoint)? {
         let stemDirection:Double = startNote.stemDirection == .up ? -1.0 : 1.0
-        if startNote.timeSlice.statusTag == .inError {
+        if [StatusTag.rhythmError].contains(startNote.timeSlice.statusTag) {
             return nil
         }
         let endNotePos = noteLayoutPositions.positions[endNote]
@@ -177,7 +177,7 @@ struct ScoreEntriesView: View {
                                     ///Record and store the note's postion so we can later draw its stems which maybe dependent on the note being in a quaver group with a quaver beam
                                     Color.clear
                                         .onAppear {
-                                            if timeSlice.statusTag != .inError {
+                                            if timeSlice.statusTag != .rhythmError {
                                                 if staff.staffNum == 0 {
                                                     noteLayoutPositions.storePosition(notes: entries.getTimeSliceNotes(),rect: geometry.frame(in: .named("HStack")))
                                                 }
@@ -189,7 +189,7 @@ struct ScoreEntriesView: View {
                                             }
                                         }
                                 })
-                                if timeSlice.statusTag != .inError {
+                                if timeSlice.statusTag != .rhythmError  {
                                     StemView(score:score,
                                              staff:staff,
                                              notePositionLayout: noteLayoutPositions,
@@ -250,7 +250,6 @@ struct ScoreEntriesView: View {
                                 }
                             }
                         }
-                        //.border(Color .red)
                         .padding(.horizontal, 0)
                     }
                     //.border(Color .orange)

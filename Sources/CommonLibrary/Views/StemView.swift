@@ -8,7 +8,6 @@ public struct StemView: View {
     @State var notePositionLayout: NoteLayoutPositions
     var notes: [Note]
 
-    
     func getStemLength() -> Double {
         var len = 0.0
         if notes.count > 0 {

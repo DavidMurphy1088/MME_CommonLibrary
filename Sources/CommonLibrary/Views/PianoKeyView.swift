@@ -10,7 +10,7 @@ public struct PianoKeyOulineView : View {
     @ObservedObject var piano:Piano
     @ObservedObject var pianoKey:PianoKey
     
-    var cornerRadius: CGFloat = 6
+    var cornerRadius: CGFloat = 10
     var borderColor: Color = .black
     var borderWidth: CGFloat = 1
     

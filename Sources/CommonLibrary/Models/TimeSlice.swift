@@ -11,6 +11,14 @@ public class TagHigh : ObservableObject {
     }
 }
 
+public enum StatusTag {
+    case noTag
+    case rhythmError
+    case pitchError
+    case afterError //e.g. all rhythm after a rhythm error is moot
+    case hilightAsCorrect //hilight the correct note that was expected
+}
+
 public class TimeSlice : ScoreEntry {
     @Published public var entries:[TimeSliceEntry]
     @Published public var tagHigh:TagHigh?
@@ -30,6 +38,10 @@ public class TimeSlice : ScoreEntry {
         self.score = score
         self.entries = []
         tapDuration = 0.0
+    }
+    
+    func inError() -> Bool {
+        return [StatusTag.pitchError, StatusTag.rhythmError].contains(self.statusTag)
     }
     
     public func setStatusTag(_ tag: StatusTag) {

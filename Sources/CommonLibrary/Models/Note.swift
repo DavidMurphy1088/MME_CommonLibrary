@@ -37,10 +37,11 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
     //Cause notes that are set for specifc staff to be transparent on other staffs
     public func getColor(staff:Staff, log:Bool? = false) -> Color {
         var out:Color? = nil
-//        guard let timeSlice = timeSlice else {
-//            return Color.black
-//        }
-        if timeSlice.statusTag == .inError {
+        
+        if timeSlice.statusTag == .pitchError {
+            out = Color(.red)
+        }
+        if timeSlice.statusTag == .rhythmError {
             out = Color(.red)
         }
         if timeSlice.statusTag == .afterError {
@@ -48,12 +49,12 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
         }
 
         if timeSlice.statusTag == .hilightAsCorrect {
-            out = Color(red: 0.0, green: 0.6, blue: 0.0)
+            if self.staffNum == staff.staffNum {
+                out = Color(red: 0.0, green: 0.6, blue: 0.0)
+            }
         }
         if out == nil {
             out = Color(staffNum == staff.staffNum ? .black : .clear)
-            //out = Color(.black)
-
         }
 
         return out!
@@ -150,13 +151,6 @@ public enum StemDirection {
     case down
 }
 
-public enum StatusTag {
-    case noTag
-    case inError
-    case afterError //e.g. all rhythm after a rhythm error is moot
-    case hilightAsCorrect //hilight the correct note that was expected
-}
-
 public class NoteStaffPlacement {
     public var offsetFromStaffMidline:Int
     public var accidental: Int?
@@ -171,7 +165,7 @@ public class Note : TimeSliceEntry, Comparable {
     static let MIDDLE_C = 60 //Midi pitch for C4
     static let OCTAVE = 12
     
-    public  static let VALUE_SEMIQUAVER = 0.25
+    public static let VALUE_SEMIQUAVER = 0.25
     public static let VALUE_QUAVER = 0.5
     public static let VALUE_QUARTER = 1.0
     public static let VALUE_HALF = 2.0
