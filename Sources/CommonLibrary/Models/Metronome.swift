@@ -248,8 +248,6 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
             while keepRunning {
                 ///Sound the metronome tick. %4 because its counting at semiquaver intervals
                 ///Make sure score playing is synched to the metronome tick
-                ///
-                
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
                         //log("next loop \(loopCtr) do tick")
@@ -259,7 +257,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                 }
                 
                 ///Sound the next note
-                if (firstNote && loopCtr % 2 == 0) || (!firstNote) {
+                if (firstNote && loopCtr % 4 == 0) || (!firstNote) {
                     if let score = score {
                         firstNote = false
                         if let timeSlice = nextScoreTimeSlice {
@@ -287,9 +285,6 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                                                     note.setHilite(hilite: false)
                                                 }
                                             }
-//                                            if noteInChordNum == 0 && note.getValue() < 1.0 {
-//                                                noteValueSpeechWord = "and"
-//                                            }
                                         }
                                     }
                                 }

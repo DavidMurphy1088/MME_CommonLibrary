@@ -4,7 +4,7 @@ import AVFoundation
 
 //https://mammothmemory.net/music/sheet-music/reading-music/treble-clef-and-bass-clef.html
 
-///Used to record view positions of notes as they are drawn by a view so that a 2nd drwing pass can draw quaver beams to the right points
+///Used to record view positions of notes as they are drawn by a view so that a 2nd drawing pass can draw quaver beams to the right points
 public class NoteLayoutPositions: ObservableObject {
     @Published public var positions:[Note: CGRect] = [:]
 

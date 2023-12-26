@@ -14,7 +14,7 @@ enum UserDefaultKeys {
     static let soundOnTaps = "soundOnTaps"
     static let useUpstrokeTaps = "useUpstrokeTaps"
     static let companionOn = "companionOn"
-    static let useVirtualKeyboard = "useVirtualKeyboard"
+    static let useAcousticKeyboard = "useAcousticKeyboard"
 }
 
 extension UserDefaults {
@@ -102,7 +102,7 @@ public class Settings : ObservableObject {
     @Published public var soundOnTaps = true
     @Published public var useUpstrokeTaps = false //Turned off for the moment. Possibly will never use and always use downstrokes
     @Published public var companionOn = false 
-    @Published public var useVirtualKeyboard = false
+    @Published public var useAcousticKeyboard = false
     
     public static var shared = Settings()
     
@@ -125,7 +125,7 @@ public class Settings : ObservableObject {
         soundOnTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.soundOnTaps)
         useUpstrokeTaps = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useUpstrokeTaps)
         companionOn = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.companionOn)
-        useVirtualKeyboard = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useVirtualKeyboard)
+        useAcousticKeyboard = UserDefaults.standard.getUseTestData(key: UserDefaultKeys.useAcousticKeyboard)
     }
     
     public init(copy settings: Settings) {
@@ -139,7 +139,7 @@ public class Settings : ObservableObject {
         self.soundOnTaps = settings.soundOnTaps
         self.useUpstrokeTaps = settings.useUpstrokeTaps
         self.companionOn = settings.companionOn
-        self.useVirtualKeyboard = settings.useVirtualKeyboard
+        self.useAcousticKeyboard = settings.useAcousticKeyboard
     }
     
     public func getAgeGroup() -> String {
@@ -157,7 +157,7 @@ public class Settings : ObservableObject {
         UserDefaults.standard.setBoolean(key: UserDefaultKeys.soundOnTaps, soundOnTaps)
         UserDefaults.standard.setBoolean(key: UserDefaultKeys.useUpstrokeTaps, useUpstrokeTaps)
         UserDefaults.standard.setBoolean(key: UserDefaultKeys.companionOn, companionOn)
-        UserDefaults.standard.setBoolean(key: UserDefaultKeys.useVirtualKeyboard, useVirtualKeyboard)
+        UserDefaults.standard.setBoolean(key: UserDefaultKeys.useAcousticKeyboard, useAcousticKeyboard)
     }
     
 }

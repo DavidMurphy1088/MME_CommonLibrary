@@ -7,7 +7,7 @@ struct TimeSliceLabelView: View {
     var staff:Staff
     @ObservedObject var timeSlice:TimeSlice
     @State var showPopover = false
-    @State var font = Font.system(size:0) //)//Font.custom("TimesNewRomanPS-BoldMT", size: score.lineSpacing * 1.5)
+    @State var font = Font.system(size:0)
 
     var body: some View {
         ZStack {
@@ -73,12 +73,10 @@ struct ScoreEntriesView: View {
         
     func getNote(entry:ScoreEntry) -> Note? {
         if entry is TimeSlice {
-            //if let
-                let notes = entry.getTimeSliceNotes()
-                if notes.count > 0 {
-                    return notes[0]
-                }
-            //}
+            let notes = entry.getTimeSliceNotes()
+            if notes.count > 0 {
+                return notes[0]
+            }
         }
         return nil
     }
@@ -113,10 +111,6 @@ struct ScoreEntriesView: View {
         }
         return nil
     }
-        
-//    func getLineSpacing() -> Double {
-//        return self.lineSpacing
-//    }
 
     func getQuaverImage(note:Note) -> Image {
         return Image(note.midiNumber > 71 ? "quaver_arm_flipped_grayscale" : "quaver_arm_grayscale")
@@ -196,9 +190,18 @@ struct ScoreEntriesView: View {
                                              notes: entries.getTimeSliceNotes())
                                 }
 
-                                TimeSliceLabelView(score:score, staff:staff, timeSlice: entry as! TimeSlice)
-                                    .frame(height: score.getStaffHeight())
+//                                TimeSliceLabelView(score:score, staff:staff, timeSlice: entry as! TimeSlice)
+//                                    .frame(height: score.getStaffHeight())
                             }
+                            //.border(Color.red)
+                            .overlay(
+                                HStack {
+                                    TimeSliceLabelView(score:score, staff:staff, timeSlice: entry as! TimeSlice)
+                                        .frame(height: score.getStaffHeight())
+                                }
+                                ///TimeSliceLabelView only takes what it needs
+                                .frame(width: score.lineSpacing * 4)
+                            )
                         }
                         if entry is BarLine {
                             GeometryReader { geometry in
@@ -260,12 +263,6 @@ struct ScoreEntriesView: View {
             }
         }
         .coordinateSpace(name: "ZStack0")
-        .onAppear() {
-        }
-        .onDisappear() {
-           // NoteLayoutPositions.reset()
-        }
-    }
-    
+    }    
 }
 

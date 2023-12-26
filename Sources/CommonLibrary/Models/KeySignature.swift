@@ -31,6 +31,8 @@ public class KeySignature {
                 count = 3
             case "E":
                 count = 4
+            case "B":
+                count = 5
             default:
                 count = 0
             }

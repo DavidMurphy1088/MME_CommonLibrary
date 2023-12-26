@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import CommonLibrary
 import Combine
+import UIKit
 
 public struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
     @ObservedObject var piano:Piano
@@ -39,7 +40,7 @@ public struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
         HStack {
         }
     }
-        
+
     public var body: some View {
         VStack {
             buttonsView()

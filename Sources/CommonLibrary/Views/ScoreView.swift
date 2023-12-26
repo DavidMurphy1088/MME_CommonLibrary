@@ -41,12 +41,14 @@ public struct FeedbackView: View {
 
 public struct ScoreView: View {
     @ObservedObject var score:Score
+    let widthPadding:Bool
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var dragOffset = CGSize.zero
     @State var logCtr = 0
     
-    public init(score:Score) {
+    public init(score:Score, widthPadding:Bool) {
         self.score = score
+        self.widthPadding = widthPadding
         //self.staffLayoutSize = score.staffLayoutSize //StaffLayoutSize(lineSpacing: UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : UIScreen.main.bounds.width / 64.0)
         //self.staffLayoutSize.lineSpacing = 0.0
         //setOrientationLineSize(ctx: "ScoreView::init")
@@ -153,7 +155,7 @@ public struct ScoreView: View {
                 ForEach(score.getStaff(), id: \.self.id) { staff in
                     if !staff.isHidden {
                         ZStack {
-                            StaffView(score: score, staff: staff)
+                            StaffView(score: score, staff: staff, widthPadding: widthPadding)
                                 .frame(height: score.getStaffHeight())
                                 //.border(Color .red, width: 2)
                             

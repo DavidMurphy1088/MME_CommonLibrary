@@ -551,7 +551,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
             Logger.logger.reportError(self, "Unknown tuple at \(i) :  \(self.getTitle()) \(tuple)")
         }
         if let score = score {
-            //score.debugScorex("ContentSection Parse", withBeam: false)
+            score.debugScorex("ContentSection End Parse", withBeam: false)
             return score
         }
         else {

@@ -22,7 +22,7 @@ public struct CountdownTimerView: View {
     }
     
     public var body: some View {
-        HStack(spacing: 20) {
+        VStack(spacing: 20) {
             Button(action: {
                 if self.isActive {
                     //self.timer?.cancel()
@@ -56,7 +56,7 @@ public struct CountdownTimerView: View {
             .foregroundColor(.white)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             
-            CircularProgressView(progress: timeRemaining,
+            CircularProgressView(progress: timeRemaining / timeLimit.wrappedValue,
                                  timeRemaining: Int(timeRemaining),
                                  color: timerColor)
                 .frame(width: size, height: size)
@@ -79,6 +79,7 @@ struct CircularProgressView: View {
             
             Circle()
                 .trim(from: 0, to: progress)
+                //.trim(from: 0, to: 0.60)
                 .stroke(timeRemaining == 0 ? Color.red : color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .aspectRatio(contentMode: .fit)

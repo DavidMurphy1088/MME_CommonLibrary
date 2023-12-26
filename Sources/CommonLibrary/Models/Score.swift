@@ -190,7 +190,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScorexx(_ ctx:String, withBeam:Bool) {
+    public func debugScorex(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -208,15 +208,16 @@ public class Score : ObservableObject {
                         print("  Seq", t.sequence,
                               "[type:", type(of: t.entries[0]), "]",
                               "[midi:",note.midiNumber, "]",
-                              "[Value:",note.getValue(),"]",
-                              "[TapDuration:",t.tapDuration,"]",
+                              "[TapDuration Seconds:",t.tapSecondsNormalizedToTempo,"]",
+                              "[Note Value:", note.getValue(),"]",
+                              "[status]",t.statusTag,
+                              "[beat]",t.beatNumber,
                               "[Accidental:",note.accidental ?? "","]",
-                              "[Staff:",note.staffNum,"]",
-                              "[stem:",note.stemDirection, note.stemLength, "]",
-                              "[placement:",note.noteStaffPlacements[0]?.offsetFromStaffMidline ?? "none", note.noteStaffPlacements[0]?.accidental ?? "none","]",
-                              t.getValue() ,
-                              "status",t.statusTag,
-                              "tagHigh", t.tagHigh ?? ""
+                              "[Staff:",note.staffNum,"]"
+//                              "[stem:",note.stemDirection, note.stemLength, "]",
+//                              "[placement:",note.noteStaffPlacements[0]?.offsetFromStaffMidline ?? "none", note.noteStaffPlacements[0]?.accidental ?? "none","]",
+//                              t.getValue() ,
+//                              "tagHigh", t.tagHigh ?? ""
                         )
                     }
                 //}
@@ -360,16 +361,15 @@ public class Score : ObservableObject {
             }
         }
         if timeSignature.top == 3 {
-            return Int(startBeamTimeSlice.beatNumber) == Int(lastBeat)
+//            if Int(startBeamTimeSlice.beatNumber) == Int(lastBeat) {
+//                return true
+//            }
+            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
+            return [0, 1, 2].contains(startBeatInt)
         }
         if timeSignature.top == 2 {
             let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-            //if lastBeat > 1 {
-                return [0, 1].contains(startBeatInt)
-//            }
-//            else {
-//                return [0].contains(startBeatInt)
-//            }
+            return [0, 1].contains(startBeatInt)
         }
         return false
     }
@@ -414,7 +414,6 @@ public class Score : ObservableObject {
         
         let staff = self.staffs[lastNote.staffNum]
         //apply the quaver beam back from the last note
-        //let endQuaver = notes[0]
         var notesUnderBeam:[Note] = []
         notesUnderBeam.append(lastNote)
         
@@ -469,7 +468,6 @@ public class Score : ObservableObject {
             notesUnderBeam = []
             notesUnderBeam.append(lastNote)
         }
-        
         
         ///Determine if the quaver group has up or down stems based on the overall staff placement of the group
         var totalOffset = 0
@@ -621,18 +619,12 @@ public class Score : ObservableObject {
         ///Stop analysis after a rhythm error (but not a pitch error)
         var stopAnalysis = false
 
-        //self.debugScore("Question", withBeam: false)
-        //let outputScoreTimeSliceValues = outputScore.scoreEntries
+        //userScore.debugScorexx("User at start FIT", withBeam: false)
         var tapIndex = 0
         var explanation = ""
         let noteType = onlyRhythm ? "tap" : "note"
-        userScore.debugScorexx("USER Start Fit", withBeam: false)
-        self.debugScorexx("QUESTION Start Fit", withBeam: false)
 
         for questionIndex in 0..<self.scoreEntries.count {
-            if questionIndex == 17 {
-                print("===============")
-            }
             guard let questionTimeSlice:TimeSlice = self.scoreEntries[questionIndex] as? TimeSlice else {
                 outputScore.addBarLine()
                 continue
@@ -640,23 +632,41 @@ public class Score : ObservableObject {
             if questionTimeSlice.entries.count == 0 {
                 continue
             }
-            let outputTimeSlice = outputScore.createTimeSlice()
+            
             guard let questionNote = questionTimeSlice.entries[0] as? Note else {
                 if !stopAnalysis {
+                    let outputTimeSlice = outputScore.createTimeSlice()
                     outputTimeSlice.addRest(rest: Rest(timeSlice: outputTimeSlice, value: questionTimeSlice.getValue(), staffNum: 0))
                 }
                 continue
             }
             
             let trailingRestsDuration = self.getTrailingRestsDuration(index: questionIndex + 1)
-            let questionNoteDuration = questionNote.getValue() + trailingRestsDuration
+            let questionNoteValue = questionNote.getValue() + trailingRestsDuration
             var outputNoteValue = questionNote.getValue()
             var outputMidiValue = questionNote.midiNumber
             
             if stopAnalysis {
-                outputTimeSlice.statusTag = .afterError
+                //outputTimeSlice.statusTag = .afterError
+                ///Dont break yet.  Add empty timeslices to the output score so that it still lines up vertically with the question score
+                //break
+                ///Changed 21Dec2023 to inlcude now in the output any remaining rhythm the student tapped.
+                ///Rationale was for studnet to be able to hear their full rhythm regardless of any mistakes made
+                if true {
+                    if tapIndex < userScore.getAllTimeSlices().count {
+                        for t in tapIndex..<userScore.getAllTimeSlices().count {
+                            let outputTimeSlice = outputScore.createTimeSlice()
+                            let ts = userScore.getAllTimeSlices()[t]
+                            let note = Note(timeSlice: outputTimeSlice, num: ts.getTimeSliceNotes()[0].midiNumber, value: ts.getValue(), staffNum: 0)
+                            note.isOnlyRhythmNote = questionNote.isOnlyRhythmNote
+                            outputTimeSlice.addNote(n: note)
+                        }
+                    }
+                    break
+                }
             }
             else {
+                let outputTimeSlice = outputScore.createTimeSlice()
                 if tapIndex >= userScore.getAllTimeSlices().count {
                     stopAnalysis = true
                     explanation = "• There was no \(noteType)"
@@ -664,11 +674,10 @@ public class Score : ObservableObject {
                 }
                 else {
                     let tap = userScore.getAllTimeSlices()[tapIndex]
-                    let delta = questionNoteDuration * tolerancePercent * 0.01
-                    let lowBound = questionNoteDuration - delta
-                    let hiBound = questionNoteDuration + delta
-                    //if questionNoteDuration != tap.getValue() {
-                    if tap.tapDuration < lowBound || tap.tapDuration > hiBound {
+                    let delta = questionNoteValue * tolerancePercent * 0.01
+                    let lowBound = questionNoteValue - delta
+                    let hiBound = questionNoteValue + delta
+                    if tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound {
                         outputTimeSlice.statusTag = .rhythmError
                         questionTimeSlice.statusTag = .hilightAsCorrect
                         outputNoteValue = tap.getValue()
@@ -684,7 +693,7 @@ public class Score : ObservableObject {
                         }
                         //explanation += "\n• Your tap was a \(tapName) and was too "
                         explanation += "\n• Your \(noteType) was too "
-                        if questionNoteDuration > tap.getValue() {
+                        if questionNoteValue > tap.getValue() {
                             explanation += "short 🫢"
                         }
                         else {
@@ -716,16 +725,8 @@ public class Score : ObservableObject {
 
         let feedback = StudentFeedback()
         feedback.feedbackExplanation = explanation
-        
-//        let out = outputScore.getAllTimeSlices()
-//        print("==============", feedback.correct, feedback.feedbackExplanation)
-//        for q in self.getAllTimeSlices() {
-//            print("QuestionOut", type(of:q.entries[0]), q.entries[0].getValue(), q.statusTag)
-//        }
-//        for e in out {
-//            print("   ScoreOut", type(of:e.entries[0]), e.entries[0].getValue(), e.statusTag)
-//        }
 
+        //outputScore.debugScorexx("Output Fit", withBeam: false)
         return (outputScore, feedback)
     }
 

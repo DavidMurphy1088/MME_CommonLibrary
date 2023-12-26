@@ -14,8 +14,8 @@ public struct ToolsView: View {
         VStack {
             HStack {
                 MetronomeView(timeSignature:score.timeSignature, helpText: helpMetronome, 
-                              frameHeight: score.lineSpacing * 6, backgroundColor: Settings.shared.colorInstructions)
-                    //.padding(.horizontal)
+                              frameHeight: score.lineSpacing * 6, 
+                              backgroundColor: Settings.shared.colorScore)
                     .padding()
 //                VoiceCounterView(frameHeight: frameHeight)
 //                    //.padding(.horizontal)
