@@ -205,6 +205,10 @@ public struct TimeSliceView: View {
             if statusTag == .rhythmError  {
                 Text("X").bold().font(.system(size: lineSpacing * 2.0)).foregroundColor(.red)
                     .position(x: noteFrameWidth/2 - (note.rotated ? noteWidth : 0), y: noteEllipseMidpoint)
+                if note.staffNum == staff.staffNum  {
+                    NoteHiliteView(entry: note, x: noteFrameWidth/2, y: noteEllipseMidpoint, width: noteWidth * 1.5)
+                }
+
             }
             else {
                 if note.staffNum == staff.staffNum  {

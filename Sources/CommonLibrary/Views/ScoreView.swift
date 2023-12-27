@@ -49,9 +49,6 @@ public struct ScoreView: View {
     public init(score:Score, widthPadding:Bool) {
         self.score = score
         self.widthPadding = widthPadding
-        //self.staffLayoutSize = score.staffLayoutSize //StaffLayoutSize(lineSpacing: UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : UIScreen.main.bounds.width / 64.0)
-        //self.staffLayoutSize.lineSpacing = 0.0
-        //setOrientationLineSize(ctx: "ScoreView::init")
     }
     
     func getFrameHeight() -> Double {
@@ -177,11 +174,7 @@ public struct ScoreView: View {
             UIDevice.current.endGeneratingDeviceOrientationNotifications()
         }
         .coordinateSpace(name: "ScoreView")
-        .overlay(
-            RoundedRectangle(cornerRadius: UIGlobals.cornerRadius).stroke(Color(UIGlobals.borderColor), lineWidth: UIGlobals.borderLineWidth)
-        )
-        .background(Settings.shared.colorScore)
-        //.border(Color .red, width: 2)
+        .roundedBorderRectangle()
     }
 
 }

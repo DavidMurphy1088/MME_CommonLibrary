@@ -216,6 +216,7 @@ public class ExampleData : ObservableObject {
 
     func setDataReady(way:RequestStatus) {
         DispatchQueue.main.async {
+            Logger.logger.log(self, "Example data was set as loaded")
             self.dataStatus = way
         }
     }

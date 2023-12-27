@@ -110,13 +110,9 @@ public struct MetronomeView: View {
             }
         }
         .frame(height: frameHeight)
-        
-        .overlay(
-            RoundedRectangle(cornerRadius: UIGlobals.cornerRadius).stroke(Color(UIGlobals.borderColor), lineWidth: UIGlobals.borderLineWidth)
-        )
+        .roundedBorderRectangle()
         //.background(Settings.shared.colorScore)
-        .background(backgroundColor)
-
+        //.background(backgroundColor)
     }
 }
 

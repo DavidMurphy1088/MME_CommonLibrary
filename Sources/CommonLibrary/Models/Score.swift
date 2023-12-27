@@ -126,7 +126,14 @@ public class Score : ObservableObject {
     
     public func getStaffHeight() -> Double {
         //leave enough space above and below the staff for the Timeslice view to show its tags
-        let height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing
+        var height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing
+        
+        let cnt = staffs.filter { !$0.isHidden }.count
+        if cnt == 1 {
+            //if !UIDevice.current.orientation.isLandscape {
+                height = height * 1.6
+            //}
+        }
         return height
     }
     
@@ -659,6 +666,7 @@ public class Score : ObservableObject {
                             let ts = userScore.getAllTimeSlices()[t]
                             let note = Note(timeSlice: outputTimeSlice, num: ts.getTimeSliceNotes()[0].midiNumber, value: ts.getValue(), staffNum: 0)
                             note.isOnlyRhythmNote = questionNote.isOnlyRhythmNote
+                            outputTimeSlice.statusTag = .afterError
                             outputTimeSlice.addNote(n: note)
                         }
                     }

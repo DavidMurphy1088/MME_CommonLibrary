@@ -18,11 +18,11 @@ public class UIGlobals {
     public static let buttonPaddingiPad:Int = 12
     public static let buttonPaddingiPhone:Int = 6
 
-    public static let cornerRadius:CGFloat = 8
+    public static let cornerRadius:CGFloat = 16
     
-    public static let borderColor:CGColor = CGColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1)
-    
-    public static let borderLineWidth:CGFloat = 2
+    //public static let borderColor:CGColor = CGColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1)
+    public static let borderColor = Color.gray
+    public static let borderLineWidth:CGFloat = 3
     
     public static let circularIconSize = 40.0
     public static let circularIconBorderSize = 4.0
@@ -168,6 +168,24 @@ class UICommons {
     static let buttonCornerRadius:Double = 20.0
     static let buttonPadding:Double = 8
     static let colorAnswer = Color.green.opacity(0.4)
+}
+
+public struct RoundedBorderRectangle: ViewModifier {
+    public func body(content: Content) -> some View {
+        content
+            .background(Color.white)
+            .padding(UIGlobals.borderLineWidth)
+            .overlay(
+                RoundedRectangle(cornerRadius: UIGlobals.cornerRadius)
+                    .stroke(UIGlobals.borderColor, lineWidth: UIGlobals.borderLineWidth)
+            )
+    }
+}
+
+public extension View {
+    func roundedBorderRectangle() -> some View {
+        self.modifier(RoundedBorderRectangle())
+    }
 }
 
 

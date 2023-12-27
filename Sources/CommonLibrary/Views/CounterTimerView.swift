@@ -22,7 +22,9 @@ public struct CountdownTimerView: View {
     }
     
     public var body: some View {
-        VStack(spacing: 20) {
+        //VStack(spacing: 20) {
+        ///Tried HStack but HStack makes the button not aling well with other screen buttons below 
+        VStack() {
             Button(action: {
                 if self.isActive {
                     //self.timer?.cancel()
@@ -55,12 +57,11 @@ public struct CountdownTimerView: View {
             .background(Color.blue)
             .foregroundColor(.white)
             .clipShape(RoundedRectangle(cornerRadius: 10))
-            
             CircularProgressView(progress: timeRemaining / timeLimit.wrappedValue,
                                  timeRemaining: Int(timeRemaining),
                                  color: timerColor)
                 .frame(width: size, height: size)
-                .padding(20)
+                //.padding(20)
         }
     }
 }
