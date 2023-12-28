@@ -15,7 +15,7 @@ public struct PurchaseLicenseView: View {
         VStack {
             Text("NZMEB Musicianship Syllabus").foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/).font(.title).padding()
             Text(contentSection.getPathTitle()).foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/).font(.title).padding()
-            Image("NZMEB logo aqua bird")
+            Image("nzmeb_logo_transparent")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(height: 300.0)

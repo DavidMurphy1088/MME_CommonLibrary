@@ -50,24 +50,7 @@ public struct ScoreView: View {
         self.score = score
         self.widthPadding = widthPadding
     }
-    
-    func getFrameHeight() -> Double {
-        ///Score tells the staff how high to make itself. Child views of staff (all paths, moves, linesto sec) do not have
-        ///inherent sizes that they can pass back up the parent staff view. So Score sets the sizes itself
-        var height = 0.0
-        //var lastStaff:Staff? = nil
-        for staff in score.staffs {
-            if !staff.isHidden {
-                height += score.lineSpacing
-            }
-            //lastStaff = staff
-        }
-        if score.barEditor != nil {
-            height += score.lineSpacing * 1.0
-        }
-        return height
-    }
-    
+        
     func setOrientationLineSize(ctx:String) {//}, geometryWidth:Double) {
         ///Nov2023 NEVER USE THIS AGAIN. Set the line spacing based on some other criteria than the size of the screen
         //Absolutley no idea - the width reported here decreases in landscape mode so use height (which increases)

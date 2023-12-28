@@ -551,7 +551,6 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
             Logger.logger.reportError(self, "Unknown tuple at \(i) :  \(self.getTitle()) \(tuple)")
         }
         if let score = score {
-            score.debugScorex("ContentSection End Parse", withBeam: false)
             return score
         }
         else {
@@ -671,6 +670,18 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         var image:Image
         image = Image(name)
         return image
+    }
+    
+    public func isTakingExam() -> Bool {
+        guard let parent = parent else {
+            return false
+        }
+        if isExamTypeContentSection() && storedAnswer == nil {
+            return true
+        }
+        else {
+            return false
+        }
     }
 }
 

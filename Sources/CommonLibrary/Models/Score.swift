@@ -97,14 +97,16 @@ public class Score : ObservableObject {
     static var accNatural = "\u{266e}"
     static var accFlat = "\u{266d}"
     public var label:String? = nil
-        
-    public init(key:Key, timeSignature:TimeSignature, linesPerStaff:Int) {
+    public var heightPaddingEnabled:Bool
+    
+    public init(key:Key, timeSignature:TimeSignature, linesPerStaff:Int, heightPaddingEnabled:Bool = true) {
         self.id = UUID()
         self.timeSignature = timeSignature
         totalStaffLineCount = linesPerStaff + (2*ledgerLineCount)
         self.key = key
         barLayoutPositions = BarLayoutPositions()
         //self.staffLayoutSize = StaffLayoutSize()
+        self.heightPaddingEnabled = heightPaddingEnabled
     }
 
     public func createTimeSlice() -> TimeSlice {
@@ -129,10 +131,13 @@ public class Score : ObservableObject {
         var height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing
         
         let cnt = staffs.filter { !$0.isHidden }.count
-        if cnt == 1 {
-            //if !UIDevice.current.orientation.isLandscape {
+        if self.heightPaddingEnabled {
+            ///Allow some extra height spacing when possible
+            if cnt == 1 {
+                //if !UIDevice.current.orientation.isLandscape {
                 height = height * 1.6
-            //}
+                //}
+            }
         }
         return height
     }
@@ -197,7 +202,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScorex(_ ctx:String, withBeam:Bool) {
+    public func debugScorem(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {

@@ -20,24 +20,23 @@ public class UIGlobals {
 
     public static let cornerRadius:CGFloat = 16
     
-    //public static let borderColor:CGColor = CGColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1)
     public static let borderColor = Color.gray
     public static let borderLineWidth:CGFloat = 3
     
     public static let circularIconSize = 40.0
     public static let circularIconBorderSize = 4.0
 
-    //static let font = Font.custom("Lora", size: 24)
     public static let font = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 24 : 16)
-    //static let fontiPhone = Font.custom("Lora", size: 16)
     public static let fontiPhone = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 24 : 16)
 
     public static let navigationFont =    Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 26 : 18)
-    public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 40 : 18)
+    public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 32 : 18)
 
     public static func showDeviceOrientation() -> Bool {
         let orientation = UIDevice.current.orientation
-        print("showDeviceOrientation --> IS PORTRAIT", orientation.isPortrait,"IS LANDSCAPE", orientation.isLandscape,
+        print("============ showDeviceOrientation --> IS PORTRAIT",
+              orientation.isPortrait,
+              "IS LANDSCAPE", orientation.isLandscape,
               "isGeneratingDeviceOrientationNotifications", UIDevice.current.isGeneratingDeviceOrientationNotifications,
               "RAW", orientation.rawValue)
         switch orientation {
@@ -69,9 +68,11 @@ public func hintButtonView(_ txt:String, selected:Bool = false) -> some View {
             Image(systemName: "hand.point.up.left").font(.largeTitle).foregroundColor(.white)
             Text(" ")
         }
-        .background(.teal)
+        .background(Color .darkerTeal)
     }
     .cornerRadius(UIGlobals.cornerRadius)
+    //.padding()
+    //.roundedBorderRectangle()
 }
 
 struct StandardButtonStyle: ButtonStyle {
@@ -82,6 +83,12 @@ struct StandardButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .cornerRadius(8)
     }
+}
+
+// --------------- Extensions -----------------
+
+extension Color {
+    static let darkerTeal = Color(red: 0 / 255, green: 80 / 255, blue: 80 / 255)
 }
 
 extension Text {
