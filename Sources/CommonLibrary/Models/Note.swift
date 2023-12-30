@@ -402,11 +402,5 @@ public class Note : TimeSliceEntry, Comparable {
         //self.debug("setNoteDisplayCharacteristics")
     }
     
-//    func debugx(_ context:String) -> Bool {
-//        print("\n============ NOTE", context, self.midiNumber, self.value)
-//        for i in 0..<self.noteStaffPlacements.count {
-//            print(" staff", "offset", noteStaffPlacements[i]?.offsetFromStaffMidline ?? "_", "accidental", noteStaffPlacements[i]?.accidental ?? "_")
-//        }
-//        return true
-//    }
+
 }

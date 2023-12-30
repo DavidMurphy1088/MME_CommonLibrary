@@ -202,7 +202,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScorem(_ ctx:String, withBeam:Bool) {
+    public func debugScore1(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -213,8 +213,16 @@ public class Score : ObservableObject {
                 let note = t.getTimeSliceNotes()[0]
                 //for ts in t.getTimeSlices() {
                     if withBeam {
-                        print("  Seq", t.sequence, "type:", type(of: t.entries[0]), "midi:", note.midiNumber, "Value:", t.getValue() , "[beamType:", note.beamType,
-                              "beamEnd", note.beamEndNote ?? "", "]")
+                        print("  Seq", t.sequence, 
+                              "type:", type(of: t.entries[0]),
+                              "midi:", note.midiNumber, 
+                              "Value:", t.getValue() ,
+                              "stemDirection", note.stemDirection,
+                              "stemLength", note.stemLength,
+                              "accidental", note.accidental,
+                              "[beamType:", note.beamType,
+                              "beamEnd:", note.beamEndNote ?? "none",
+                              "]")
                     }
                     else {
                         print("  Seq", t.sequence,
@@ -391,7 +399,6 @@ public class Score : ObservableObject {
     private func addStemCharaceteristics() {
         let lastNoteIndex = self.scoreEntries.count - 1
         let scoreEntry = self.scoreEntries[lastNoteIndex]
-
         guard scoreEntry is TimeSlice else {
             return
         }
@@ -428,7 +435,10 @@ public class Score : ObservableObject {
         //apply the quaver beam back from the last note
         var notesUnderBeam:[Note] = []
         notesUnderBeam.append(lastNote)
-        
+        if lastTimeSlice.sequence == 4 {
+           print("==========+DEBUGX")
+        }
+
         ///Figure out the start, middle and end of this group of quavers
         for i in stride(from: lastNoteIndex - 1, through: 0, by: -1) {
             let scoreEntry = self.scoreEntries[i]
@@ -523,9 +533,9 @@ public class Score : ObservableObject {
             note.stemDirection = totalOffset > 0 ? .down : .up
         }
         
-        ///Check no stranded beam starts. Every beam start must have a beam end so it is rendered correctly.
+        ///Check no stranded beam starts. A note with beamStart without a beamEnd. Every beam start must have a beam end so it is rendered correctly.
         ///Quavers under beams only have their stems rendered by the presence of an end note in their beam group
-        func noteInTS(_ tsIndex:Int) -> Note? {
+        func getFirstNoteInTS(_ tsIndex:Int) -> Note? {
             if tsIndex < self.getAllTimeSlices().count {
                 let ts = getAllTimeSlices()[tsIndex]
                 if ts.getTimeSliceNotes().count > 0 {
@@ -536,13 +546,16 @@ public class Score : ObservableObject {
         }
 
         for i in 0..<getAllTimeSlices().count {
-            let note = noteInTS(i)
+            let note = getFirstNoteInTS(i)
             if let note = note {
                 if note.beamType == .start {
-                    let nextNote = noteInTS(i+1)
+                    let nextNote = getFirstNoteInTS(i+1)
                     if let nextNote = nextNote {
                         if !([QuaverBeamType.end, QuaverBeamType.middle].contains(nextNote.beamType)) {
                             note.beamType = .end
+                            ///Undo any stem direction that might have been previousy applied
+                            note.stemDirection = getStemDirection(staff: staff, notes: [note])
+                            note.stemLength = stemLengthLines
                             break
                         }
                     }

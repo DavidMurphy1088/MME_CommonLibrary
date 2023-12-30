@@ -115,10 +115,15 @@ struct ScoreEntriesView: View {
     func getQuaverImage(note:Note) -> Image {
         return Image(note.midiNumber > 71 ? "quaver_arm_flipped_grayscale" : "quaver_arm_grayscale")
     }
-
+    
+//    func log(_ sn:Note, _ en:Note) -> Bool {
+//        return true
+//    }
+    
     func quaverBeamView(line: (CGPoint, CGPoint), startNote:Note, endNote:Note, lineSpacing: Double) -> some View {
         ZStack {
             if startNote.sequence == endNote.sequence {
+                //let l = log(startNote, endNote)
                 //An unpaired quaver
                 let height = lineSpacing * 4.5
                 let width = height / 3.0
@@ -148,7 +153,6 @@ struct ScoreEntriesView: View {
                     path.addLine(to: CGPoint(x: line.1.x, y: line.1.y))
                 }
                 .stroke(endNote.getColor(staff: staff), lineWidth: 3)
-                //.stroke(lineWidth: 3)
             }
         }
     }

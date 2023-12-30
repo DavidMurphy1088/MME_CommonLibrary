@@ -101,7 +101,7 @@ public class Settings : ObservableObject {
     @Published public var colorBackground = UIGlobals.colorBackgroundDefault
     @Published public var soundOnTaps = true
     @Published public var useUpstrokeTaps = false //Turned off for the moment. Possibly will never use and always use downstrokes
-    @Published public var companionOn = false 
+    @Published public var companionOn = true
     @Published public var useAcousticKeyboard = false
     
     public static var shared = Settings()

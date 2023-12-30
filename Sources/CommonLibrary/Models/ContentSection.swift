@@ -52,7 +52,8 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     public var level:Int
     public var questionStatus = QuestionStatus(0)
     public var homeworkIsAssigned:Bool = false
-
+    public var needLicense:Bool = false
+    
     public init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
         self.parent = parent
         self.name = name
@@ -75,6 +76,20 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
         self.level = level
         setHomeworkStatus()
+        setLicense()
+    }
+    
+    func setLicense() {
+        let parts = self.name.split(separator: " ")
+
+        if parts.count == 2 {
+            let exNum = Int(parts[1])
+            if let exNum = exNum {
+                if exNum > 2 {
+                    //self.needLicense = true
+                }
+            }
+        }
     }
     
     private func setHomeworkStatus()  {

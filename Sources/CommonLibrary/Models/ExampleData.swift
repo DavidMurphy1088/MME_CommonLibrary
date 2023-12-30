@@ -1,9 +1,9 @@
 import Foundation
 
 public class ExampleData : ObservableObject {
+    @Published public var dataStatus:RequestStatus = .waiting
     var logger = Logger.logger
     private let googleAPI = GoogleAPI.shared
-    @Published public var dataStatus:RequestStatus = .waiting
     private let rootContentSection:ContentSection
     
     public init(sheetName:String, rootContentSection:ContentSection) {
@@ -216,7 +216,7 @@ public class ExampleData : ObservableObject {
 
     func setDataReady(way:RequestStatus) {
         DispatchQueue.main.async {
-            Logger.logger.log(self, "Example data was set as loaded")
+            Logger.logger.log(self, "Example data was set as \(way)")
             self.dataStatus = way
         }
     }

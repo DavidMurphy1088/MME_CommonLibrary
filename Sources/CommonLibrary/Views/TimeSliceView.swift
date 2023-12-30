@@ -257,10 +257,12 @@ public struct TimeSliceView: View {
                     //if staff.type == .treble {
                     ForEach(getLedgerLines(staff: staff, note: note, noteWidth: noteWidth, lineSpacing: lineSpacing)) { line in
                         let y = geometry.size.height/2.0 + line.offsetVertical
+                        ///offset - make sure ledger lines dont join on small wodth stafff's. ex melody examples
+                        let xOffset = noteWidth * 0.2
                         let x = noteFrameWidth/2 - noteWidth - (note.rotated ? noteWidth : 0)
                         Path { path in
-                            path.move(to: CGPoint(x: x, y: y))
-                            path.addLine(to: CGPoint(x: x + 2 * noteWidth, y: y))
+                            path.move(to: CGPoint(x: x + xOffset, y: y))
+                            path.addLine(to: CGPoint(x: x + (2 * noteWidth) - xOffset, y: y))
                         }
                         .stroke(note.getColor(staff: staff), lineWidth: 1)
                     }

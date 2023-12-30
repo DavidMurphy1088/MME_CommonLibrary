@@ -71,28 +71,30 @@ struct TimeSignatureView: View {
         // Calculate the font size based on the desired pixel height
         let desiredPixelHeight: CGFloat = 48.0
         let scaleFactor: CGFloat = 72.0 // 72 points per inch
-        let points = (desiredPixelHeight * 72.0) / scaleFactor
+        let points = (desiredPixelHeight * 90.0) / scaleFactor
         let scalingFactor = height / UIScreen.main.bounds.size.height
         return points * scalingFactor
     }
 
     var body: some View {
-        //GeometryReader { geometry in
-            let padding:Double = Double(lineSpacing) / 3.0
-            let fontSize:Double = Double(lineSpacing) * (staff.linesInStaff == 1 ? 2.2 : 2.2)
-            
-            if timeSignature.isCommonTime {
-                Text(" C")
-                    .font(.custom("Times New Roman", size: fontSize * 1.5)).bold().foregroundColor(.black)
-                //.font(.system(size: fontSize(for: geometry.size.height)))
+        let padding:Double = Double(lineSpacing) / 3.0
+        let fontSize:Double = Double(lineSpacing) * (staff.linesInStaff == 1 ? 2.2 : 2.2)
+        ///Bring number closer to midline, they should almost otuch midlline
+        let yOffset = lineSpacing / 6.0
+    
+        if timeSignature.isCommonTime {
+            Text(" C")
+                .font(.custom("Times New Roman", size: fontSize * 1.5)).bold().foregroundColor(.black)
+            //.font(.system(size: fontSize(for: geometry.size.height)))
+        }
+        else {
+            VStack (spacing: 0) {
+                Text(" \(timeSignature.top)").font(.system(size: fontSize * 1.1)).padding(.vertical, -padding).foregroundColor(.black)
+                    .offset(y:yOffset)
+                Text(" \(timeSignature.bottom)").font(.system(size: fontSize  * 1.1)).padding(.vertical, -padding).foregroundColor(.black)
+                    .offset(y:0-yOffset)
             }
-            else {
-                VStack (spacing: 0) {
-                    Text(" \(timeSignature.top)").font(.system(size: fontSize * 1.1)).padding(.vertical, -padding).foregroundColor(.black)
-                    Text(" \(timeSignature.bottom)").font(.system(size: fontSize  * 1.1)).padding(.vertical, -padding).foregroundColor(.black)
-                }
-            }
-        //}
+        }
     }
 }
 

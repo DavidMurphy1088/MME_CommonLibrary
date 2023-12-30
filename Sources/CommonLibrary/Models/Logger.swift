@@ -21,14 +21,13 @@ public class Logger : ObservableObject {
     }
     
     public func reportError(_ reporter:AnyObject, _ context:String, _ err:Error? = nil) {
-        var msg = String("🛑 *** ERROR *** ErrNo:\(errorNo): " + String(describing: type(of: reporter))) + " " + context
+        var msg = String("🛑 =========== ERROR =========== ErrNo:\(errorNo): " + String(describing: type(of: reporter))) + " " + context
         if let err = err {
             msg += ", "+err.localizedDescription
         }
         print(msg)
         recordedMsgs.append(LogMessage(num: recordedMsgs.count, msg))
         DispatchQueue.main.async {
-            //print("===>Logger::publishing", self.id.uuidString.prefix(8), msg)
             self.errorMsg = msg
             self.errorNo += 1
         }
@@ -40,7 +39,7 @@ public class Logger : ObservableObject {
 
     public func log(_ reporter:AnyObject, _ msg:String) {
         let msg = String(describing: type(of: reporter)) + ":" + msg
-        print("Logger ------>", msg)
+        print("Logger ===========>", msg)
         recordedMsgs.append(LogMessage(num: recordedMsgs.count, msg))
     }
     
