@@ -1,9 +1,8 @@
-
 import Foundation
 import SwiftUI
 import CoreData
 
-public class UIGlobals {
+public class UIGlobalsCommon {
     public static var colorDefault = Color.white
     
     public static var colorInstructionsDefault = Color.blue.opacity(0.10)
@@ -32,9 +31,10 @@ public class UIGlobals {
     public static let navigationFont =    Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 26 : 18)
     public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 32 : 18)
 
-    public static func showDeviceOrientation() -> Bool {
+    public static func showDeviceOrientation(_ ctx:String) -> Bool {
         let orientation = UIDevice.current.orientation
-        print("============ showDeviceOrientation --> IS PORTRAIT",
+        //UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+        print("============ showDeviceOrientation \(ctx) --> IS PORTRAIT",
               orientation.isPortrait,
               "IS LANDSCAPE", orientation.isLandscape,
               "isGeneratingDeviceOrientationNotifications", UIDevice.current.isGeneratingDeviceOrientationNotifications,
@@ -53,10 +53,16 @@ public class UIGlobals {
         case .faceDown:
             print("Face Down")
         default:
-            print("Unknown")
+            print("showDeviceOrientation Unknown")
         }
         return true
     }
+    
+    public static func isLandscape() -> Bool {
+        ///UIDevice.current.orientation is horrendously unreliable :(
+        return UIScreen.main.bounds.width > UIScreen.main.bounds.height
+    }
+    
     public static var rhythmTolerancePercent:Double = 45.0 //B+
     public static var rhythmTapSoundOn = false
 }
@@ -70,7 +76,7 @@ public func hintButtonView(_ txt:String, selected:Bool = false) -> some View {
         }
         .background(Color .darkerTeal)
     }
-    .cornerRadius(UIGlobals.cornerRadius)
+    .cornerRadius(UIGlobalsCommon.cornerRadius)
     //.padding()
     //.roundedBorderRectangle()
 }
@@ -94,60 +100,61 @@ extension Color {
 extension Text {
 
     private func buttonPadding() -> CGFloat {
-        return CGFloat(UIDevice.current.userInterfaceIdiom == .phone ? UIGlobals.buttonPaddingiPhone : UIGlobals.buttonPaddingiPad)
+        return CGFloat(UIDevice.current.userInterfaceIdiom == .phone ? UIGlobalsCommon.buttonPaddingiPhone : UIGlobalsCommon.buttonPaddingiPad)
     }
     
     public func defaultButtonStyle(enabled:Bool = true) -> some View {
         self
-            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobals.font : UIGlobals.fontiPhone)
+            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobalsCommon.font : UIGlobalsCommon.fontiPhone)
             .foregroundColor(.white)
             .padding(buttonPadding())
             .background(enabled ? .blue : .gray)
-            .cornerRadius(UIGlobals.cornerRadius)
+            .cornerRadius(UIGlobalsCommon.cornerRadius)
     }
     
     public func submitAnswerButtonStyle(enabled:Bool = true) -> some View {
         self
-            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobals.font : UIGlobals.fontiPhone)
+            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobalsCommon.font : UIGlobalsCommon.fontiPhone)
             .foregroundColor(.white)
             .padding(buttonPadding())
             .background(enabled ? .green : .gray)
-            .cornerRadius(UIGlobals.cornerRadius)
+            .cornerRadius(UIGlobalsCommon.cornerRadius)
     }
     
     public func hintAnswerButtonStyle(selected:Bool) -> some View {
         self
-            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobals.font : UIGlobals.fontiPhone)
+            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobalsCommon.font : UIGlobalsCommon.fontiPhone)
             .foregroundColor(.white)
             .padding(buttonPadding())
             .background(selected ? .orange : .teal)
-            .cornerRadius(UIGlobals.cornerRadius)
+            .cornerRadius(UIGlobalsCommon.cornerRadius)
     }
 
     public func defaultTextStyle() -> some View {
         self
-            .font(UIGlobals.font)
+            .font(UIGlobalsCommon.font)
             .foregroundColor(.black)
     }
 
-    public func defaultContainer(selected:Bool) -> some View {
-        self
-            .background(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(selected ? Color.black : Color.clear, lineWidth: 1)
-                //.background(selectedIntervalIndex == index ? Color(.systemTeal) : Color.clear)
-                .background(selected ? Settings.shared.colorInstructions : Color.clear)
-        )
-    }
+//    public func defaultContainer(selected:Bool) -> some View {
+//        self
+//            .background(
+//            RoundedRectangle(cornerRadius: 8)
+//                .stroke(selected ? Color.black : Color.clear, lineWidth: 1)
+//                //.background(selectedIntervalIndex == index ? Color(.systemTeal) : Color.clear)
+//                //.background(selected ? Settings.shared.colorInstructions : Color.clear)
+//                .background(selected ? Settings.shared.colorInstructions : Color.clear)
+//        )
+//    }
     
     public func selectedButtonStyle(selected: Bool) -> some View {
         self
-            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobals.font : UIGlobals.fontiPhone)
+            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobalsCommon.font : UIGlobalsCommon.fontiPhone)
             .foregroundColor(.white)
             .padding(buttonPadding())
             //.background(enabled ? .blue : .gray)
             .background(selected ? .orange : .blue)
-            .cornerRadius(UIGlobals.cornerRadius)
+            .cornerRadius(UIGlobalsCommon.cornerRadius)
 //            .padding(8)
 //            .background (
 //                ZStack {
@@ -162,29 +169,29 @@ extension Text {
     
     public func disabledButtonStyle() -> some View {
         self
-            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobals.font : UIGlobals.fontiPhone)
+            .font(UIDevice.current.userInterfaceIdiom == .pad ? UIGlobalsCommon.font : UIGlobalsCommon.fontiPhone)
             .foregroundColor(.white)
             .padding(buttonPadding())
             .background(Color(red: 0.7, green: 0.7, blue: 0.7))
-            .cornerRadius(UIGlobals.cornerRadius)
+            .cornerRadius(UIGlobalsCommon.cornerRadius)
             .padding(8)
     }
 }
 
-class UICommons {
-    static let buttonCornerRadius:Double = 20.0
-    static let buttonPadding:Double = 8
-    static let colorAnswer = Color.green.opacity(0.4)
-}
+//class UICommons {
+//    static let buttonCornerRadius:Double = 20.0
+//    static let buttonPadding:Double = 8
+//    static let colorAnswer = Color.green.opacity(0.4)
+//}
 
 public struct RoundedBorderRectangle: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .background(Color.white)
-            .padding(UIGlobals.borderLineWidth)
+            .padding(UIGlobalsCommon.borderLineWidth)
             .overlay(
-                RoundedRectangle(cornerRadius: UIGlobals.cornerRadius)
-                    .stroke(UIGlobals.borderColor, lineWidth: UIGlobals.borderLineWidth)
+                RoundedRectangle(cornerRadius: UIGlobalsCommon.cornerRadius)
+                    .stroke(UIGlobalsCommon.borderColor, lineWidth: UIGlobalsCommon.borderLineWidth)
             )
     }
 }
@@ -194,6 +201,3 @@ public extension View {
         self.modifier(RoundedBorderRectangle())
     }
 }
-
-
-

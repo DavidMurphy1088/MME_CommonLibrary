@@ -39,7 +39,7 @@ public class Logger : ObservableObject {
 
     public func log(_ reporter:AnyObject, _ msg:String) {
         let msg = String(describing: type(of: reporter)) + ":" + msg
-        print("Logger ===========>", msg)
+        print("Logger:", msg)
         recordedMsgs.append(LogMessage(num: recordedMsgs.count, msg))
     }
     

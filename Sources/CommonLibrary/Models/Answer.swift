@@ -9,16 +9,6 @@ public enum AnswerState {
     case submittedAnswer
 }
 
-//public class SightReadingNote { //Codable {
-//    var midi: Int
-//    var date: Date
-//    init(midi:Int, date:Date) {
-//        self.midi = midi
-//        self.date = date
-//    }
-//}
-
-
 ///The answer a student gives to a question
 public class Answer : ObservableObject, Identifiable, Codable {
     public var id:UUID
@@ -32,7 +22,6 @@ public class Answer : ObservableObject, Identifiable, Codable {
     public var selectedIntervalName = ""
     
     ///Rhythm
-    //var tempo:Int?
     public var values:[Double]?
     
     ///Recording
@@ -59,6 +48,22 @@ public class Answer : ObservableObject, Identifiable, Codable {
         a.sightReadingNotePitches = self.sightReadingNotePitches
         a.sightReadingNoteTimes = self.sightReadingNoteTimes
         return a
+    }
+    
+    ///Convert note timestamps from the piano to note durations
+    public func makeNoteValues() {
+        self.values = []
+        var lastTime:Date = Date()
+        for i in 0..<sightReadingNoteTimes.count {
+            let noteTime = sightReadingNoteTimes[i]
+            if i == 0 {
+                lastTime = noteTime
+                continue
+            }
+            var duration:Double = noteTime.timeIntervalSince(lastTime)
+            self.values!.append(duration)
+            lastTime = noteTime
+        }
     }
 }
 

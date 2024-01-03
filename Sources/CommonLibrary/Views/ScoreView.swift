@@ -62,7 +62,7 @@ public struct ScoreView: View {
 //                lineSpacing = 10.0
 //            }
 //            else {
-//                if UIDevice.current.orientation == .portrait {
+//                if !UIGlobalsCommon.isLandscape() == .portrait {
 //                    lineSpacing = UIScreen.main.bounds.width / 64.0
 //                }
 //                else {
@@ -73,7 +73,7 @@ public struct ScoreView: View {
 //        else {
 //            //make a small change only to force via Published a redraw of the staff views
 //            lineSpacing = self.staffLayoutSize.lineSpacing
-//            if UIDevice.current.orientation.isLandscape {
+//            if UIGlobalsCommon.isLandscape() {
 //                lineSpacing += 1
 //            }
 //            else {
@@ -86,16 +86,6 @@ public struct ScoreView: View {
         //score.lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : geometryWidth / 64.0
         //score.lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 5.0 : 15
 
-//        if UIDevice.current.orientation.isLandscape {
-//            lineSpacing = lineSpacing / 1.5
-//        }
-//        if UIDevice.current.orientation.isLandscape {
-//            print("\tLandscape", UIScreen.main.bounds, UIDevice.current.orientation.isFlat)
-//        }
-//        else {
-//            print("\tPortrait", UIScreen.main.bounds, UIDevice.current.orientation.isFlat)
-//        }
-        
         //??????????????????????????????
         //score.lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 5.0 : 8
 //        print("\n👉 👉 setOrientationLineSize \(logCtr) \twidth::", UIScreen.main.bounds.width, "height:", UIScreen.main.bounds.height, "\tline spacing", score.lineSpacing)
@@ -115,7 +105,7 @@ public struct ScoreView: View {
 //        print("🤔 =====> ScoreView Body",
 //              "Score:", score.id.uuidString.suffix(4),
 //              //"Width:", geometryWidth,
-//              //"Portrait?", UIDevice.current.orientation.isPortrait
+//              //"Portrait?", UIGlobalsCommon.isLandscape()
 //              "lineSpacing", self.lineSpacing)
 //
 //        return ""
@@ -151,7 +141,7 @@ public struct ScoreView: View {
 
         .onAppear() {
             self.setOrientationLineSize(ctx: "🤢.Score View .onAppear") //, geometryWidth: geometry.size.width)
-            UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+            //UIDevice.current.beginGeneratingDeviceOrientationNotifications()
         }
         .onDisappear {
             UIDevice.current.endGeneratingDeviceOrientationNotifications()

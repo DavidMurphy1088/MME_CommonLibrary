@@ -62,7 +62,7 @@ public class TimeSlice : ScoreEntry {
         self.entries.append(n)
 
         for i in 0..<score.staffs.count {
-            n.setNotePlacementAndAccidental(staff: score.staffs[i], barAlreadyHasNote: score.noteCountForBar(pitch:n.midiNumber) > 1)
+            n.setNotePlacementAndAccidental(score:score, staff: score.staffs[i])
         }
         score.updateStaffs()
         score.addStemAndBeamCharaceteristics()

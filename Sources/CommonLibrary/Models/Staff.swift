@@ -70,7 +70,8 @@ public class NoteOffsetsInStaffByKey {
         noteOffsetByKey.append("0     0    0    0    0    0    0,1   0     0    0,1  0    0")    //C
         noteOffsetByKey.append("0,1   1    0,1  1,0  0,1  1,0  1     0,1   1    0    1,0  0,1")  //C#, D♭
         noteOffsetByKey.append("1     1,1  1    1    1    1    1,1   1     1,1  1    1    1")    //D
-        noteOffsetByKey.append("2,-1  2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
+      //noteOffsetByKey.append("2,-1  2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
+        noteOffsetByKey.append("1,1   2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
         noteOffsetByKey.append("2     2,1  2    2,1  2    2    2,1   2     2,1  2    2,1  2")    //E
         noteOffsetByKey.append("3     3    3    3    3    3    3     3     3    3,1  3    3")    //F
         noteOffsetByKey.append("3,1   4    3,1  4,0  3,1  4,0  4     3,1   4,0  3    4,0  3,1")  //F#, G♭
@@ -173,9 +174,6 @@ public class Staff : ObservableObject, Identifiable {
                 continue
             }
 
-            //            if noteValue == 73 || noteValue == 72 {
-            //                var debug = 72
-            //            }
             var offsetFromTonic = (noteValue - Note.MIDDLE_C) % Note.OCTAVE
             if offsetFromTonic < 0 {
                 offsetFromTonic = 12 + offsetFromTonic
@@ -186,7 +184,6 @@ public class Staff : ObservableObject, Identifiable {
                 break
             }
             var offsetFromMidLine = noteOffset.offsetFromStaffMidline
-
 
             var octave:Int
             let referenceNote = type == .treble ? Note.MIDDLE_C : Note.MIDDLE_C - 2 * Note.OCTAVE
@@ -271,18 +268,6 @@ public class Staff : ObservableObject, Identifiable {
             }
         }
      }
-    
-    //Tell a note how to display itself
-    //Note offset from middle of staff is dependendent on the staff
-//    func getNoteViewPlacement(note:Note) -> NoteStaffPlacement {
-//
-//        let defaultPlacement = noteStaffPlacement[note.midiNumber]
-//        let placement = NoteStaffPlacement(midi: defaultPlacement.midi,
-//                                           offsetFroMidLine: defaultPlacement.offsetFromStaffMidline,
-//                                           accidental: defaultPlacement.accidental
-//        )
-//        return placement
-//    }
     
     //Tell a note how to display itself
     //Note offset from middle of staff is dependendent on the staff

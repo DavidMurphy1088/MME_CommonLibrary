@@ -173,7 +173,7 @@ public class Note : TimeSliceEntry, Comparable {
 
     public var midiNumber:Int
     public var isOnlyRhythmNote = false
-    public var accidental:Int? = nil ///< 0 = flat, ==0 natural, > 0 sharp
+    public var writtenAccidental:Int? = nil ///An accidental that was explicitly specified in content
     public var rotated:Bool = false ///true if note must be displayed vertically rotated due to closeness to a neighbor.
     
     ///Placements for the note on treble and bass staff
@@ -196,16 +196,16 @@ public class Note : TimeSliceEntry, Comparable {
         return (note1 % 12) == (note2 % 12)
     }
     
-    public init(timeSlice:TimeSlice, num:Int, value:Double = Note.VALUE_QUARTER, staffNum:Int, accidental:Int?=nil) {
+    public init(timeSlice:TimeSlice, num:Int, value:Double = Note.VALUE_QUARTER, staffNum:Int, writtenAccidental:Int?=nil) {
         self.midiNumber = num
         super.init(timeSlice:timeSlice, value: value, staffNum: staffNum)
-        self.accidental = accidental
+        self.writtenAccidental = writtenAccidental
     }
     
     public init(note:Note) {
         self.midiNumber = note.midiNumber
         super.init(timeSlice:note.timeSlice, value: note.getValue(), staffNum: note.staffNum)
-        self.accidental = note.accidental
+        self.writtenAccidental = note.writtenAccidental
         self.isOnlyRhythmNote = note.isOnlyRhythmNote
     }
     
@@ -220,7 +220,6 @@ public class Note : TimeSliceEntry, Comparable {
         if self.isOnlyRhythmNote {
             self.midiNumber = Note.MIDDLE_C + Note.OCTAVE - 1
         }
-        
     }
     
     public static func getNoteName(midiNum:Int) -> String {
@@ -358,18 +357,19 @@ public class Note : TimeSliceEntry, Comparable {
     ///default staff offset based on the written accidental. e.g. a note at MIDI 75 would be defaulted to show as E ♭ in C major but may be speciifed to show as D# by a written
     ///accidentail. In that case the note must shift down 1 unit of offset.
     ///
-    func setNotePlacementAndAccidental(staff:Staff, barAlreadyHasNote:Bool) {
-        let defaultNoteData = staff.getNoteViewPlacement(note: self)
-        var offsetFromMiddle = defaultNoteData.offsetFromStaffMidline
+    func setNotePlacementAndAccidental(score:Score, staff:Staff) {
+        let barAlreadyHasNote = score.getNotesForLastBar(pitch:self.midiNumber).count > 1
+        let defaultNotePlacement = staff.getNoteViewPlacement(note: self)
+        var offsetFromMiddle = defaultNotePlacement.offsetFromStaffMidline
         var offsetAccidental:Int? = nil
-        
+
         if self.isOnlyRhythmNote {
             offsetFromMiddle = 0
         }
-        if let writtenAccidental = self.accidental {
+        if let writtenAccidental = self.writtenAccidental {
             //Content provided a specific accidental
             offsetAccidental = writtenAccidental
-            if writtenAccidental != defaultNoteData.accidental {
+            if writtenAccidental != defaultNotePlacement.accidental {
                 let defaultNoteStaffPlacement = staff.noteStaffPlacement[self.midiNumber]
                 let targetOffsetIndex = self.midiNumber - writtenAccidental
                 let targetNoteStaffPlacement = staff.noteStaffPlacement[targetOffsetIndex]
@@ -380,8 +380,9 @@ public class Note : TimeSliceEntry, Comparable {
         else {
             //Determine if the note's accidental is implied by the key signature
             //Or a note has to have a natural accidental to offset the key signture
+
             let keySignatureHasNote = staff.score.key.hasKeySignatureNote(note: self.midiNumber)
-            if let defaultAccidental = defaultNoteData.accidental {
+            if let defaultAccidental = defaultNotePlacement.accidental {
                 if !keySignatureHasNote {
                     if !barAlreadyHasNote {
                         offsetAccidental = defaultAccidental
@@ -396,11 +397,38 @@ public class Note : TimeSliceEntry, Comparable {
                     }
                 }
             }
+            ///Determine if an accidental for this note is required to cancel the accidental of a previous note in the bar at the same offset.
+            ///e.g. we have a b flat in the bar already and a b natural arrives. The 2nd note needs a natural accidental
+            var lastNoteAtOffset:Note? = nil
+            //var lastStaffPlacement:NoteStaffPlacement? = nil
+            var barPreviousNotes = score.getNotesForLastBar(pitch:nil)
+            if barPreviousNotes.count > 1 {
+                ///Dont consider current note
+                barPreviousNotes.removeFirst()
+            }
+            for prevNote in barPreviousNotes {
+                if let prevPlacement = prevNote.noteStaffPlacements[staff.staffNum] {
+                    if prevPlacement.offsetFromStaffMidline == offsetFromMiddle {
+                        if prevPlacement.accidental != nil {
+                            lastNoteAtOffset = prevNote
+                            break
+                        }
+                    }
+                }
+            }
+            if let lastNoteAtOffset = lastNoteAtOffset {
+                if let lastAccidental = lastNoteAtOffset.noteStaffPlacements[staffNum]?.accidental {
+                    if lastNoteAtOffset.midiNumber > self.midiNumber {
+                        offsetAccidental = lastAccidental - 1
+                    }
+                    if lastNoteAtOffset.midiNumber < self.midiNumber {
+                        offsetAccidental = lastAccidental + 1
+                    }
+                }
+            }
         }
         let placement = NoteStaffPlacement(offsetFroMidLine: offsetFromMiddle, accidental: offsetAccidental)
         self.noteStaffPlacements[staff.staffNum] = placement
         //self.debug("setNoteDisplayCharacteristics")
     }
-    
-
 }

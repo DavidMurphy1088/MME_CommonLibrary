@@ -52,7 +52,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     public var level:Int
     public var questionStatus = QuestionStatus(0)
     public var homeworkIsAssigned:Bool = false
-    public var needLicense:Bool = false
+    //public var isLicensed:Bool = false
     
     public init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
         self.parent = parent
@@ -76,27 +76,40 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
         self.level = level
         setHomeworkStatus()
-        setLicense()
+        //setLicense()
     }
     
-    func setLicense() {
-        let parts = self.name.split(separator: " ")
-
-        if parts.count == 2 {
-            let exNum = Int(parts[1])
-            if let exNum = exNum {
-                if exNum > 2 {
-                    //self.needLicense = true
-                }
-            }
-        }
-    }
+//    func setLicense() {
+//        self.isLicensed = true
+//        let parentExample = self.parentSearch(testCondition: {section in
+//            return section.name.contains("Example")
+//        })
+//        print("====", self.name, "par:", parentExample?.name, parentExample?.getPathAsArray())
+////        self.isLicensed = true
+////        if self.getPathAsArray().count >= 3 {
+////            if let parentExample = self.parentSearch(testCondition: {section in
+////                return section.name.contains("Example")
+////            }) {
+//////                let parts = self.name.split(separator: " ")
+//////                if parts.count == 2 {
+//////                    let exNum = Int(parts[1])
+//////                    if let exNum = exNum {
+//////                        if exNum > 2 {
+//////                            self.isLicensed = true
+//////                        }
+//////                    }
+//////                }
+//////
+////                self.isLicensed = false
+////            }
+////        }
+//    }
     
     private func setHomeworkStatus()  {
-        if !Settings.shared.companionOn {
-            self.homeworkIsAssigned = false
+//        if !Settings.shared.companionOn {
+//            self.homeworkIsAssigned = false
             return
-        }
+//        }
         let path = self.getPathAsArray()
         if path.count == 0 {
             return
@@ -236,19 +249,16 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
     
     ///Search all parents with a true test supplied by the caller
-    public func parentSearch(testCondition:(_ section:ContentSection)->Bool) -> Bool {
+    public func parentSearch(testCondition:(_ section:ContentSection)->Bool) -> ContentSection? {
         if testCondition(self) {
-            return true
+            return self
         }
         if let parent = self.parent  {
-            if testCondition(parent) {
-                return true
-            }
-            if parent.parentSearch(testCondition: testCondition) {
-                return true
-            }
+            //if (parent.parentSearch(testCondition: testCondition) != nil) {
+            return parent.parentSearch(testCondition: testCondition)
+            //}
         }
-        return false
+        return nil
     }
     
     ///Recursivly search all children with a true test supplied by the caller
@@ -551,7 +561,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                     if let value = value {
                         if let score = score {
                             let timeSlice = score.createTimeSlice()
-                            let note = Note(timeSlice: timeSlice, num: onlyRhythm ? 71 : notePitch, value: value, staffNum: 0, accidental: accidental)
+                            let note = Note(timeSlice: timeSlice, num: onlyRhythm ? 71 : notePitch, value: value, staffNum: 0, writtenAccidental: accidental)
                             note.staffNum = 0
                             note.isOnlyRhythmNote = onlyRhythm
                             timeSlice.addNote(n: note)

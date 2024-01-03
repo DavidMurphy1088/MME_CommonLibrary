@@ -194,11 +194,11 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             var recordedTapDuration = tapDuration * Double(questionTempo) / 60.0
             let roundedTappedValue = roundNoteValueToStandardValue(inValue: tapDuration, tempo: questionTempo)
             if var tappedValue = roundedTappedValue {
-
                 if i == tapValues.count - 1 {
                     ///The last tap value is when the student ended the recording and they may have delayed the stop recording
                     ///So instead of using the tapped value, let the last note value be the last question note value so the rhythm is not marked wrong
                     ///But only allow an extra delay of 2.0 sec. i.e. they can't delay hitting stop for too long
+                    ///Also if student ends too quickly that neeeds to be reported as a rhythm error so only modify the tapped value if they are too long
                     if lastQuestionNote != nil {
                         if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + 2.0 {
                             //the student delayed the end of recording
@@ -250,7 +250,6 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         if tapValues.count == 0 {
             return 60
         }
-        //let firstTapValue = self.tapValues1[0]
         let firstTapValue = tapValues[0]
         let tempo = (firstScoreValue / firstTapValue) * 60.0
         return Int(tempo)
@@ -265,10 +264,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     //Read the user's tapped rhythm and return a score representing the ticks they ticked
     public func getTappedAsAScore(timeSignatue:TimeSignature, questionScore:Score, tapValues:[Double]) -> Score {
         let recordedTempo = getTempoFromRecordingStart(tapValues: tapValues, questionScore: questionScore)
-        //let recordedTempo = 60
         ///G3,2,43 let tapValues = [0.5,0.5,1.5,0.5,   1.0,2.0,   0.5,0.5, 1, 3, 2]
-        ///
-        //let tapValues:[Double] = [1,1,1,1,1,1]
         let tappedScore = self.makeScoreFromTaps(questionScore: questionScore, questionTempo: recordedTempo, tapValues: tapValues) //, tapValues: self.tapValues1)
         tappedScore.tempo = recordedTempo
         return tappedScore

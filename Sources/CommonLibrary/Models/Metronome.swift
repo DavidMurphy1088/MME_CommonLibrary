@@ -227,7 +227,8 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     }
     
     private func getSleepTime() -> Double {
-        return (60.0 / Double(self.tempo)) * shortestNoteValue
+        ///Last number is an attempt to sync with Google metronome
+        return (60.0 / Double(self.tempo)) * shortestNoteValue * (self.tempo < 80 ? 0.94 : 0.885)
     }
     
     private func startPlayThreadRunning(timeSignature:TimeSignature) {
@@ -244,13 +245,18 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
             var ticksPlayed = 0
             var firstNote = true
             var tieWasFound = false
+            var debug = true
+            var lastTime = Date()
 
             while keepRunning {
                 ///Sound the metronome tick. %4 because its counting at semiquaver intervals
                 ///Make sure score playing is synched to the metronome tick
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
-                        //log("next loop \(loopCtr) do tick")
+                        let elapsedTimeMillis = Date().timeIntervalSince(lastTime) * 1000
+                        let elapsedTimeSeconds = String(format: "%.2f", elapsedTimeMillis / 1000)
+                        print("\(loopCtr) \(loopCtr % 4) Elapsed time: \(elapsedTimeSeconds) seconds")
+                        lastTime = Date()
                         audioTickerMetronomeTick.soundTick(timeSignature: timeSignature, silent: false)
                         ticksPlayed += 1
                     }

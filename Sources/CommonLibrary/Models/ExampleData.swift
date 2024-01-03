@@ -9,10 +9,12 @@ public class ExampleData : ObservableObject {
     public init(sheetName:String, rootContentSection:ContentSection) {
         self.dataStatus = .waiting
         self.rootContentSection = rootContentSection
-        loadData(sheetName: sheetName)
+        getSheet(sheetName: sheetName, context: "Examples", loadFunction: loadSheetData)
+        getSheet(sheetName: "MelodiesSheetID", context: "Melodies", loadFunction: loadMelodies)
+        getSheet(sheetName: "MTFreeLicenses", context: "Licenses", loadFunction: IAPManager.shared.loadLicenses)
     }
     
-    func loadData(sheetName:String)  {
+    private func getSheet(sheetName:String, context:String, loadFunction: @escaping (_ sheetRows: [[String]]) -> Void) {
         googleAPI.getContentSheet(sheetName: sheetName) { status, data in
             if status == .success {
                 if let data = data {
@@ -23,52 +25,27 @@ public class ExampleData : ObservableObject {
                     do {
                         let jsonData = try JSONDecoder().decode(JSONSheet.self, from: data)
                         let sheetRows = jsonData.values
-                        self.loadSheetData(sheetRows: sheetRows)
-                        Logger.logger.log(self, "Loaded \(sheetRows.count) sheet rows")
-                        self.setDataReady(way: status)
+                        //self.loadSheetData(sheetRows: sheetRows)
+                        loadFunction(sheetRows)
+                        Logger.logger.log(self, "\(context) loaded \(sheetRows.count) sheet rows")
+                        self.setDataReady(context: context, way: status)
                     }
                     catch {
-                        self.logger.log(self, "Cannot parse JSON content")
+                        self.logger.log(self, "\(context) cannot parse JSON content")
                     }
                 }
                 else {
-                    self.setDataReady(way: .failed)
-                    self.logger.log(self, "No content data")
+                    self.setDataReady(context: context, way: .failed)
+                    self.logger.log(self, "\(context) no content data")
                 }
             }
             else {
-                self.setDataReady(way: status)
+                self.setDataReady(context:context, way: status)
             }
-        }
-        
-        googleAPI.getContentSheet(sheetName: "MelodiesSheetID") { status, data in
-            if status == .success {
-                if let data = data {
-                    struct JSONSheet: Codable {
-                        let range: String
-                        let values:[[String]]
-                    }
-                    do {
-                        let jsonData = try JSONDecoder().decode(JSONSheet.self, from: data)
-                        let sheetRows = jsonData.values
-                        self.loadMelodies(sheetRows: sheetRows)
-                    }
-                    catch {
-                        self.logger.log(self, "Cannot parse melody content")
-                    }
-                }
-                else {
-                    self.setDataReady(way: .failed)
-                    self.logger.log(self, "No melody data")
-                }
-            }
-            else {
-                self.setDataReady(way: status)
-            }
-
         }
     }
     
+
     func loadMelodies(sheetRows:[[String]]) {
         for rowCells in sheetRows {
             if rowCells.count < 4 {
@@ -109,7 +86,7 @@ public class ExampleData : ObservableObject {
                     if parts.count == 3 {
                         let accidental = Int(parts[2])
                         if [0,1,2].contains(accidental) {
-                            note.accidental = accidental
+                            note.writtenAccidental = accidental
                         }
                     }
                     timeSlice.addNote(n: note)
@@ -199,9 +176,9 @@ public class ExampleData : ObservableObject {
                                 contentSection.loadAnswerFromFile()
                             }
                             else {
-                                if Settings.shared.companionOn {
-                                    contentSection.loadAnswerFromFile()
-                                }
+//                                if Settings.shared.companionOn {
+//                                    contentSection.loadAnswerFromFile()
+//                                }
                             }
                         }
                         //MusicianshipTrainerApp.root.debug()
@@ -214,9 +191,9 @@ public class ExampleData : ObservableObject {
 
     //load data from Google Drive Sheet
 
-    func setDataReady(way:RequestStatus) {
+    func setDataReady(context:String, way:RequestStatus) {
         DispatchQueue.main.async {
-            Logger.logger.log(self, "Example data was set as \(way)")
+            Logger.logger.log(self, "\(context) data was set as \(way)")
             self.dataStatus = way
         }
     }

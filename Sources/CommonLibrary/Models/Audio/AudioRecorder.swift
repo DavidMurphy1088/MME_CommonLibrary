@@ -122,7 +122,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     public func stopRecording() {
         Logger.logger.log(self, "Trying to stop recorder")
         if audioRecorder == nil {
-            Logger.logger.reportError(self, "audioRecorder is nil at stop")
+            //Logger.logger.reportError(self, "audioRecorder is nil at stop")
         }
         else {
             Logger.logger.log(self, "Recording ended - wasRecording? -\(audioRecorder.isRecording) seconds:\(String(format: "%.1f", audioRecorder.currentTime))")

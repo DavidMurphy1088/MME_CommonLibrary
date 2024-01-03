@@ -81,6 +81,37 @@ struct ScoreEntriesView: View {
         return nil
     }
     
+//    ///Return the start and end points for te quaver beam based on the note postions that were reported
+//    func getBeamLine(endNote:Note, noteWidth:Double, startNote:Note, stemLength:Double) -> (CGPoint, CGPoint)? {
+//        let stemDirection:Double = startNote.stemDirection == .up ? -1.0 : 1.0
+//        if [StatusTag.rhythmError].contains(startNote.timeSlice.statusTag) {
+//            return nil
+//        }
+//        let endNotePos = noteLayoutPositions.positions[endNote]
+//        if let endNotePos = endNotePos {
+//            let xEndMid = endNotePos.origin.x + endNotePos.size.width / 2.0 + (noteWidth / 2.0 * stemDirection * -1.0)
+//            let yEndMid = endNotePos.origin.y + endNotePos.size.height / 2.0
+//            
+//            let endPitchOffset = endNote.getNoteDisplayCharacteristics(staff: staff).offsetFromStaffMidline
+//            let yEndNoteMiddle:Double = yEndMid + (Double(endPitchOffset) * score.lineSpacing * -0.5)
+//            let yEndNoteStemTip = yEndNoteMiddle + stemLength * stemDirection
+//            
+//            //start note
+//            let startNotePos = noteLayoutPositions.positions[startNote]
+//            if let startNotePos = startNotePos {
+//                let xStartMid = startNotePos.origin.x + startNotePos.size.width / 2.0 + (noteWidth / 2.0 * stemDirection * -1.0) - noteWidth/.0
+//                let yStartMid = startNotePos.origin.y + startNotePos.size.height / 2.0
+//                let startPitchOffset = startNote.getNoteDisplayCharacteristics(staff: staff).offsetFromStaffMidline
+//                let yStartNoteMiddle:Double = yStartMid + (Double(startPitchOffset) * score.lineSpacing * -0.5)
+//                let yStartNoteStemTip = yStartNoteMiddle + stemLength * stemDirection
+//                let p1 = CGPoint(x:5, y: yEndNoteStemTip)
+//                let p2 = CGPoint(x:xStartMid, y:yStartNoteStemTip)
+//                return (p1, p2)
+//            }
+//        }
+//        return nil
+//    }
+    
     ///Return the start and end points for te quaver beam based on the note postions that were reported
     func getBeamLine(endNote:Note, noteWidth:Double, startNote:Note, stemLength:Double) -> (CGPoint, CGPoint)? {
         let stemDirection:Double = startNote.stemDirection == .up ? -1.0 : 1.0
@@ -111,7 +142,7 @@ struct ScoreEntriesView: View {
         }
         return nil
     }
-
+    
     func getQuaverImage(note:Note) -> Image {
         return Image(note.midiNumber > 71 ? "quaver_arm_flipped_grayscale" : "quaver_arm_grayscale")
     }

@@ -58,23 +58,6 @@ public class StudentFeedback : ObservableObject {
     public var tempo:Int? = nil
 }
 
-//class StaffLayoutSize: ObservableObject {
-//    @Published var lineSpacing:Double
-//
-//    init () {
-//        //self.lineSpacing = 0.0
-//        self.lineSpacing = 15.0
-//    }
-//
-//    func setLineSpacing(_ v:Double) {
-//        DispatchQueue.main.async {
-//            self.lineSpacing = v
-//        }
-//    }
-//
-//
-//}
-
 public class Score : ObservableObject {
     let id:UUID
     
@@ -91,6 +74,7 @@ public class Score : ObservableObject {
     public var studentFeedback:StudentFeedback? = nil
     public var tempo:Int?
     public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 15.0
+    //public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 8.0
 
     private var totalStaffLineCount:Int = 0
     static var accSharp = "\u{266f}"
@@ -134,7 +118,7 @@ public class Score : ObservableObject {
         if self.heightPaddingEnabled {
             ///Allow some extra height spacing when possible
             if cnt == 1 {
-                //if !UIDevice.current.orientation.isLandscape {
+                //if !UIGlobalsCommon.isLandscape() {
                 height = height * 1.6
                 //}
             }
@@ -219,7 +203,7 @@ public class Score : ObservableObject {
                               "Value:", t.getValue() ,
                               "stemDirection", note.stemDirection,
                               "stemLength", note.stemLength,
-                              "accidental", note.accidental,
+                              "writtenAccidental", note.writtenAccidental,
                               "[beamType:", note.beamType,
                               "beamEnd:", note.beamEndNote ?? "none",
                               "]")
@@ -232,7 +216,7 @@ public class Score : ObservableObject {
                               "[Note Value:", note.getValue(),"]",
                               "[status]",t.statusTag,
                               "[beat]",t.beatNumber,
-                              "[Accidental:",note.accidental ?? "","]",
+                              "[writtenAccidental:",note.writtenAccidental ?? "","]",
                               "[Staff:",note.staffNum,"]"
 //                              "[stem:",note.stemDirection, note.stemLength, "]",
 //                              "[placement:",note.noteStaffPlacements[0]?.offsetFromStaffMidline ?? "none", note.noteStaffPlacements[0]?.accidental ?? "none","]",
@@ -435,9 +419,6 @@ public class Score : ObservableObject {
         //apply the quaver beam back from the last note
         var notesUnderBeam:[Note] = []
         notesUnderBeam.append(lastNote)
-        if lastTimeSlice.sequence == 4 {
-           print("==========+DEBUGX")
-        }
 
         ///Figure out the start, middle and end of this group of quavers
         for i in stride(from: lastNoteIndex - 1, through: 0, by: -1) {
@@ -675,7 +656,7 @@ public class Score : ObservableObject {
                 //outputTimeSlice.statusTag = .afterError
                 ///Dont break yet.  Add empty timeslices to the output score so that it still lines up vertically with the question score
                 //break
-                ///Changed 21Dec2023 to inlcude now in the output any remaining rhythm the student tapped.
+                ///Changed 21Dec2023 to include now in the output any remaining rhythm the student tapped.
                 ///Rationale was for studnet to be able to hear their full rhythm regardless of any mistakes made
                 if true {
                     if tapIndex < userScore.getAllTimeSlices().count {
@@ -695,7 +676,7 @@ public class Score : ObservableObject {
                 let outputTimeSlice = outputScore.createTimeSlice()
                 if tapIndex >= userScore.getAllTimeSlices().count {
                     stopAnalysis = true
-                    explanation = "• There was no \(noteType)"
+                    explanation = "• There was no \(noteType) here"
                     outputTimeSlice.statusTag = .rhythmError
                 }
                 else {
@@ -703,6 +684,9 @@ public class Score : ObservableObject {
                     let delta = questionNoteValue * tolerancePercent * 0.01
                     let lowBound = questionNoteValue - delta
                     let hiBound = questionNoteValue + delta
+//                    if tapIndex == userScore.getAllTimeSlices().count - 1 {
+//                        tap.tapSecondsNormalizedToTempo = questionNoteValue
+//                    }
                     if tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound {
                         outputTimeSlice.statusTag = .rhythmError
                         questionTimeSlice.statusTag = .hilightAsCorrect
@@ -793,22 +777,28 @@ public class Score : ObservableObject {
         }
     }
     
-    func noteCountForBar(pitch:Int) -> Int {
-        var count = 0
+    func getNotesForLastBar(pitch:Int? = nil) -> [Note] {
+        var notes:[Note] = []
         for entry in self.scoreEntries.reversed() {
             if entry is BarLine {
                 break
             }
             if let ts = entry as? TimeSlice {
                 if ts.getTimeSliceNotes().count > 0 {
-                    let note = ts.entries[0] as? Note
-                    if note?.midiNumber == pitch {
-                        count += 1
+                    if let note = ts.entries[0] as? Note {
+                        if let pitch = pitch {
+                            if note.midiNumber == pitch {
+                                notes.append(note)
+                            }
+                        }
+                        else {
+                            notes.append(note)
+                        }
                     }
                 }
             }
         }
-        return count
+        return notes
     }
     
     func searchTimeSlices(searchFunction:(_:TimeSlice)->Bool) -> [TimeSlice]  {
