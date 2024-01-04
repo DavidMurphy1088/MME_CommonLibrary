@@ -12,6 +12,7 @@ public struct ToolsView: View {
     
     public var body: some View {
         VStack {
+            Text(" ") ///This view is at the top of a view inside a ScrollView which for some unknown reason scrolls the top of the metronome off the top of the screen so space it down some :(
             HStack {
                 MetronomeView(timeSignature:score.timeSignature, helpText: helpMetronome, 
                               frameHeight: score.lineSpacing * 6, 

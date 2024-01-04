@@ -186,7 +186,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore1(_ ctx:String, withBeam:Bool) {
+    public func debugScore3(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -199,13 +199,14 @@ public class Score : ObservableObject {
                     if withBeam {
                         print("  Seq", t.sequence, 
                               "type:", type(of: t.entries[0]),
-                              "midi:", note.midiNumber, 
+                              "midi:", note.midiNumber,
+                              "beat:", t.beatNumber,
                               "Value:", t.getValue() ,
                               "stemDirection", note.stemDirection,
                               "stemLength", note.stemLength,
                               "writtenAccidental", note.writtenAccidental,
-                              "[beamType:", note.beamType,
-                              "beamEnd:", note.beamEndNote ?? "none",
+                              "\t[beamType:", note.beamType,"]",
+                              "beamEndNoteSeq:", note.beamEndNote?.sequence ?? "_",
                               "]")
                     }
                     else {
@@ -354,7 +355,9 @@ public class Score : ObservableObject {
     }
 
     ///Determine whether quavers can be beamed within a bar's strong and weak beats
+    ///startBeam is the possible start of beam, lastBeat is the end of beam
     func canBeBeamedTo(timeSignature:TimeSignature, startBeamTimeSlice:TimeSlice, lastBeat:Double) -> Bool {
+        //self.debugScore1("CanBeam start:\(startBeamTimeSlice.sequence) latBeat:\(lastBeat)", withBeam: true)
         if timeSignature.top == 4 {
             let startBeatInt = Int(startBeamTimeSlice.beatNumber)
             if lastBeat > 2 {
@@ -365,11 +368,17 @@ public class Score : ObservableObject {
             }
         }
         if timeSignature.top == 3 {
-//            if Int(startBeamTimeSlice.beatNumber) == Int(lastBeat) {
-//                return true
-//            }
-            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-            return [0, 1, 2].contains(startBeatInt)
+            ///Check is integer to check start beat is on a main beat
+            ///If check integer then 3/4 with values : 1.5, 0.5, 0.5, 0.5 the 2nd is standalone and 3 and 4 are beamed - which is correct. without check, 3 is beamed to 2
+            ///but with check 1, .5,.5,  .5,.5 beams are 2 and 3 and 4 and 5 but not 2 thru 5 all together. But this is a less bad sin than the one above. So keep integer check inplace
+            ///Beaming code needs a rewrite but first needs 100% definite and simple to understand rules
+            if floor(startBeamTimeSlice.beatNumber) == ceil(startBeamTimeSlice.beatNumber) {
+                let startBeatInt = Int(startBeamTimeSlice.beatNumber)
+                return [0, 1, 2].contains(startBeatInt)
+            }
+            else {
+                return false
+            }
         }
         if timeSignature.top == 2 {
             let startBeatInt = Int(startBeamTimeSlice.beatNumber)
@@ -414,7 +423,7 @@ public class Score : ObservableObject {
             }
             return
         }
-        
+
         let staff = self.staffs[lastNote.staffNum]
         //apply the quaver beam back from the last note
         var notesUnderBeam:[Note] = []
@@ -543,7 +552,7 @@ public class Score : ObservableObject {
                 }
             }
         }
-        //debugScore("end of beaming", withBeam: true)
+        //debugScore2("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
     }
     
     public func copyEntries(from:Score, count:Int? = nil) {

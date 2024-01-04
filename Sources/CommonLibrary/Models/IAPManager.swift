@@ -12,7 +12,8 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     @Published var isInPurchasingState = false
 
     public static let shared = IAPManager()
-    private let productIDs: Set<String> = ["MT_NZMEB_Grade_1_2024", "MT_NZMEB_Grade_2_2024", "MT_NZMEB_Grade_3_2024"]
+    //private let productIDs: Set<String> = ["NZMEB_Grade_2_2024", "MT_NZMEB_Grade_1_2024", "MT_NZMEB_Grade2_2024", "MT_NZMEB_Grade_3_2024"]
+    private let productIDs: Set<String> = ["NZMEB_Grade_2_2024"]
 
     private override init() {
         print("=========IAPManager init()")
@@ -93,7 +94,8 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         let currentYear = calendar.component(.year, from: now)
         let gradeToBuy = grade.replacingOccurrences(of: " ", with: "_")
 
-        let productId = "MT_NZMEB_\(gradeToBuy)_\(String(currentYear))"
+        let productId = "NZMEB_\(gradeToBuy)_\(String(currentYear))"
+        print("============== buyProduct, product id", productId)
         if let product = self.availableProducts[productId] {
             print("=========IAPManager buyProduct", productId, product)
             let payment = SKPayment(product: product)

@@ -43,7 +43,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     public static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String,
                                                 minTempo:Int? = nil, maxTempo:Int? = nil) -> Metronome {
         shared.setTempo(tempo: initialTempo, context: "getMetronomeWithSettings - \(ctx)")
-        shared.setAllowTempoChange(allow: allowChangeTempo)
+        shared.setAllowTempoChange("getMetronomeWithSettings", allow: allowChangeTempo)
         if let tempo = minTempo {
             shared.tempoMinimumSetting = tempo
         }
@@ -164,8 +164,9 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
         }
     }
     
-    public func setAllowTempoChange(allow:Bool) {
+    public func setAllowTempoChange(_ ctx:String, allow:Bool) {
         DispatchQueue.main.async {
+            print("======== Metronome, \(ctx), allow set", allow)
             self.allowChangeTempo = allow
         }
     }
@@ -255,7 +256,6 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
                     if self.tickingIsActive {
                         let elapsedTimeMillis = Date().timeIntervalSince(lastTime) * 1000
                         let elapsedTimeSeconds = String(format: "%.2f", elapsedTimeMillis / 1000)
-                        print("\(loopCtr) \(loopCtr % 4) Elapsed time: \(elapsedTimeSeconds) seconds")
                         lastTime = Date()
                         audioTickerMetronomeTick.soundTick(timeSignature: timeSignature, silent: false)
                         ticksPlayed += 1
