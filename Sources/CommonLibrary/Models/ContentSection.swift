@@ -52,7 +52,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     public var level:Int
     public var questionStatus = QuestionStatus(0)
     public var homeworkIsAssigned:Bool = false
-    //public var isLicensed:Bool = false
+    public var backgroundImageName:String = ""
     
     public init(parent:ContentSection?, name:String, type:String, data:ContentSectionData? = nil, isActive:Bool = true) {
         self.parent = parent
@@ -78,33 +78,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         setHomeworkStatus()
         //setLicense()
     }
-    
-//    func setLicense() {
-//        self.isLicensed = true
-//        let parentExample = self.parentSearch(testCondition: {section in
-//            return section.name.contains("Example")
-//        })
-//        print("====", self.name, "par:", parentExample?.name, parentExample?.getPathAsArray())
-////        self.isLicensed = true
-////        if self.getPathAsArray().count >= 3 {
-////            if let parentExample = self.parentSearch(testCondition: {section in
-////                return section.name.contains("Example")
-////            }) {
-//////                let parts = self.name.split(separator: " ")
-//////                if parts.count == 2 {
-//////                    let exNum = Int(parts[1])
-//////                    if let exNum = exNum {
-//////                        if exNum > 2 {
-//////                            self.isLicensed = true
-//////                        }
-//////                    }
-//////                }
-//////
-////                self.isLicensed = false
-////            }
-////        }
-//    }
-    
+        
     private func setHomeworkStatus()  {
 //        if !Settings.shared.companionOn {
 //            self.homeworkIsAssigned = false
@@ -145,7 +119,8 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                 DispatchQueue.main.async {
                     self.postitionToIndex = i
                     DispatchQueue.global(qos: .background).async {
-                        sleep(1)
+                        //sleep(1.5)
+                        usleep(2000 * 1000)
                         DispatchQueue.main.async {
                             self.selectedIndex = i
                         }

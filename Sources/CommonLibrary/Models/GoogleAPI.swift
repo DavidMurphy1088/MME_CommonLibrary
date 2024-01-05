@@ -339,7 +339,6 @@ public class GoogleAPI {
         if !bypass {
             ///If we get data from either cache or defaults return it, otherwise try once to load it externally
             let data = dataCache.getData(key: cacheKey)
-            
             var loadedFromExternal = false
             if let entry = dataCache.getCacheEntry(cacheKey) {
                 if entry.wasLoadedFromExternal {

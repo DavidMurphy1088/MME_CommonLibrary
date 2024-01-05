@@ -13,6 +13,16 @@ public struct LicenseManagerView: View {
         self.email = email
     }
     
+    func getProducts() -> [SKProduct] {
+        let products: [SKProduct] = Array(IAPManager.shared.availableProducts.values)
+        let filteredProducts = products.filter { product in {
+            let grade = contentSection.getPathTitle().replacingOccurrences(of: " ", with: "_")
+            return product.productIdentifier.hasPrefix("NZMEB") && product.productIdentifier.contains(grade)
+        }()
+        }
+        return filteredProducts
+    }
+    
     public var body: some View {
         VStack {
             Text("\(contentSection.getPathTitle()) License").font(.title).padding()
@@ -26,6 +36,20 @@ public struct LicenseManagerView: View {
             }
             else {
                 if iapManager.isLicenseAvailable(grade: contentSection.name) {
+                    List {
+                        ForEach(getProducts(), id: \.self) { product in
+                            HStack {
+                                Text(product.localizedTitle)
+                                Spacer()
+                                let currency = product.priceLocale.localizedString(forCurrencyCode: product.priceLocale.currencyCode!)
+                                Text(currency ?? "")
+                                let price:String = product.price.description
+                                Text(price)
+                            }
+                        }
+                    }
+                    .padding()
+                    .navigationTitle("Available Products")
                     HStack {
                         Text("                  ").padding()
                         VStack {
@@ -33,6 +57,7 @@ public struct LicenseManagerView: View {
                             Text("Purchasing this license provides you with unlimited access to all the practise examples and practise exams for \(contentSection.getPathTitle()) NZMEB Musicianship.").padding()
                             Text("Product licenses are also available for registered music teachers. Please contact productsupport@musicmastereducation.co.nz for more details.").padding()                            
                         }
+
                         Text("                  ").padding()
                     }
                     if iapManager.isInPurchasingState {

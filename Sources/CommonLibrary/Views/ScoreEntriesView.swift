@@ -28,6 +28,7 @@ struct TimeSliceLabelView: View {
                         }
                         else {
                             Text(tag.content).font(font).defaultTextStyle()
+                            //Text(tag.content).defaultTextStyle()
                         }
                         Spacer()
                     }
@@ -39,6 +40,7 @@ struct TimeSliceLabelView: View {
                     VStack {
                         Spacer()
                         Text(tag).font(font).defaultTextStyle()
+                        //Text(tag).defaultTextStyle()
                     }
                 }
             }
@@ -112,12 +114,13 @@ struct ScoreEntriesView: View {
 //        return nil
 //    }
     
-    ///Return the start and end points for te quaver beam based on the note postions that were reported
-    func getBeamLine(endNote:Note, noteWidth:Double, startNote:Note, stemLength:Double) -> (CGPoint, CGPoint)? {
+    ///Return the start and end points for the quaver beam based on the note postions that were reported
+    func getBeamLine(endNote:Note, noteWidth:Double, startNote:Note) -> (CGPoint, CGPoint)? {
         let stemDirection:Double = startNote.stemDirection == .up ? -1.0 : 1.0
         if [StatusTag.rhythmError].contains(startNote.timeSlice.statusTag) {
             return nil
         }
+        let stemLength = max(startNote.stemLength, endNote.stemLength) * score.lineSpacing
         let endNotePos = noteLayoutPositions.positions[endNote]
         if let endNotePos = endNotePos {
             let xEndMid = endNotePos.origin.x + endNotePos.size.width / 2.0 + (noteWidth / 2.0 * stemDirection * -1.0)
@@ -188,6 +191,14 @@ struct ScoreEntriesView: View {
         }
     }
     
+    func getTagOffset(_ ts:TimeSlice) -> Double {
+        if ts.getTimeSliceNotes().count > 0 {
+            let note = ts.getTimeSliceNotes()[0]
+            return note.midiNumber < 64 ? 1 : 0
+        }
+        return 0
+    }
+    
     var body: some View {
         ZStack {
             let noteWidth = score.lineSpacing * 1.2
@@ -218,6 +229,7 @@ struct ScoreEntriesView: View {
                                             }
                                         }
                                 })
+                                
                                 if timeSlice.statusTag != .rhythmError  {
                                     StemView(score:score,
                                              staff:staff,
@@ -225,17 +237,20 @@ struct ScoreEntriesView: View {
                                              notes: entries.getTimeSliceNotes())
                                 }
 
-//                                TimeSliceLabelView(score:score, staff:staff, timeSlice: entry as! TimeSlice)
-//                                    .frame(height: score.getStaffHeight())
-                            }
+                             }
                             //.border(Color.red)
                             .overlay(
                                 HStack {
                                     TimeSliceLabelView(score:score, staff:staff, timeSlice: entry as! TimeSlice)
-                                        .frame(height: score.getStaffHeight())
+                                        //.frame(height: score.getStaffHeight())
+                                        .frame(height: Double(staff.linesInStaff) * score.lineSpacing * 2)
+                                        /// Move down below bottom ledger lines if the note is low
+                                        .offset(y:score.lineSpacing * getTagOffset(entry as! TimeSlice))
                                 }
-                                ///TimeSliceLabelView only takes what it needs
-                                .frame(width: score.lineSpacing * 4)
+                                
+                                //.border(Color.red)
+                                ///Must be enough width for 2 chars (as of the current version...)
+                                .frame(width: score.lineSpacing * 5)
                             )
                         }
                         if entry is BarLine {
@@ -281,8 +296,7 @@ struct ScoreEntriesView: View {
                                     let startNote = endNote.getBeamStartNote(score: score, np:noteLayoutPositions)
                                     if let line = getBeamLine(endNote: endNote,
                                                               noteWidth: noteWidth,
-                                                              startNote: startNote,
-                                                              stemLength:score.lineSpacing * 3.5) {
+                                                              startNote: startNote) {
                                         quaverBeamView(line: line, startNote: startNote, endNote: endNote, lineSpacing: score.lineSpacing)
                                     }
                                 }

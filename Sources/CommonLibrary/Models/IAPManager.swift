@@ -13,10 +13,9 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
 
     public static let shared = IAPManager()
     //private let productIDs: Set<String> = ["NZMEB_Grade_2_2024", "MT_NZMEB_Grade_1_2024", "MT_NZMEB_Grade2_2024", "MT_NZMEB_Grade_3_2024"]
-    private let productIDs: Set<String> = ["NZMEB_Grade_2_2024"]
+    private let productIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024"]
 
     private override init() {
-        print("=========IAPManager init()")
         super.init()
         //SKPaymentQueue.default().add(self)
         //requestProducts()
@@ -76,14 +75,14 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     }
 
     public func requestProducts() {
-        print("=========IAPManager requestProducts", productIDs)
+        //print("=========IAPManager requestProducts", productIDs)
         let request = SKProductsRequest(productIdentifiers: productIDs)
         request.delegate = self
         request.start()
     }
     
     public func restoreTransactions() {
-        print("=========IAPManager restoreTransactions")
+        //print("=========IAPManager restoreTransactions")
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
     
@@ -95,9 +94,9 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         let gradeToBuy = grade.replacingOccurrences(of: " ", with: "_")
 
         let productId = "NZMEB_\(gradeToBuy)_\(String(currentYear))"
-        print("============== buyProduct, product id", productId)
+        //print("============== buyProduct, product id", productId)
         if let product = self.availableProducts[productId] {
-            print("=========IAPManager buyProduct", productId, product)
+            //print("=========IAPManager buyProduct", productId, product)
             let payment = SKPayment(product: product)
             SKPaymentQueue.default().add(payment)
         }
@@ -107,52 +106,47 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     /// Sent immediately before -requestDidFinish
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
-            print("=========IAPManager  productsRequest response", request, response)
+            //print("=========IAPManager  productsRequest response", request, response)
             for product in response.products {
                 self.availableProducts[product.productIdentifier] = product
-                print("  ==> available", product.productIdentifier)
+                Logger.logger.log(self, "licenseType \(product.productIdentifier)")
             }
         }
     }
 
     public func request(_ request: SKRequest, didFailWithError error: Error) {
-        print("=========IAPManager  didFailWithError", error.localizedDescription)
+        Logger.logger.reportError(self, "didFailWithError", error)
     }
 
     // SKPaymentTransactionObserver
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        print("\n=========IAPManager  paymentQueue, updatedTransactions")
+        //print("\n=========IAPManager  paymentQueue, updatedTransactions")
         DispatchQueue.main.async {
             self.isInPurchasingState = false
             for transaction in transactions {
-                print("  transaction", transaction.transactionState,
-                      "\tstate:", self.getStateName(transaction.transactionState).0,
-                      "\tdesc", transaction.description)
+//                print("  transaction", transaction.transactionState,
+//                      "\tstate:", self.getStateName(transaction.transactionState).0,
+//                      "\tdesc", transaction.description)
                 
                 switch transaction.transactionState {
                 case .purchasing:
                     /// Transaction is being added to the server queue. Client should not complete the transaction.
-                    //DispatchQueue.main.async {
-                    print("  -----> purchasing...", transaction.payment.productIdentifier)
+                    //print("  -----> purchasing...", transaction.payment.productIdentifier)
                     self.isInPurchasingState = true
                     //                    self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     //                    SKPaymentQueue.default().finishTransaction(transaction)
-                    //}
                     
                 case .purchased:
-                    //DispatchQueue.main.async {
-                        print("  -----> purchased", transaction.payment.productIdentifier)
+                        //print("  -----> purchased", transaction.payment.productIdentifier)
                         self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                         SKPaymentQueue.default().finishTransaction(transaction)
-                    //}
                 case .restored:
-                    //DispatchQueue.main.async {
-                        print("  -----> restored", transaction.payment.productIdentifier)
+                        //print("  -----> restored", transaction.payment.productIdentifier)
                         self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                         SKPaymentQueue.default().finishTransaction(transaction)
-                    //}
                 case .failed:
-                    print("  -----> failed", transaction.payment.productIdentifier)
+                    let err:String = transaction.error?.localizedDescription ?? ""
+                    Logger.logger.reportError(self, "paymentQueue didFailWithError \(err)")
                     SKPaymentQueue.default().finishTransaction(transaction)
                 default:
                     print("  -----> unknown", transaction.payment.productIdentifier)

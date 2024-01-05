@@ -89,7 +89,6 @@ public class Score : ObservableObject {
         totalStaffLineCount = linesPerStaff + (2*ledgerLineCount)
         self.key = key
         barLayoutPositions = BarLayoutPositions()
-        //self.staffLayoutSize = StaffLayoutSize()
         self.heightPaddingEnabled = heightPaddingEnabled
     }
 
@@ -112,8 +111,9 @@ public class Score : ObservableObject {
     
     public func getStaffHeight() -> Double {
         //leave enough space above and below the staff for the Timeslice view to show its tags
-        var height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing
-        
+        //var height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing
+        var height = Double(getTotalStaffLineCount() + 2) * self.lineSpacing ///Jan2024 Leave room for notes on more ledger lines
+
         let cnt = staffs.filter { !$0.isHidden }.count
         if self.heightPaddingEnabled {
             ///Allow some extra height spacing when possible
@@ -186,7 +186,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore3(_ ctx:String, withBeam:Bool) {
+    public func debugScore4(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -406,7 +406,7 @@ public class Score : ObservableObject {
         lastNote.sequence = self.getAllTimeSlices().count
 
         //The number of staff lines for a full stem length
-        let stemLengthLines = 3.5
+        let linesForFullStemLength = 3.5
 
         if lastNote.getValue() != Note.VALUE_QUAVER {
             for staffIndex in 0..<self.staffs.count {
@@ -414,7 +414,7 @@ public class Score : ObservableObject {
                 let staffNotes = lastTimeSlice.getTimeSliceNotes(staffNum: staffIndex)
                 for note in staffNotes {
                     note.stemDirection = stemDirection
-                    note.stemLength = stemLengthLines
+                    note.stemLength = linesForFullStemLength
                     ///Dont try yet to beam semiquavers
                     if lastNote.getValue() == Note.VALUE_SEMIQUAVER {
                         note.beamType = .end
@@ -499,28 +499,41 @@ public class Score : ObservableObject {
         beamSlope = beamSlope / Double(notesUnderBeam.count - 1)
 
         var requiredBeamPosition = Double(startPlacement.offsetFromStaffMidline)
+        var minStemLength = linesForFullStemLength
         
         for i in 0..<notesUnderBeam.count {
             let note = notesUnderBeam[i]
             if i == 0 {
                 note.beamType = .end
-                note.stemLength = stemLengthLines
+                note.stemLength = linesForFullStemLength
             }
             else {
                 if i == notesUnderBeam.count-1 {
                     note.beamType = .start
-                    note.stemLength = stemLengthLines
+                    note.stemLength = linesForFullStemLength
                 }
                 else {
                     note.beamType = .middle
                     let placement = staff.getNoteViewPlacement(note: note)
                     ///adjust the stem length according to where the note is positioned vs. where the beam slope position requires
                     let stemDiff = Double(placement.offsetFromStaffMidline) - requiredBeamPosition
-                    note.stemLength = stemLengthLines + (stemDiff / 2.0 * (totalOffset > 0 ? 1.0 : -1.0))
+                    note.stemLength = linesForFullStemLength + (stemDiff / 2.0 * (totalOffset > 0 ? 1.0 : -1.0))
+                    print("=========StemLen", note.stemLength, note.beamType, "midi:", note.midiNumber)
+                    if note.stemLength < minStemLength {
+                        minStemLength = note.stemLength
+                    }
                 }
             }
             requiredBeamPosition += beamSlope
             note.stemDirection = totalOffset > 0 ? .down : .up
+        }
+        
+        if minStemLength < 2 {
+            let delta = 3 - minStemLength
+            for i in 0..<notesUnderBeam.count {
+                let note = notesUnderBeam[i]
+                note.stemLength += delta
+            }
         }
         
         ///Check no stranded beam starts. A note with beamStart without a beamEnd. Every beam start must have a beam end so it is rendered correctly.
@@ -545,14 +558,14 @@ public class Score : ObservableObject {
                             note.beamType = .end
                             ///Undo any stem direction that might have been previousy applied
                             note.stemDirection = getStemDirection(staff: staff, notes: [note])
-                            note.stemLength = stemLengthLines
+                            note.stemLength = linesForFullStemLength
                             break
                         }
                     }
                 }
             }
         }
-        //debugScore2("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
+        //debugScore3("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
     }
     
     public func copyEntries(from:Score, count:Int? = nil) {

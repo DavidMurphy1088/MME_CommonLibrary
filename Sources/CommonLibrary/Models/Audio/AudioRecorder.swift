@@ -64,25 +64,6 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     public func startRecording(fileName:String)  {
         let outputFileName = audioFilenameStatic
         let audioFilename = getDocumentsDirectory().appendingPathComponent("\(outputFileName).wav")
-        
-//        let permissionStatus = checkMicrophonePermission()
-//        switch permissionStatus {
-//        case .granted:
-//            log("Mic - Permission granted")
-//        case .denied:
-//            log("Mic - Permission denied")
-//        case .undetermined:
-//            log("Mic - Permission undetermined")
-//            requestMicrophonePermission { granted in
-//                if granted {
-//                    self.log("Mic - Permission granted after request")
-//                } else {
-//                    self.logger.reportError(self, "Mic - Permission denied after request")
-//                }
-//            }
-//        @unknown default:
-//            logger.reportError(self, "Mic - Unknown permission status")
-//        }
 
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatLinearPCM,
@@ -93,7 +74,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             AVLinearPCMIsFloatKey: false
         ]
         
-        AudioManager.shared.setSession(.record)
+        AudioManager.shared.setAudioSessionRecord("AudioRecorder.startRecording")
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             if audioRecorder == nil {
@@ -116,7 +97,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         setStatus("Recording stopped, successfull status:\(flag ? "OK" : "Error")")
-        AudioManager.shared.setSession(.playback)
+        AudioManager.shared.setAudioSessionPlayback("audioRecorderDidFinishRecording")
     }
 
     public func stopRecording() {
@@ -129,7 +110,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             setStatus("Recorded time \(String(format: "%.1f", audioRecorder.currentTime)) seconds")
             audioRecorder.stop()
         }
-        AudioManager.shared.setSession(.playback)
+        AudioManager.shared.setAudioSessionPlayback("stopRecording")
     }
     
     public func getRecordedAudio(fileName:String) -> Data? {
@@ -207,7 +188,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     
     public func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         setStatus("audioPlayerDecodeErrorDidOccur, status:\(String(describing: error?.localizedDescription))")
-        AudioManager.shared.setSession(.playback)
+        AudioManager.shared.setAudioSessionPlayback("Recorder.audioPlayerDecodeErrorDidOccur")
     }
 
     public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {

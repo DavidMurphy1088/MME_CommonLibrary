@@ -166,14 +166,13 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     
     public func setAllowTempoChange(_ ctx:String, allow:Bool) {
         DispatchQueue.main.async {
-            print("======== Metronome, \(ctx), allow set", allow)
             self.allowChangeTempo = allow
         }
     }
     
     public func playScore(score:Score, rhythmNotesOnly:Bool=false, onDone: (()->Void)? = nil) {
 //        let audioSamplerMIDI = AudioSamplerPlayer.shared.sampler
-//        AudioSamplerPlayer.shared.startSampler()
+        //AudioSamplerPlayer.shared.startSampler()
         
         //find the first note to play
         nextScoreIndex = 0
@@ -234,7 +233,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     
     private func startPlayThreadRunning(timeSignature:TimeSignature) {
         self.isThreadRunning = true
-        AudioManager.shared.setSession(.playback)
+        AudioManager.shared.setAudioSessionPlayback("Metronome.startPlayThreadRunning")
         ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
         //AudioSamplerPlayer.reset()
         //tickTimes = []

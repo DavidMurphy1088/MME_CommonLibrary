@@ -9,15 +9,16 @@ public class TapSoundPlayer {
     private var audioPlayerNodes: [AVAudioPlayerNode] = []
     private var playerNodeIndex = 0
     
-    ///This must be high enough to record every tap in the given rhythm. After all are sounded once they wont sound again. Fure - write code to recreate the AudioNode again
+    ///This must be high enough to record every tap in the given rhythm. After all are sounded once they wont sound again. Future - write code to recreate the AudioNode again
     private let audioPlayersCount = 32
-    
+    //private let audioPlayersCount = 1
+
     public init() {
-        audioEngine = AVAudioEngine()
+        audioEngine = AudioManager.shared.getAudioEngine()
         //setupAudio()
     }
 
-    public func startAudio() {
+    public func loadTapSoundPlayers() {
         audioPlayerNodes = []
         for _ in 0..<audioPlayersCount {
             let playerNode = AVAudioPlayerNode()
@@ -31,7 +32,6 @@ public class TapSoundPlayer {
            let file = try? AVAudioFile(forReading: fileURL) {
             for i in 0..<audioPlayersCount {
                 let node = audioPlayerNodes[i]
-                //engine.attach(node)
                 audioEngine.connect(node, to: audioEngine.mainMixerNode, format: file.processingFormat)
                 node.scheduleFile(file, at: nil, completionHandler: nil)
                 node.volume = 1.0
@@ -55,7 +55,7 @@ public class TapSoundPlayer {
         for i in 0..<audioPlayersCount {
             audioEngine.detach(audioPlayerNodes[i])
         }
-        audioEngine.stop()
+//        audioEngine.stop() //Bad idea .... dont stop it
     }
 
     public func playSound() {
@@ -79,7 +79,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
 
     var metronome = Metronome.getMetronomeWithCurrentSettings(ctx: "Tap Recorder init")
     var metronomeTempoAtRecordingStart:Int? = nil
-    let soundPlayer = TapSoundPlayer()
+    let tapSoundPlayer = TapSoundPlayer()
     
     public func setStatus(_ msg:String) {
         DispatchQueue.main.async {
@@ -97,7 +97,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             self.enableRecordingLight = true
         }
         self.metronomeTempoAtRecordingStart = metronomeTempoAtRecordingStart
-        soundPlayer.startAudio()
+        tapSoundPlayer.loadTapSoundPlayers()
     }
     
     public func endMetronomePrefix() {
@@ -111,7 +111,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         let date = Date()
         self.tapTimes.append(date.timeIntervalSince1970)
         if useSoundPlayer {
-            soundPlayer.playSound()
+            tapSoundPlayer.playSound()
         }
         else {
             let sound = SystemSoundID(1104)
@@ -120,7 +120,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     }
 
     public func stopRecording(score:Score) -> ([Double]) {
-        soundPlayer.stopAudio()
+        tapSoundPlayer.stopAudio()
         self.tapTimes.append(Date().timeIntervalSince1970) // record value of last tap made
         self.tappedValues = []
         var last:Double? = nil

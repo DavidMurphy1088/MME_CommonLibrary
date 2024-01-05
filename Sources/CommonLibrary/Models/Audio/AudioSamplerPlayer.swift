@@ -6,12 +6,21 @@ public class AudioSamplerPlayer {
     static private var shared = AudioSamplerPlayer()
     private var sampler = AVAudioUnitSampler()
     private var stopPlayingNotes = false
+        
+    static public func getShared() -> AudioSamplerPlayer {
+        return AudioSamplerPlayer.shared
+    }
     
     private init() {
-        let audioEngine = AudioManager.shared.audioEngine
         sampler = AVAudioUnitSampler()
+        setup()
+    }
+    
+    func setup() {
+        let audioEngine = AudioManager.shared.getAudioEngine()
         audioEngine.attach(sampler)
         audioEngine.connect(sampler, to: audioEngine.mainMixerNode, format: nil)
+        print("AudioSamplerPlayer connected to AVAudioEngine")
         do {
             try audioEngine.start()
         } catch {
@@ -19,11 +28,7 @@ public class AudioSamplerPlayer {
         }
         loadSoundFont()
     }
-    
-    static public func getShared() -> AudioSamplerPlayer {
-        return AudioSamplerPlayer.shared
-    }
-    
+
 //    static public func reset() {
 //        let audioEngine = AudioManager.shared.audioEngine
 //        audioEngine.disconnectNodeInput(getShared().sampler )
@@ -41,7 +46,6 @@ public class AudioSamplerPlayer {
         //let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
         /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
         let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
-        
         let samplerFileName = soundFontNames[0].1
         
         ///18May23 -For some unknown reason and after hours of investiagtion this loadSoundbank must oocur before every play, not just at init time
