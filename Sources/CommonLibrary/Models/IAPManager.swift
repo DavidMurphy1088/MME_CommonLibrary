@@ -6,10 +6,10 @@ import StoreKit
 ///https://developer.apple.com/documentation/storekit/in-app_purchase/testing_at_all_stages_of_development_with_xcode_and_the_sandbox
 
 public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, SKPaymentTransactionObserver {
-    @Published var availableProducts:[String: SKProduct] = [:] //[SKProduct]()
-    @Published var purchasedProductIds = Set<String>()
-    @Published var freeLicenses = Set<String>()
-    @Published var isInPurchasingState = false
+    @Published public var availableProducts:[String: SKProduct] = [:] //[SKProduct]()
+    @Published public var purchasedProductIds = Set<String>()
+    @Published public var emailLicenses = Set<String>()
+    @Published public var isInPurchasingState = false
 
     public static let shared = IAPManager()
     //private let productIDs: Set<String> = ["NZMEB_Grade_2_2024", "MT_NZMEB_Grade_1_2024", "MT_NZMEB_Grade2_2024", "MT_NZMEB_Grade_3_2024"]
@@ -21,42 +21,23 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         //requestProducts()
     }
     
-    public func loadLicenses(sheetRows:[[String]]) {
+    ///Load email licenses (e.g. teachers)
+    public func loadEmailLicenses(sheetRows:[[String]]) {
         for rowCells in sheetRows {
             if rowCells.count < 5 {
                 continue
             }
-
             if rowCells[0].hasPrefix("//")  {
                 continue
             }
             let email = rowCells[1]
             DispatchQueue.main.async {
-                self.freeLicenses.insert(email)
+                self.emailLicenses.insert(email)
             }
         }
     }
     
-    public func getLicense(grade:String, email:String) -> String? {
-        let now = Date()
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: now)
-        let gradeToCheck = grade.replacingOccurrences(of: " ", with: "_")
-        for productId in self.purchasedProductIds {
-            if productId.contains(gradeToCheck) {
-                if productId.contains(String(currentYear)) {
-                    if let product = availableProducts[productId] {
-                        return product.localizedTitle
-                    }
-                }
-            }
-        }
-        if self.freeLicenses.contains(email) {
-            return email
-        }
-        return nil
-    }
-    
+    ///Does the grade have a license to purchase?
     public func isLicenseAvailable(grade:String) -> Bool {
         let now = Date()
         let calendar = Calendar.current
@@ -75,18 +56,19 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     }
 
     public func requestProducts() {
-        //print("=========IAPManager requestProducts", productIDs)
+        print("=========IAPManager requestProducts", productIDs)
         let request = SKProductsRequest(productIdentifiers: productIDs)
         request.delegate = self
         request.start()
     }
     
+    ///Load the licenses that are paid for
     public func restoreTransactions() {
-        //print("=========IAPManager restoreTransactions")
+        print("=========IAPManager restoreTransactions")
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
     
-    func buyProduct(grade: String) {
+    public func buyProduct(grade: String) {
         //_ product: SKProduct) {
         let now = Date()
         let calendar = Calendar.current
@@ -109,7 +91,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
             //print("=========IAPManager  productsRequest response", request, response)
             for product in response.products {
                 self.availableProducts[product.productIdentifier] = product
-                Logger.logger.log(self, "licenseType \(product.productIdentifier)")
+                Logger.logger.log(self, "Available licenseType \(product.productIdentifier)")
             }
         }
     }
@@ -133,23 +115,20 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
                     /// Transaction is being added to the server queue. Client should not complete the transaction.
                     //print("  -----> purchasing...", transaction.payment.productIdentifier)
                     self.isInPurchasingState = true
-                    //                    self.purchasedProductIds.insert(transaction.payment.productIdentifier)
-                    //                    SKPaymentQueue.default().finishTransaction(transaction)
                     
                 case .purchased:
-                        //print("  -----> purchased", transaction.payment.productIdentifier)
-                        self.purchasedProductIds.insert(transaction.payment.productIdentifier)
-                        SKPaymentQueue.default().finishTransaction(transaction)
+                    Logger.logger.log(self, "Purchased: \(transaction.payment.productIdentifier)")
+                    self.purchasedProductIds.insert(transaction.payment.productIdentifier)
+                    SKPaymentQueue.default().finishTransaction(transaction)
                 case .restored:
-                        //print("  -----> restored", transaction.payment.productIdentifier)
-                        self.purchasedProductIds.insert(transaction.payment.productIdentifier)
-                        SKPaymentQueue.default().finishTransaction(transaction)
+                    Logger.logger.log(self, "Restored from history: \(transaction.payment.productIdentifier)")
+                    self.purchasedProductIds.insert(transaction.payment.productIdentifier)
+                    SKPaymentQueue.default().finishTransaction(transaction)
                 case .failed:
                     let err:String = transaction.error?.localizedDescription ?? ""
                     Logger.logger.reportError(self, "paymentQueue didFailWithError \(err)")
                     SKPaymentQueue.default().finishTransaction(transaction)
                 default:
-                    print("  -----> unknown", transaction.payment.productIdentifier)
                     break
                 }
             }

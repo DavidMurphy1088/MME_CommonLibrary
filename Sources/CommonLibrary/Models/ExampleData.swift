@@ -11,7 +11,7 @@ public class ExampleData : ObservableObject {
         self.rootContentSection = rootContentSection
         getSheet(sheetName: sheetName, context: "Examples", loadFunction: loadSheetData)
         getSheet(sheetName: "MelodiesSheetID", context: "Melodies", loadFunction: loadMelodies)
-        getSheet(sheetName: "MTFreeLicenses", context: "Licenses", loadFunction: IAPManager.shared.loadLicenses)
+        getSheet(sheetName: "MTFreeLicenses", context: "Licenses", loadFunction: IAPManager.shared.loadEmailLicenses)
     }
     
     private func getSheet(sheetName:String, context:String, loadFunction: @escaping (_ sheetRows: [[String]]) -> Void) {

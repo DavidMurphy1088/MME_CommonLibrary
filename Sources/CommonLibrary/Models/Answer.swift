@@ -12,7 +12,6 @@ public enum AnswerState {
 ///The answer a student gives to a question
 public class Answer : ObservableObject, Identifiable, Codable {
     public var id:UUID
-    //var questionMode: QuestionMode
     public var correct: Bool = false
     public var explanation = ""
 
@@ -22,7 +21,8 @@ public class Answer : ObservableObject, Identifiable, Codable {
     public var selectedIntervalName = ""
     
     ///Rhythm
-    public var values:[Double]?
+    public var rhythmValues:[Double]?
+    public var rhythmTolerancePercent:Double?
     
     ///Recording
     public var recordedData: Data?
@@ -43,7 +43,8 @@ public class Answer : ObservableObject, Identifiable, Codable {
         a.correctIntervalHalfSteps = self.correctIntervalHalfSteps
         a.selectedIntervalName = self.selectedIntervalName
         a.explanation = self.explanation
-        a.values = self.values
+        a.rhythmValues = self.rhythmValues
+        a.rhythmTolerancePercent = self.rhythmTolerancePercent
         a.recordedData = self.recordedData
         a.sightReadingNotePitches = self.sightReadingNotePitches
         a.sightReadingNoteTimes = self.sightReadingNoteTimes
@@ -52,7 +53,7 @@ public class Answer : ObservableObject, Identifiable, Codable {
     
     ///Convert note timestamps from the piano to note durations
     public func makeNoteValues() {
-        self.values = []
+        self.rhythmValues = []
         var lastTime:Date = Date()
         for i in 0..<sightReadingNoteTimes.count {
             let noteTime = sightReadingNoteTimes[i]
@@ -61,7 +62,7 @@ public class Answer : ObservableObject, Identifiable, Codable {
                 continue
             }
             var duration:Double = noteTime.timeIntervalSince(lastTime)
-            self.values!.append(duration)
+            self.rhythmValues!.append(duration)
             lastTime = noteTime
         }
     }

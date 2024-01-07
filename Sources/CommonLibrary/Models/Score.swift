@@ -56,6 +56,7 @@ public class StudentFeedback : ObservableObject {
     public var feedbackExplanation:String? = nil
     public var feedbackNotes:String? = nil
     public var tempo:Int? = nil
+    public var rhythmTolerance:Int? = nil
 }
 
 public class Score : ObservableObject {

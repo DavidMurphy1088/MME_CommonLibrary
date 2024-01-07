@@ -95,7 +95,7 @@ public struct BarEditorView: View {
                             }
                         }
                     }
-                    .position(x:indexAndPos.2 - barWidth/2.0, y:0)
+                    .position(x:indexAndPos.2 - barWidth/2.0, y:UIGlobalsCommon.isLandscape() ? 20 : 0)
                     .frame(height: score.lineSpacing * 12.0)
                     //.border(Color .green, width: 2)
                     

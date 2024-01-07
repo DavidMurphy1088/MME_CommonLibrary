@@ -676,7 +676,8 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         guard let parent = parent else {
             return false
         }
-        if isExamTypeContentSection() && storedAnswer == nil {
+        //if isExamTypeContentSection() && storedAnswer == nil {
+        if parent.isExamTypeContentSection() && storedAnswer == nil {
             return true
         }
         else {

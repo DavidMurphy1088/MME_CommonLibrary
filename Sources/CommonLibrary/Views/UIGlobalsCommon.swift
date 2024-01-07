@@ -63,7 +63,6 @@ public class UIGlobalsCommon {
         return UIScreen.main.bounds.width > UIScreen.main.bounds.height
     }
     
-    public static var rhythmTolerancePercent:Double = 45.0 //B+
     public static var rhythmTapSoundOn = false
 }
 

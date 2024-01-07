@@ -45,7 +45,8 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
             out = Color(.red)
         }
         if timeSlice.statusTag == .afterError {
-            out = Color(.lightGray)
+            //out = Color(.lightGray)
+            out = Color(.clear)
         }
 
         if timeSlice.statusTag == .hilightAsCorrect {
