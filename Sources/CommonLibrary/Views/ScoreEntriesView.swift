@@ -187,13 +187,13 @@ struct ScoreEntriesView: View {
         }
     }
     
-    func getTagOffset(_ ts:TimeSlice) -> Double {
-        if ts.getTimeSliceNotes().count > 0 {
-            let note = ts.getTimeSliceNotes()[0]
-            return note.midiNumber < 64 ? 1 : 0
-        }
-        return 0
-    }
+//    func getTagOffset(_ ts:TimeSlice) -> Double {
+//        if ts.getTimeSliceNotes().count > 0 {
+//            let note = ts.getTimeSliceNotes()[0]
+//            return note.midiNumber < 64 ? 1 : 0
+//        }
+//        return 0
+//    }
     
 //    func log(_ posn:NoteLayoutPositions) -> Bool {
 //        for n in posn.positions.keys {
@@ -246,9 +246,7 @@ struct ScoreEntriesView: View {
                                 HStack {
                                     TimeSliceLabelView(score:score, staff:staff, timeSlice: entry as! TimeSlice)
                                         //.frame(height: score.getStaffHeight())
-                                        .frame(height: Double(staff.linesInStaff) * score.lineSpacing * 2)
-                                        /// Move down below bottom ledger lines if the note is low
-                                        .offset(y:score.lineSpacing * getTagOffset(entry as! TimeSlice))
+                                        .frame(height: Double(staff.linesInStaff) * score.lineSpacing * 2.3)
                                 }
                                 
                                 //.border(Color.red)

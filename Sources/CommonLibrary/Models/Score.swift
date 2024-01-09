@@ -187,7 +187,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore44(_ ctx:String, withBeam:Bool) {
+    public func debugScore5(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -357,253 +357,38 @@ public class Score : ObservableObject {
 
     ///Determine whether quavers can be beamed within a bar's strong and weak beats
     ///startBeam is the possible start of beam, lastBeat is the end of beam
-    func canBeBeamedTo(timeSignature:TimeSignature, startBeamTimeSlice:TimeSlice, lastBeat:Double) -> Bool {
-        //self.debugScore1("CanBeam start:\(startBeamTimeSlice.sequence) latBeat:\(lastBeat)", withBeam: true)
-        if timeSignature.top == 4 {
-            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-            if lastBeat > 2 {
-                return [2, 3].contains(startBeatInt)
-            }
-            else {
-                return [0, 1].contains(startBeatInt)
-            }
-        }
-        if timeSignature.top == 3 {
-            ///Check is integer to check start beat is on a main beat
-            ///If check integer then 3/4 with values : 1.5, 0.5, 0.5, 0.5 the 2nd is standalone and 3 and 4 are beamed - which is correct. without check, 3 is beamed to 2
-            ///but with check 1, .5,.5,  .5,.5 beams are 2 and 3 and 4 and 5 but not 2 thru 5 all together. But this is a less bad sin than the one above. So keep integer check inplace
-            ///Beaming code needs a rewrite but first needs 100% definite and simple to understand rules
-            if floor(startBeamTimeSlice.beatNumber) == ceil(startBeamTimeSlice.beatNumber) {
-                let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-                return [0, 1, 2].contains(startBeatInt)
-            }
-            else {
-                return false
-            }
-        }
-        if timeSignature.top == 2 {
-            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-            return [0, 1].contains(startBeatInt)
-        }
-        return false
-    }
-    
-    ///Determine whether quavers can be beamed within a bar's strong and weak beats
-    ///startBeam is the possible start of beam, lastBeat is the end of beam
-    private func addStemCharaceteristics() {
-        
-        func setStem(timeSlice:TimeSlice, beamType:QuaverBeamType) {
-            for staffIndex in 0..<self.staffs.count {
-                let stemDirection = getStemDirection(staff: self.staffs[staffIndex], notes: timeSlice.getTimeSliceNotes())
-                let staffNotes = timeSlice.getTimeSliceNotes(staffNum: staffIndex)
-                for note in staffNotes {
-                    note.stemDirection = stemDirection
-                    note.stemLength = linesForFullStemLength
-                    note.beamType = beamType
-                    ///Dont try yet to beam semiquavers
-//                        if lastNote.getValue() == Note.VALUE_SEMIQUAVER {
-//                            note.beamType = .end
-//                        }
-                }
-            }
-        }
-        
-        func saveBeam(timeSlicesUnderBeam:[TimeSlice]) -> [TimeSlice] {
-            if timeSlicesUnderBeam.count == 0 {
-                return []
-            }
-            for i in 0..<timeSlicesUnderBeam.count {
-                if i == 0 {
-                    if timeSlicesUnderBeam.count == 1 {
-                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .none)
-                    }
-                    else {
-                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .start)
-                    }
-                }
-                else {
-                    if i == timeSlicesUnderBeam.count - 1 {
-                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .end)
-                    }
-                    else {
-                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .middle)
-                    }
-                }
-            }
-            return []
-        }
-        
-        enum InBeamState {
-            case noBeam
-            case beamStarted
-        }
-        //The number of staff lines for a full stem length
-        let linesForFullStemLength = 3.5
-        //var beamStartTimeSlice:TimeSlice? = nil
-        var timeSlicesUnderBeam:[TimeSlice] = []
-        
-        ///Make quaver beams onto the main beats
-        
-        for scoreEntry in self.scoreEntries {
-            guard scoreEntry is TimeSlice else {
-                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
-                continue
-            }
-            let timeSlice = scoreEntry as! TimeSlice
-            if timeSlice.getTimeSliceNotes().count == 0 {
-                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
-                continue
-            }
-            let note = timeSlice.getTimeSliceNotes()[0]
-            if note.getValue() != Note.VALUE_QUAVER {
-                setStem(timeSlice: timeSlice, beamType: .none)
-                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
-                continue
-            }
-
-            let mainBeat = Int(timeSlice.beatNumber)
-            if timeSlice.beatNumber == Double(mainBeat) {
-                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
-                timeSlicesUnderBeam.append(timeSlice)
-            }
-            else {
-                if timeSlicesUnderBeam.count > 0 {
-                    timeSlicesUnderBeam.append(timeSlice)
-                }
-                else {
-                    setStem(timeSlice: timeSlice, beamType: .none)
-                }
-            }
-        }
-        timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
-        
-        ///Join up adjoining beams where possible
-        
-        if self.getAllTimeSlices().count == 6 {
-            debugScore44("newBEAM", withBeam: true)
-            print("============ HERE")
-        }
-
-        var lastNote:Note? = nil
-        for scoreEntry in self.scoreEntries {
-            guard let timeSlice = scoreEntry as? TimeSlice else {
-                lastNote = nil
-                continue
-            }
-            if timeSlice.getTimeSliceNotes().count == 0 {
-                lastNote = nil
-                continue
-            }
-            var note = timeSlice.getTimeSliceNotes()[0]
-            if note.beamType == .none {
-                lastNote = nil
-                continue
-            }
-            if note.beamType == .start {
-                if let lastNote = lastNote {
-                    if lastNote.beamType == .end {
-                        lastNote.beamType = .middle
-                        note.beamType = .middle
-                    }
-                }
-            }
-            lastNote = note
-        }
-    }
-
-    ///If the last note added was a quaver, identify any previous adjoining quavers and set them to be joined with a quaver bar
-    ///Set the beginning, middle and end quavers for the beam
-    private func addStemCharaceteristicsOld() {
-        let lastNoteIndex = self.scoreEntries.count - 1
-        let scoreEntry = self.scoreEntries[lastNoteIndex]
-        guard scoreEntry is TimeSlice else {
-            return
-        }
-
-        let lastTimeSlice = scoreEntry as! TimeSlice
-        let notes = lastTimeSlice.getTimeSliceNotes()
-        if notes.count == 0 {
-            return
-        }
-
-        let lastNote = notes[0]
-        //lastNote.sequence1 = self.getAllTimeSlices().count
-
-        //The number of staff lines for a full stem length
-        let linesForFullStemLength = 3.5
-
-        if lastNote.getValue() != Note.VALUE_QUAVER {
-            for staffIndex in 0..<self.staffs.count {
-                let stemDirection = getStemDirection(staff: self.staffs[staffIndex], notes: notes)
-                let staffNotes = lastTimeSlice.getTimeSliceNotes(staffNum: staffIndex)
-                for note in staffNotes {
-                    note.stemDirection = stemDirection
-                    note.stemLength = linesForFullStemLength
-                    ///Dont try yet to beam semiquavers
-                    if lastNote.getValue() == Note.VALUE_SEMIQUAVER {
-                        note.beamType = .end
-                    }
-                }
-            }
-            return
-        }
-
-        let staff = self.staffs[lastNote.staffNum]
-        //apply the quaver beam back from the last note
-        var notesUnderBeam:[Note] = []
-        notesUnderBeam.append(lastNote)
-
-        ///Figure out the start, middle and end of this group of quavers
-        for i in stride(from: lastNoteIndex - 1, through: 0, by: -1) {
-            let scoreEntry = self.scoreEntries[i]
-            if !(scoreEntry is TimeSlice) {
-                break
-            }
-            let timeSlice = scoreEntry as! TimeSlice
-            if timeSlice.entries.count > 0 {
-                if timeSlice.entries[0] is Rest {
-                    break
-                }
-            }
-            let notes = timeSlice.getTimeSliceNotes()
-            if notes.count > 0 {
-                if notes[0].getValue() == Note.VALUE_QUAVER {
-                    if !canBeBeamedTo(timeSignature: self.timeSignature, startBeamTimeSlice: timeSlice, lastBeat: lastTimeSlice.beatNumber) {
-                        break
-                    }
-                    let note = notes[0]
-                    notesUnderBeam.append(note)
-                }
-                else {
-                    break
-                }
-            }
-        }
-
-        ///Check if beam is valid
-        var totalValueUnderBeam = 0.0
-        var valid = true
-
-        for note in notesUnderBeam {
-//            if note.beamType == .start {
-//                if note.timeSlice?.beatNumber.truncatingRemainder(dividingBy: 1.0) != 0 {
-//                    valid = false
-//                    break
-//                }
+//    func canBeBeamedTo(timeSignature:TimeSignature, startBeamTimeSlice:TimeSlice, lastBeat:Double) -> Bool {
+//        //self.debugScore1("CanBeam start:\(startBeamTimeSlice.sequence) latBeat:\(lastBeat)", withBeam: true)
+//        if timeSignature.top == 4 {
+//            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
+//            if lastBeat > 2 {
+//                return [2, 3].contains(startBeatInt)
 //            }
-            totalValueUnderBeam += note.getValue()
-        }
-        
-        if valid {
-            valid = totalValueUnderBeam.truncatingRemainder(dividingBy: 1) == 0
-        }
-            
-        ///Its not valid so unbeam
-        if !valid {
-            ///Discard the beam group because cant beam to an off-beat note
-            notesUnderBeam = []
-            notesUnderBeam.append(lastNote)
-        }
+//            else {
+//                return [0, 1].contains(startBeatInt)
+//            }
+//        }
+//        if timeSignature.top == 3 {
+//            ///Check is integer to check start beat is on a main beat
+//            ///If check integer then 3/4 with values : 1.5, 0.5, 0.5, 0.5 the 2nd is standalone and 3 and 4 are beamed - which is correct. without check, 3 is beamed to 2
+//            ///but with check 1, .5,.5,  .5,.5 beams are 2 and 3 and 4 and 5 but not 2 thru 5 all together. But this is a less bad sin than the one above. So keep integer check inplace
+//            ///Beaming code needs a rewrite but first needs 100% definite and simple to understand rules
+//            if floor(startBeamTimeSlice.beatNumber) == ceil(startBeamTimeSlice.beatNumber) {
+//                let startBeatInt = Int(startBeamTimeSlice.beatNumber)
+//                return [0, 1, 2].contains(startBeatInt)
+//            }
+//            else {
+//                return false
+//            }
+//        }
+//        if timeSignature.top == 2 {
+//            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
+//            return [0, 1].contains(startBeatInt)
+//        }
+//        return false
+//    }
+    
+    private func determineStemDirections(staff:Staff, notesUnderBeam:[Note], linesForFullStemLength:Double) {
         
         ///Determine if the quaver group has up or down stems based on the overall staff placement of the group
         var totalOffset = 0
@@ -623,21 +408,24 @@ public class Score : ObservableObject {
         beamSlope = beamSlope / Double(notesUnderBeam.count - 1)
 
         var requiredBeamPosition = Double(startPlacement.offsetFromStaffMidline)
+        
+        //The number of staff lines for a full stem length
+        
         var minStemLength = linesForFullStemLength
         
         for i in 0..<notesUnderBeam.count {
             let note = notesUnderBeam[i]
             if i == 0 {
-                note.beamType = .end
+                //note.beamType = .end
                 note.stemLength = linesForFullStemLength
             }
             else {
                 if i == notesUnderBeam.count-1 {
-                    note.beamType = .start
+                    //note.beamType = .start
                     note.stemLength = linesForFullStemLength
                 }
                 else {
-                    note.beamType = .middle
+                    //note.beamType = .middle
                     let placement = staff.getNoteViewPlacement(note: note)
                     ///adjust the stem length according to where the note is positioned vs. where the beam slope position requires
                     let stemDiff = Double(placement.offsetFromStaffMidline) - requiredBeamPosition
@@ -658,38 +446,333 @@ public class Score : ObservableObject {
                 note.stemLength += delta
             }
         }
+    }
+    
+    ///Determine whether quavers can be beamed within a bar's strong and weak beats
+    ///StartBeam is the possible start of beam, lastBeat is the end of beam
+    private func addStemCharaceteristics() {
         
-        ///Check no stranded beam starts. A note with beamStart without a beamEnd. Every beam start must have a beam end so it is rendered correctly.
-        ///Quavers under beams only have their stems rendered by the presence of an end note in their beam group
-        func getFirstNoteInTS(_ tsIndex:Int) -> Note? {
-            if tsIndex < self.getAllTimeSlices().count {
-                let ts = getAllTimeSlices()[tsIndex]
-                if ts.getTimeSliceNotes().count > 0 {
-                    return ts.getTimeSliceNotes()[0]
+        func setStem(timeSlice:TimeSlice, beamType:QuaverBeamType, linesForFullStemLength:Double) {
+            for staffIndex in 0..<self.staffs.count {
+                let stemDirection = getStemDirection(staff: self.staffs[staffIndex], notes: timeSlice.getTimeSliceNotes())
+                let staffNotes = timeSlice.getTimeSliceNotes(staffNum: staffIndex)
+                for note in staffNotes {
+                    note.stemDirection = stemDirection
+                    note.stemLength = linesForFullStemLength
+                    note.beamType = beamType
+                    ///Dont try yet to beam semiquavers
                 }
             }
-            return nil
+        }
+        
+        func saveBeam(timeSlicesUnderBeam:[TimeSlice], linesForFullStemLength:Double) -> [TimeSlice] {
+            if timeSlicesUnderBeam.count == 0 {
+                return []
+            }
+            for i in 0..<timeSlicesUnderBeam.count {
+                if i == 0 {
+                    if timeSlicesUnderBeam.count == 1 {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .none, linesForFullStemLength: linesForFullStemLength)
+                    }
+                    else {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .start, linesForFullStemLength: linesForFullStemLength)
+                    }
+                }
+                else {
+                    if i == timeSlicesUnderBeam.count - 1 {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .end, linesForFullStemLength: linesForFullStemLength)
+                    }
+                    else {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .middle, linesForFullStemLength: linesForFullStemLength)
+                    }
+                }
+            }
+            return []
+        }
+        
+        enum InBeamState {
+            case noBeam
+            case beamStarted
         }
 
-        for i in 0..<getAllTimeSlices().count {
-            let note = getFirstNoteInTS(i)
-            if let note = note {
-                if note.beamType == .start {
-                    let nextNote = getFirstNoteInTS(i+1)
-                    if let nextNote = nextNote {
-                        if !([QuaverBeamType.end, QuaverBeamType.middle].contains(nextNote.beamType)) {
-                            note.beamType = .end
-                            ///Undo any stem direction that might have been previousy applied
-                            note.stemDirection = getStemDirection(staff: staff, notes: [note])
-                            note.stemLength = linesForFullStemLength
-                            break
+        var timeSlicesUnderBeam:[TimeSlice] = []
+        let linesForFullStemLength = 3.5
+        
+        ///Make quaver beams onto the main beats
+        
+        for scoreEntry in self.scoreEntries {
+            guard scoreEntry is TimeSlice else {
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam, linesForFullStemLength: linesForFullStemLength)
+                continue
+            }
+            let timeSlice = scoreEntry as! TimeSlice
+            if timeSlice.getTimeSliceNotes().count == 0 {
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam, linesForFullStemLength: linesForFullStemLength)
+                continue
+            }
+            let note = timeSlice.getTimeSliceNotes()[0]
+            if note.getValue() != Note.VALUE_QUAVER {
+                setStem(timeSlice: timeSlice, beamType: .none, linesForFullStemLength: linesForFullStemLength)
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam, linesForFullStemLength: linesForFullStemLength)
+                continue
+            }
+
+            let mainBeat = Int(timeSlice.beatNumber)
+            if timeSlice.beatNumber == Double(mainBeat) {
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam, linesForFullStemLength: linesForFullStemLength)
+                timeSlicesUnderBeam.append(timeSlice)
+            }
+            else {
+                if timeSlicesUnderBeam.count > 0 {
+                    timeSlicesUnderBeam.append(timeSlice)
+                }
+                else {
+                    setStem(timeSlice: timeSlice, beamType: .none, linesForFullStemLength: linesForFullStemLength)
+                }
+            }
+        }
+        timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam, linesForFullStemLength: linesForFullStemLength)
+        
+        ///Join up adjoining beams where possible. Existing beams only span one main beat and can be joined in some cases
+
+        var lastNote:Note? = nil
+        for scoreEntry in self.scoreEntries {
+            guard let timeSlice = scoreEntry as? TimeSlice else {
+                lastNote = nil
+                continue
+            }
+            if timeSlice.getTimeSliceNotes().count == 0 {
+                lastNote = nil
+                continue
+            }
+            var note = timeSlice.getTimeSliceNotes()[0]
+            if note.beamType == .none {
+                lastNote = nil
+                continue
+            }
+            if note.beamType == .start {
+                if let lastNote = lastNote {
+                    if lastNote.beamType == .end {
+                        var timeSigAllowsJoin = true
+                        if timeSignature.top == 4 {
+                            /// 4/4 beats after 2nd cannot join to earlier beats
+                            let beat = Int(note.timeSlice.beatNumber)
+                            let startBeat = Int(lastNote.timeSlice.beatNumber)
+                            timeSigAllowsJoin = beat < 2 || (startBeat >= 2)
+                        }
+                        if timeSigAllowsJoin {
+                            lastNote.beamType = .middle
+                            note.beamType = .middle
                         }
                     }
                 }
             }
+            lastNote = note
         }
-        debugScore44("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
+        
+        ///Determine stem directions for each quaver beam
+        
+        var notesUnderBeam:[Note] = []
+        for scoreEntry in self.scoreEntries {
+            guard let timeSlice = scoreEntry as? TimeSlice else {
+                lastNote = nil
+                continue
+            }
+            if timeSlice.getTimeSliceNotes().count == 0 {
+                lastNote = nil
+                continue
+            }
+            var note = timeSlice.getTimeSliceNotes()[0]
+            if note.beamType != .none {
+                notesUnderBeam.append(note)
+                if note.beamType == .end {
+                    let staff = self.staffs[note.staffNum]
+                    determineStemDirections(staff:staff, notesUnderBeam: notesUnderBeam, linesForFullStemLength: linesForFullStemLength)
+                    notesUnderBeam = []
+                }
+            }
+        }
     }
+
+    ///If the last note added was a quaver, identify any previous adjoining quavers and set them to be joined with a quaver bar
+    ///Set the beginning, middle and end quavers for the beam
+//    private func addStemCharaceteristicsOld() {
+//        let lastNoteIndex = self.scoreEntries.count - 1
+//        let scoreEntry = self.scoreEntries[lastNoteIndex]
+//        guard scoreEntry is TimeSlice else {
+//            return
+//        }
+//
+//        let lastTimeSlice = scoreEntry as! TimeSlice
+//        let notes = lastTimeSlice.getTimeSliceNotes()
+//        if notes.count == 0 {
+//            return
+//        }
+//
+//        let lastNote = notes[0]
+//        //lastNote.sequence1 = self.getAllTimeSlices().count
+//
+//        //The number of staff lines for a full stem length
+//        let linesForFullStemLength = 3.5
+//
+//        if lastNote.getValue() != Note.VALUE_QUAVER {
+//            for staffIndex in 0..<self.staffs.count {
+//                let stemDirection = getStemDirection(staff: self.staffs[staffIndex], notes: notes)
+//                let staffNotes = lastTimeSlice.getTimeSliceNotes(staffNum: staffIndex)
+//                for note in staffNotes {
+//                    note.stemDirection = stemDirection
+//                    note.stemLength = linesForFullStemLength
+//                    ///Dont try yet to beam semiquavers
+//                    if lastNote.getValue() == Note.VALUE_SEMIQUAVER {
+//                        note.beamType = .end
+//                    }
+//                }
+//            }
+//            return
+//        }
+//
+//        let staff = self.staffs[lastNote.staffNum]
+//        //apply the quaver beam back from the last note
+//        var notesUnderBeam:[Note] = []
+//        notesUnderBeam.append(lastNote)
+//
+//        ///Figure out the start, middle and end of this group of quavers
+//        for i in stride(from: lastNoteIndex - 1, through: 0, by: -1) {
+//            let scoreEntry = self.scoreEntries[i]
+//            if !(scoreEntry is TimeSlice) {
+//                break
+//            }
+//            let timeSlice = scoreEntry as! TimeSlice
+//            if timeSlice.entries.count > 0 {
+//                if timeSlice.entries[0] is Rest {
+//                    break
+//                }
+//            }
+//            let notes = timeSlice.getTimeSliceNotes()
+//            if notes.count > 0 {
+//                if notes[0].getValue() == Note.VALUE_QUAVER {
+//                    if !canBeBeamedTo(timeSignature: self.timeSignature, startBeamTimeSlice: timeSlice, lastBeat: lastTimeSlice.beatNumber) {
+//                        break
+//                    }
+//                    let note = notes[0]
+//                    notesUnderBeam.append(note)
+//                }
+//                else {
+//                    break
+//                }
+//            }
+//        }
+//
+//        ///Check if beam is valid
+//        var totalValueUnderBeam = 0.0
+//        var valid = true
+//
+//        for note in notesUnderBeam {
+////            if note.beamType == .start {
+////                if note.timeSlice?.beatNumber.truncatingRemainder(dividingBy: 1.0) != 0 {
+////                    valid = false
+////                    break
+////                }
+////            }
+//            totalValueUnderBeam += note.getValue()
+//        }
+//        
+//        if valid {
+//            valid = totalValueUnderBeam.truncatingRemainder(dividingBy: 1) == 0
+//        }
+//            
+//        ///Its not valid so unbeam
+//        if !valid {
+//            ///Discard the beam group because cant beam to an off-beat note
+//            notesUnderBeam = []
+//            notesUnderBeam.append(lastNote)
+//        }
+//        
+//        ///Determine if the quaver group has up or down stems based on the overall staff placement of the group
+//        var totalOffset = 0
+//        for note in notesUnderBeam {
+//            let placement = staff.getNoteViewPlacement(note: note)
+//            totalOffset += placement.offsetFromStaffMidline
+//        }
+//        
+//        ///Set each note's beam type and calculate the nett above r below the staff line for the quaver group (for the subsequnet stem up or down decison)
+//        let startNote = notesUnderBeam[0]
+//        let startPlacement = staff.getNoteViewPlacement(note: startNote)
+//
+//        let endNote = notesUnderBeam[notesUnderBeam.count - 1]
+//        let endPlacement = staff.getNoteViewPlacement(note: endNote)
+//
+//        var beamSlope:Double = Double(endPlacement.offsetFromStaffMidline - startPlacement.offsetFromStaffMidline)
+//        beamSlope = beamSlope / Double(notesUnderBeam.count - 1)
+//
+//        var requiredBeamPosition = Double(startPlacement.offsetFromStaffMidline)
+//        var minStemLength = linesForFullStemLength
+//        
+//        for i in 0..<notesUnderBeam.count {
+//            let note = notesUnderBeam[i]
+//            if i == 0 {
+//                note.beamType = .end
+//                note.stemLength = linesForFullStemLength
+//            }
+//            else {
+//                if i == notesUnderBeam.count-1 {
+//                    note.beamType = .start
+//                    note.stemLength = linesForFullStemLength
+//                }
+//                else {
+//                    note.beamType = .middle
+//                    let placement = staff.getNoteViewPlacement(note: note)
+//                    ///adjust the stem length according to where the note is positioned vs. where the beam slope position requires
+//                    let stemDiff = Double(placement.offsetFromStaffMidline) - requiredBeamPosition
+//                    note.stemLength = linesForFullStemLength + (stemDiff / 2.0 * (totalOffset > 0 ? 1.0 : -1.0))
+//                    if note.stemLength < minStemLength {
+//                        minStemLength = note.stemLength
+//                    }
+//                }
+//            }
+//            requiredBeamPosition += beamSlope
+//            note.stemDirection = totalOffset > 0 ? .down : .up
+//        }
+//        
+//        if minStemLength < 2 {
+//            let delta = 3 - minStemLength
+//            for i in 0..<notesUnderBeam.count {
+//                let note = notesUnderBeam[i]
+//                note.stemLength += delta
+//            }
+//        }
+//        
+//        ///Check no stranded beam starts. A note with beamStart without a beamEnd. Every beam start must have a beam end so it is rendered correctly.
+//        ///Quavers under beams only have their stems rendered by the presence of an end note in their beam group
+//        func getFirstNoteInTS(_ tsIndex:Int) -> Note? {
+//            if tsIndex < self.getAllTimeSlices().count {
+//                let ts = getAllTimeSlices()[tsIndex]
+//                if ts.getTimeSliceNotes().count > 0 {
+//                    return ts.getTimeSliceNotes()[0]
+//                }
+//            }
+//            return nil
+//        }
+//
+//        for i in 0..<getAllTimeSlices().count {
+//            let note = getFirstNoteInTS(i)
+//            if let note = note {
+//                if note.beamType == .start {
+//                    let nextNote = getFirstNoteInTS(i+1)
+//                    if let nextNote = nextNote {
+//                        if !([QuaverBeamType.end, QuaverBeamType.middle].contains(nextNote.beamType)) {
+//                            note.beamType = .end
+//                            ///Undo any stem direction that might have been previousy applied
+//                            note.stemDirection = getStemDirection(staff: staff, notes: [note])
+//                            note.stemLength = linesForFullStemLength
+//                            break
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        debugScore44("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
+//    }
     
     public func copyEntries(from:Score, count:Int? = nil) {
         let staff = self.staffs[0]
