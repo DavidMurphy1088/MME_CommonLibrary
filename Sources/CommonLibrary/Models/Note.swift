@@ -7,7 +7,7 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
     public let id = UUID()
     public var staffNum:Int //Narrow the display of the note to just one staff
     public var timeSlice:TimeSlice
-    public var sequence:Int = 0 //the timeslice's sequence position
+    //public var sequence1:Int = 0 //the timeslice's sequence position
 
     private var value:Double = Note.VALUE_QUARTER
 
@@ -309,7 +309,7 @@ public class Note : TimeSliceEntry, Comparable {
                 let notes = ts.getTimeSliceNotes()
                 if notes.count > 0 {
                     let note = notes[0]
-                    if note.sequence == endNote.sequence {
+                    if note.timeSlice.sequence == endNote.timeSlice.sequence {
                         foundEndNote = true
                     }
                     else {

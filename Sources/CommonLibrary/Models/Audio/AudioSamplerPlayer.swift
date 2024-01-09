@@ -13,28 +13,9 @@ public class AudioSamplerPlayer {
     
     private init() {
         sampler = AVAudioUnitSampler()
-        setup()
-    }
-    
-    func setup() {
-        let audioEngine = AudioManager.shared.getAudioEngine()
-        audioEngine.attach(sampler)
-        audioEngine.connect(sampler, to: audioEngine.mainMixerNode, format: nil)
-        print("AudioSamplerPlayer connected to AVAudioEngine")
-        do {
-            try audioEngine.start()
-        } catch {
-            Logger.logger.reportError(self, "Could not start the audio engine: \(error)")
-        }
+        AudioManager.shared.connectSampler("AudioSamplerPlayer.init()", sampler: sampler)
         loadSoundFont()
     }
-
-//    static public func reset() {
-//        let audioEngine = AudioManager.shared.audioEngine
-//        audioEngine.disconnectNodeInput(getShared().sampler )
-//        audioEngine.disconnectNodeOutput(getShared().sampler )
-//        AudioSamplerPlayer.shared = AudioSamplerPlayer()
-//    }
     
     public func getSampler() -> AVAudioUnitSampler {
         return sampler
@@ -67,6 +48,9 @@ public class AudioSamplerPlayer {
         }
         if sampler == nil {
             Logger.logger.reportError(self, "No soundfont loaded")
+        }
+        else {
+            Logger.logger.log(self, "Sampler loaded sound font")
         }
     }
     

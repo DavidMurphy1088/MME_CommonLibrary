@@ -18,6 +18,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     @Published var status:String = ""
     
     public func setStatus(_ msg:String) {
+        self.logger.log(self, msg)
         DispatchQueue.main.async {
             self.status = "AudioRecorder::"+msg
         }
@@ -131,14 +132,10 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         let url = getDocumentsDirectory().appendingPathComponent("\(audioFilename).wav")
         do {
             self.audioPlayer = try AVAudioPlayer(contentsOf: url)
-            //self.audioPlayer = try AVAudioPlayer(url: audioFilename)
             if self.audioPlayer == nil {
                 Logger.logger.reportError(self, "At playback, cannot create audio player for \(url)")
                 return
             }
-            //var msg = "playback started, still recording? \(audioRecorder.isRecording)"
-            //setStatus(msg)
-            //Logger.logger.log(self, msg)
             self.audioPlayer.delegate = self
             self.audioPlayer.play()
             setStatus("Playback started, status:\(self.audioPlayer.isPlaying ? "OK" : "Error")")
@@ -147,7 +144,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         }
     }
     
-    public func playFromData(data:Data, onDone:@escaping ()->Void) {
+    public func playAudioFromData(data:Data, onDone:@escaping ()->Void) {
         do {
             self.audioPlayer = try AVAudioPlayer(data: data)
             if self.audioPlayer == nil {
@@ -169,14 +166,14 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             }
 
             if self.audioPlayer.isPlaying {
-                setStatus("Playback started, status:\(self.audioPlayer.isPlaying ? "OK" : "Error")")
+                setStatus("Audio playback started, status:\(self.audioPlayer.isPlaying ? "OK" : "Error")")
             }
             else {
                 Logger.logger.reportError(self, ".isPlaying is false")
             }
 
         } catch let error {
-            Logger.logger.reportError(self, "At Playback, start playing error", error)
+            Logger.logger.reportError(self, "At playback, start playing error", error)
         }
     }
     

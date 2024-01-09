@@ -187,7 +187,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore4(_ ctx:String, withBeam:Bool) {
+    public func debugScore44(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -207,7 +207,7 @@ public class Score : ObservableObject {
                               "stemLength", note.stemLength,
                               "writtenAccidental", note.writtenAccidental,
                               "\t[beamType:", note.beamType,"]",
-                              "beamEndNoteSeq:", note.beamEndNote?.sequence ?? "_",
+                              "beamEndNoteSeq:", note.beamEndNote?.timeSlice.sequence ?? "_",
                               "]")
                     }
                     else {
@@ -388,9 +388,132 @@ public class Score : ObservableObject {
         return false
     }
     
+    ///Determine whether quavers can be beamed within a bar's strong and weak beats
+    ///startBeam is the possible start of beam, lastBeat is the end of beam
+    private func addStemCharaceteristics() {
+        
+        func setStem(timeSlice:TimeSlice, beamType:QuaverBeamType) {
+            for staffIndex in 0..<self.staffs.count {
+                let stemDirection = getStemDirection(staff: self.staffs[staffIndex], notes: timeSlice.getTimeSliceNotes())
+                let staffNotes = timeSlice.getTimeSliceNotes(staffNum: staffIndex)
+                for note in staffNotes {
+                    note.stemDirection = stemDirection
+                    note.stemLength = linesForFullStemLength
+                    note.beamType = beamType
+                    ///Dont try yet to beam semiquavers
+//                        if lastNote.getValue() == Note.VALUE_SEMIQUAVER {
+//                            note.beamType = .end
+//                        }
+                }
+            }
+        }
+        
+        func saveBeam(timeSlicesUnderBeam:[TimeSlice]) -> [TimeSlice] {
+            if timeSlicesUnderBeam.count == 0 {
+                return []
+            }
+            for i in 0..<timeSlicesUnderBeam.count {
+                if i == 0 {
+                    if timeSlicesUnderBeam.count == 1 {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .none)
+                    }
+                    else {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .start)
+                    }
+                }
+                else {
+                    if i == timeSlicesUnderBeam.count - 1 {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .end)
+                    }
+                    else {
+                        setStem(timeSlice: timeSlicesUnderBeam[i], beamType: .middle)
+                    }
+                }
+            }
+            return []
+        }
+        
+        enum InBeamState {
+            case noBeam
+            case beamStarted
+        }
+        //The number of staff lines for a full stem length
+        let linesForFullStemLength = 3.5
+        //var beamStartTimeSlice:TimeSlice? = nil
+        var timeSlicesUnderBeam:[TimeSlice] = []
+        
+        ///Make quaver beams onto the main beats
+        
+        for scoreEntry in self.scoreEntries {
+            guard scoreEntry is TimeSlice else {
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
+                continue
+            }
+            let timeSlice = scoreEntry as! TimeSlice
+            if timeSlice.getTimeSliceNotes().count == 0 {
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
+                continue
+            }
+            let note = timeSlice.getTimeSliceNotes()[0]
+            if note.getValue() != Note.VALUE_QUAVER {
+                setStem(timeSlice: timeSlice, beamType: .none)
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
+                continue
+            }
+
+            let mainBeat = Int(timeSlice.beatNumber)
+            if timeSlice.beatNumber == Double(mainBeat) {
+                timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
+                timeSlicesUnderBeam.append(timeSlice)
+            }
+            else {
+                if timeSlicesUnderBeam.count > 0 {
+                    timeSlicesUnderBeam.append(timeSlice)
+                }
+                else {
+                    setStem(timeSlice: timeSlice, beamType: .none)
+                }
+            }
+        }
+        timeSlicesUnderBeam = saveBeam(timeSlicesUnderBeam: timeSlicesUnderBeam)
+        
+        ///Join up adjoining beams where possible
+        
+        if self.getAllTimeSlices().count == 6 {
+            debugScore44("newBEAM", withBeam: true)
+            print("============ HERE")
+        }
+
+        var lastNote:Note? = nil
+        for scoreEntry in self.scoreEntries {
+            guard let timeSlice = scoreEntry as? TimeSlice else {
+                lastNote = nil
+                continue
+            }
+            if timeSlice.getTimeSliceNotes().count == 0 {
+                lastNote = nil
+                continue
+            }
+            var note = timeSlice.getTimeSliceNotes()[0]
+            if note.beamType == .none {
+                lastNote = nil
+                continue
+            }
+            if note.beamType == .start {
+                if let lastNote = lastNote {
+                    if lastNote.beamType == .end {
+                        lastNote.beamType = .middle
+                        note.beamType = .middle
+                    }
+                }
+            }
+            lastNote = note
+        }
+    }
+
     ///If the last note added was a quaver, identify any previous adjoining quavers and set them to be joined with a quaver bar
     ///Set the beginning, middle and end quavers for the beam
-    private func addStemCharaceteristics() {
+    private func addStemCharaceteristicsOld() {
         let lastNoteIndex = self.scoreEntries.count - 1
         let scoreEntry = self.scoreEntries[lastNoteIndex]
         guard scoreEntry is TimeSlice else {
@@ -404,7 +527,7 @@ public class Score : ObservableObject {
         }
 
         let lastNote = notes[0]
-        lastNote.sequence = self.getAllTimeSlices().count
+        //lastNote.sequence1 = self.getAllTimeSlices().count
 
         //The number of staff lines for a full stem length
         let linesForFullStemLength = 3.5
@@ -519,7 +642,6 @@ public class Score : ObservableObject {
                     ///adjust the stem length according to where the note is positioned vs. where the beam slope position requires
                     let stemDiff = Double(placement.offsetFromStaffMidline) - requiredBeamPosition
                     note.stemLength = linesForFullStemLength + (stemDiff / 2.0 * (totalOffset > 0 ? 1.0 : -1.0))
-                    print("=========StemLen", note.stemLength, note.beamType, "midi:", note.midiNumber)
                     if note.stemLength < minStemLength {
                         minStemLength = note.stemLength
                     }
@@ -566,7 +688,7 @@ public class Score : ObservableObject {
                 }
             }
         }
-        //debugScore3("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
+        debugScore44("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
     }
     
     public func copyEntries(from:Score, count:Int? = nil) {
@@ -724,15 +846,19 @@ public class Score : ObservableObject {
                         else {
                             explanation += ""
                         }
-                        //explanation += "\n• Your tap was a \(tapName) and was too "
-                        explanation += "\n• Your \(noteType) was too "
+                        if !UIGlobalsCommon.isLandscape() {
+                            explanation += "\n• "
+                        }
+                        else {
+                            explanation += " - "
+                        }
+                        explanation += "Your \(noteType) was too "
                         if questionNoteValue > tap.getValue() {
                             explanation += "short 🫢"
                         }
                         else {
                             explanation += "long 🫢"
                         }
-                        explanation += ""
                     }
                     else {
                         if !onlyRhythm {

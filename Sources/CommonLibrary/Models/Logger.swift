@@ -4,9 +4,20 @@ public class LogMessage : Identifiable {
     public var id:UUID = UUID()
     public var number:Int
     public var message:String
+    public let logTime = Date()
+    
     init(num:Int, _ msg:String) {
         self.message = msg
         self.number = num
+    }
+    
+    public func getLogEvent() -> String {
+        var out = String(number)+"-"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        let logTime = formatter.string(from: self.logTime)
+        out += logTime + " " + message
+        return out
     }
 }
 
@@ -15,7 +26,7 @@ public class Logger : ObservableObject {
     @Published var loggedMsg:String? = nil
     @Published var errorNo:Int = 0
     @Published public var errorMsg:String? = nil
-    public var recordedMsgs:[LogMessage] = []
+    public var loggedMsgs:[LogMessage] = []
     
     public init() {
     }
@@ -26,7 +37,7 @@ public class Logger : ObservableObject {
             msg += ", "+err.localizedDescription
         }
         print(msg)
-        recordedMsgs.append(LogMessage(num: recordedMsgs.count, msg))
+        loggedMsgs.append(LogMessage(num: loggedMsgs.count, msg))
         DispatchQueue.main.async {
             self.errorMsg = msg
             self.errorNo += 1
@@ -40,7 +51,7 @@ public class Logger : ObservableObject {
     public func log(_ reporter:AnyObject, _ msg:String) {
         let msg = String(describing: type(of: reporter)) + ":" + msg
         print("Logger:", msg)
-        recordedMsgs.append(LogMessage(num: recordedMsgs.count, msg))
+        loggedMsgs.append(LogMessage(num: loggedMsgs.count, msg))
     }
     
 }

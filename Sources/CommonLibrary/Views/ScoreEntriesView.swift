@@ -150,13 +150,9 @@ struct ScoreEntriesView: View {
         return Image(note.midiNumber > 71 ? "quaver_arm_flipped_grayscale" : "quaver_arm_grayscale")
     }
     
-//    func log(_ sn:Note, _ en:Note) -> Bool {
-//        return true
-//    }
-    
     func quaverBeamView(line: (CGPoint, CGPoint), startNote:Note, endNote:Note, lineSpacing: Double) -> some View {
         ZStack {
-            if startNote.sequence == endNote.sequence {
+            if startNote.timeSlice.sequence == endNote.timeSlice.sequence {
                 //let l = log(startNote, endNote)
                 //An unpaired quaver
                 let height = lineSpacing * 4.5
@@ -198,6 +194,13 @@ struct ScoreEntriesView: View {
         }
         return 0
     }
+    
+//    func log(_ posn:NoteLayoutPositions) -> Bool {
+//        for n in posn.positions.keys {
+//            print("=========NoteLayoutPosition", n.midiNumber, "type:", n.beamType, "seq", n.timeSlice.sequence)
+//        }
+//        return true
+//    }
     
     var body: some View {
         ZStack {
@@ -283,16 +286,18 @@ struct ScoreEntriesView: View {
             }
             .coordinateSpace(name: "HStack")
 
-            // ---------- Quaver beams ------------
+            ///---------- Quaver beams ------------
+            ///Draw quaver stems and beams over quavers that are beamed together
+            ///noteLayoutPositions has recorded the position of each note to enable drawing the quaver beam
             
             if staff.staffNum == 0 {
                 GeometryReader { geo in
                     ZStack {
                         ZStack {
-                            //let log = log(noteLayoutPositions: noteLayoutPositions)
-                            ForEach(noteLayoutPositions.positions.sorted(by: { $0.key.sequence < $1.key.sequence }), id: \.key.id) {
+                            //let log = log(noteLayoutPositions)
+                            ForEach(noteLayoutPositions.positions.sorted(by: { $0.key.timeSlice.sequence < $1.key.timeSlice.sequence }), id: \.key.id) {
                                 endNote, endNotePos in
-                                if endNote.beamType == .end {
+                                if endNote.beamType == .end || endNote.beamType == .none {
                                     let startNote = endNote.getBeamStartNote(score: score, np:noteLayoutPositions)
                                     if let line = getBeamLine(endNote: endNote,
                                                               noteWidth: noteWidth,

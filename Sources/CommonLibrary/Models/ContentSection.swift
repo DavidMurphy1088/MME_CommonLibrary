@@ -613,7 +613,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                                 }
                             }
                         }
-                        AudioRecorder.shared.playFromData(data: data!, onDone: onNarrated)
+                        AudioRecorder.shared.playAudioFromData(data: data!, onDone: onNarrated)
                     }
                 }
             }

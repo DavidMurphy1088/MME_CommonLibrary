@@ -23,7 +23,8 @@ public class NoteLayoutPositions: ObservableObject {
     
     public func storePosition(notes: [Note], rect: CGRect) {
         if notes.count > 0 {
-            if notes[0].beamType != .none {
+            //if notes[0].beamType != .none {
+            if notes[0].getValue() == Note.VALUE_QUAVER {
                 let rectCopy = CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))
                 DispatchQueue.main.async {
                     sleep(UInt32(0.25))
@@ -70,8 +71,8 @@ public class NoteOffsetsInStaffByKey {
         noteOffsetByKey.append("0     0    0    0    0    0    0,1   0     0    0,1  0    0")    //C
         noteOffsetByKey.append("0,1   1    0,1  1,0  0,1  1,0  1     0,1   1    0    1,0  0,1")  //C#, D♭
         noteOffsetByKey.append("1     1,1  1    1    1    1    1,1   1     1,1  1    1    1")    //D
-      //noteOffsetByKey.append("2,-1  2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
-        noteOffsetByKey.append("1,1   2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
+        noteOffsetByKey.append("2,-1  2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
+      //noteOffsetByKey.append("1,1   2    2,-1 2    1,1  2,0  2     2,-1  2    1,2  2    1,1")  //D#, E♭
         noteOffsetByKey.append("2     2,1  2    2,1  2    2    2,1   2     2,1  2    2,1  2")    //E
         noteOffsetByKey.append("3     3    3    3    3    3    3     3     3    3,1  3    3")    //F
         noteOffsetByKey.append("3,1   4    3,1  4,0  3,1  4,0  4     3,1   4,0  3    4,0  3,1")  //F#, G♭

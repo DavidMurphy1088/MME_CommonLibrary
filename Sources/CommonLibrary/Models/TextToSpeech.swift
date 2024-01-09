@@ -2,14 +2,21 @@ import Foundation
 import AVFoundation
 import SwiftSoup
 
-public class TTS : AudioPlayerUser {
-    public static let shared = TTS(parent: "TTS")
+public class TextToSpeech { //}: AudioPlayerUser {
+    public static let shared = TextToSpeech()
     let googleAPI = GoogleAPI.shared
     var isSpeaking = false
     let dataCache = DataCache()
+    var audioPlayer: AVAudioPlayer!
+    let logger = Logger.logger
     
-    public override func stop() {
-        super.stop()
+    public func stop() {
+        if let audioPlayer = audioPlayer {
+            audioPlayer.stop()
+            //let log = "Audio player stopped for user type \(parent)"
+            self.audioPlayer = nil
+            //logger.log(self, log)
+        }
         isSpeaking = false
     }
     
@@ -35,7 +42,7 @@ public class TTS : AudioPlayerUser {
         let data:Data? = nil //dataCache.getData(key: cacheKey)
         var playAudio = true
         if let data = data {
-            play(data: data)
+            playAudioData(data: data)
             if dataCache.hasCacheKey(cacheKey) {
                 return
             }
@@ -86,7 +93,7 @@ public class TTS : AudioPlayerUser {
                     let audioData = Data(base64Encoded: audioContent) {
                     self.dataCache.setFromExternalData(key: cacheKey, data: audioData)
                     if playAudio {
-                        self.play(data: audioData)
+                        self.playAudioData(data: audioData)
                     }
                 }
                 else {
@@ -98,4 +105,20 @@ public class TTS : AudioPlayerUser {
         }
         task.resume()
     }
+    
+    public func playAudioData(data:Data) {
+        do {
+            let log:String
+            if self.audioPlayer == nil {
+                self.audioPlayer = try AVAudioPlayer(data: data)
+            }
+            else {
+                self.audioPlayer!.stop()
+            }
+            self.audioPlayer?.play()
+        } catch {
+            logger.reportError(self, "Audio player can't play data")
+        }
+    }
+
 }

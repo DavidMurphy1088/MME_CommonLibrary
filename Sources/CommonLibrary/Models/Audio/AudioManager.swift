@@ -3,61 +3,81 @@ import AVFoundation
 
 public class AudioManager {
     public static let shared = AudioManager()
-    ///5Jan24 - Symptom was that after setting AVAudioSession back from recording to playback the AVSampler (e.g. notes) would sound silent
-    ///So just setting it to playAndRecord just once and dont touch it again seems to correct the problem. playAndRecord  should handle everything required so no need to change session state.
     public static var callNumber = 0
 
     ///Best Practice:For the majority of apps, the best practice is to initialize AVAudioEngine once and use its methods to control its state throughout the app's lifecycle.
     private let audioEngine:AVAudioEngine
     
     init() {
-        audioEngine = AVAudioEngine()
+        audioEngine = AVAudioEngine()        
+        NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: audioEngine, queue: nil) { notification in
+            if self.audioEngine.isRunning {
+                Logger.logger.log(self,"AVAudioEngineConfigurationChange, audio engine is RUNNING")
+            } else {
+                Logger.logger.log(self,"AVAudioEngineConfigurationChange, audio engine is STOPPED")
+            }
+        }
     }
     
-    func getAudioEngine() -> AVAudioEngine {
+    func getAudioEngine(_ ctx:String) -> AVAudioEngine {
+        Logger.logger.log(self, "getAudioEngine for [\(ctx)]")
         return self.audioEngine
+    }
+    
+    func connectSampler(_ ctx:String, sampler:AVAudioUnitSampler) {
+        Logger.logger.log(self, "connectSampler then start audioEngine, for [\(ctx)]")
+        audioEngine.attach(sampler)
+        audioEngine.connect(sampler, to: audioEngine.mainMixerNode, format: nil)
+        ///Cant start it until nodes are connected via this function
+        do {
+            try audioEngine.start()
+        } catch {
+            Logger.logger.reportError(self, "Could not start the audio engine: \(error)")
+        }
     }
     
     public func setAudioSessionRecord(_ ctx:String) {
         ///An object that communicates to the system how you intend to use audio in your app.
+        ///5Jan24 - Symptom was that after setting AVAudioSession back from recording to playback the AVSampler (e.g. notes) would sound silent
+        ///So just setting it to playAndRecord just once and dont touch it again seems to correct the problem. playAndRecord  should handle everything required so no need to change session state.
+        let attachedNodes = audioEngine.attachedNodes
+        let audioSession = AVAudioSession.sharedInstance()
         if AudioManager.callNumber == 0 {
-            let audioSession = AVAudioSession.sharedInstance()
-            //print("=========== AudioEngineManager setAudioSessionRecord RECORD [\(ctx)]")
             do {
                 try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .default)
                 try audioSession.setActive(true)
+                Logger.logger.log(self, "\(ctx) - set audio session record for first call but set .playAndRecord, nodes:\(attachedNodes)")
             } catch {
-                Logger.logger.reportErrorString("App init, setup AVAudioSession failed", error)
+                Logger.logger.reportErrorString("\(ctx) setup AVAudioSession failed, nodes:\(attachedNodes)", error)
             }
         }
+        else {
+            Logger.logger.log(self, "\(ctx) - ignored set audio session record, nodes:\(attachedNodes), sessionCategory:\(audioSession.category)")
+        }
         AudioManager.callNumber += 1
+        if !audioEngine.isRunning {
+            Logger.logger.reportErrorString("\(ctx) setAudioSessionRecord, audio engine not running")
+        }
     }
     
     public func setAudioSessionPlayback(_ ctx:String) {
+        let attachedNodes = audioEngine.attachedNodes
+        let audioSession = AVAudioSession.sharedInstance()
         if AudioManager.callNumber == 0 {
-            let audioSession = AVAudioSession.sharedInstance()
-            //print("=========== AudioEngineManager RESETAudioSession to PLAYBACK [\(ctx)]")
             do {
                 try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .default)
                 try audioSession.setActive(true)
+                Logger.logger.log(self, "\(ctx) - set audio session play for first call. Set .playAndRecord, nodes:\(attachedNodes)")
             } catch {
-                Logger.logger.reportErrorString("App init, reset AVAudioSession failed", error)
+                Logger.logger.reportErrorString("\(ctx) reset AVAudioSession failed, nodes:\(attachedNodes)", error)
             }
-            
-            //        let attachedNodes = audioEngine.attachedNodes
-            //        for node in attachedNodes {
-            //            node.reset()
-            //        }
-            //        //AudioSamplerPlayer.getShared().setup()
-            //        if attachedNodes.count > 0 {
-            //            audioEngine.stop()
-            //            do {
-            //                try audioEngine.start()
-            //            } catch {
-            //                print("Could not restart the audio engine: \(error)")
-            //            }
-            //        }
+        }
+        else {
+            Logger.logger.log(self, "\(ctx) - ignored set audio session play, nodes:\(attachedNodes), sessionCategory:\(audioSession.category)")
         }
         AudioManager.callNumber += 1
+        if !audioEngine.isRunning {
+            Logger.logger.reportErrorString("\(ctx) setAudioSessionPlayback, audio engine not running")
+        }
     }
 }

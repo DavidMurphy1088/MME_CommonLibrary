@@ -14,7 +14,7 @@ public class TapSoundPlayer {
     //private let audioPlayersCount = 1
 
     public init() {
-        audioEngine = AudioManager.shared.getAudioEngine()
+        audioEngine = AudioManager.shared.getAudioEngine("TapSoundPlayer,init()")
         //setupAudio()
     }
 

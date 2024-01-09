@@ -5,10 +5,28 @@ import StoreKit
 ///https://developer.apple.com/documentation/storekit/in-app_purchase
 ///https://developer.apple.com/documentation/storekit/in-app_purchase/testing_at_all_stages_of_development_with_xcode_and_the_sandbox
 
+public class FreeLicenseUser:Hashable {
+    public var email:String
+    public var allowTest:Bool
+    
+    init(email:String, allowTest:Bool) {
+        self.email = email
+        self.allowTest = allowTest
+    }
+    
+    public static func == (lhs: FreeLicenseUser, rhs: FreeLicenseUser) -> Bool {
+        return lhs.email == rhs.email
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(email)
+    }
+}
+
 public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, SKPaymentTransactionObserver {
     @Published public var availableProducts:[String: SKProduct] = [:] //[SKProduct]()
     @Published public var purchasedProductIds = Set<String>()
-    @Published public var emailLicenses = Set<String>()
+    @Published public var emailLicenses = Set<FreeLicenseUser>()
     @Published public var isInPurchasingState = false
 
     public static let shared = IAPManager()
@@ -17,6 +35,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
 
     private override init() {
         super.init()
+        self.emailLicenses.insert(FreeLicenseUser(email:"xxx", allowTest:true)) ///Testing
         //SKPaymentQueue.default().add(self)
         //requestProducts()
     }
@@ -31,12 +50,31 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
                 continue
             }
             let email = rowCells[1]
+            let allowTest = rowCells[2] == "Y"
             DispatchQueue.main.async {
-                self.emailLicenses.insert(email)
+                self.emailLicenses.insert(FreeLicenseUser(email:email, allowTest: allowTest))
             }
         }
     }
     
+    public func emailIsLicensed(email:String) -> Bool {
+        for user in self.emailLicenses {
+            if user.email == email {
+                return true
+            }
+        }
+        return false
+    }
+    
+    public func getLicenseUser(email:String) -> FreeLicenseUser? {
+        for user in self.emailLicenses {
+            if user.email == email {
+                return user
+            }
+        }
+        return nil
+    }
+
     ///Does the grade have a license to purchase?
     public func isLicenseAvailable(grade:String) -> Bool {
         let now = Date()
@@ -56,7 +94,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     }
 
     public func requestProducts() {
-        print("=========IAPManager requestProducts", productIDs)
+        //print("=========IAPManager requestProducts", productIDs)
         let request = SKProductsRequest(productIdentifiers: productIDs)
         request.delegate = self
         request.start()
@@ -64,7 +102,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     
     ///Load the licenses that are paid for
     public func restoreTransactions() {
-        print("=========IAPManager restoreTransactions")
+        //print("=========IAPManager restoreTransactions")
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
     

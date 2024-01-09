@@ -2,7 +2,7 @@ import SwiftUI
 import CoreData
 import AVFoundation
 
-public class Metronome: AudioPlayerUser, ObservableObject  {
+public class Metronome: ObservableObject  {
     
     static private var shared:Metronome = Metronome()
     static private var nextInstrument = 0
@@ -58,7 +58,7 @@ public class Metronome: AudioPlayerUser, ObservableObject  {
     }
 
     public init() {
-        super.init(parent: "Metronome")
+        //super.init(parent: "Metronome")
     }
     
 //    public func log(_ msg:String) {
