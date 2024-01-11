@@ -70,8 +70,8 @@ public func hintButtonView(_ txt:String, selected:Bool = false) -> some View {
     VStack {
         HStack {
             Text(txt).hintAnswerButtonStyle(selected: selected)
-            Image(systemName: "hand.point.up.left").font(.largeTitle).foregroundColor(.white)
-            Text(" ")
+            //Image(systemName: "hand.point.up.left").font(.largeTitle).foregroundColor(.white)
+            //Text(" ")
         }
         .background(Color .darkerTeal)
     }

@@ -7,7 +7,6 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
     public let id = UUID()
     public var staffNum:Int //Narrow the display of the note to just one staff
     public var timeSlice:TimeSlice
-    //public var sequence1:Int = 0 //the timeslice's sequence position
 
     private var value:Double = Note.VALUE_QUARTER
 

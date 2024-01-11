@@ -80,10 +80,10 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     }
         
     private func setHomeworkStatus()  {
-//        if !Settings.shared.companionOn {
+        //if !GlobalSettingsMT.shared.companionOn {
 //            self.homeworkIsAssigned = false
             return
-//        }
+        //}
         let path = self.getPathAsArray()
         if path.count == 0 {
             return

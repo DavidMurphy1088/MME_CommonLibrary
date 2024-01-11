@@ -23,11 +23,13 @@ public class NoteLayoutPositions: ObservableObject {
     
     public func storePosition(notes: [Note], rect: CGRect) {
         if notes.count > 0 {
-            //if notes[0].beamType != .none {
             if notes[0].getValue() == Note.VALUE_QUAVER {
                 let rectCopy = CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))
                 DispatchQueue.main.async {
-                    sleep(UInt32(0.25))
+                    ///Make sure this fires after all other UI is rendered
+                    ///Also can cause 'Publishing changes from within view updates is not allowed, this will cause undefined behavior.' - but cant see how to stop it :(
+                    //sleep(UInt32(0.25))
+                    sleep(UInt32(0.5))
                     self.positions[notes[0]] = rectCopy
                 }
             }

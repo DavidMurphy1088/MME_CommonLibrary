@@ -20,19 +20,19 @@ public class AudioManager {
     }
     
     func getAudioEngine(_ ctx:String) -> AVAudioEngine {
-        Logger.logger.log(self, "getAudioEngine for [\(ctx)]")
+        Logger.logger.log(self, "[\(ctx)] getAudioEngine")
         return self.audioEngine
     }
     
     func connectSampler(_ ctx:String, sampler:AVAudioUnitSampler) {
-        Logger.logger.log(self, "connectSampler then start audioEngine, for [\(ctx)]")
+        Logger.logger.log(self, "[\(ctx)] Attach connectSampler then start audioEngine")
         audioEngine.attach(sampler)
         audioEngine.connect(sampler, to: audioEngine.mainMixerNode, format: nil)
         ///Cant start it until nodes are connected via this function
         do {
             try audioEngine.start()
         } catch {
-            Logger.logger.reportError(self, "Could not start the audio engine: \(error)")
+            Logger.logger.reportError(self, "[\(ctx)] Could not start the audio engine: \(error)")
         }
     }
     
@@ -46,17 +46,17 @@ public class AudioManager {
             do {
                 try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .default)
                 try audioSession.setActive(true)
-                Logger.logger.log(self, "\(ctx) - set audio session record for first call but set .playAndRecord, nodes:\(attachedNodes)")
+                Logger.logger.log(self, "[\(ctx)] Set audio session record for first call and set session .playAndRecord, nodes:\(attachedNodes)")
             } catch {
-                Logger.logger.reportErrorString("\(ctx) setup AVAudioSession failed, nodes:\(attachedNodes)", error)
+                Logger.logger.reportErrorString("[\(ctx)] Setup AVAudioSession failed, nodes:\(attachedNodes)", error)
             }
         }
         else {
-            Logger.logger.log(self, "\(ctx) - ignored set audio session record, nodes:\(attachedNodes), sessionCategory:\(audioSession.category)")
+            Logger.logger.log(self, "[\(ctx)] Ignored set audio session record, nodes:\(attachedNodes), sessionCategory:\(audioSession.category)")
         }
         AudioManager.callNumber += 1
         if !audioEngine.isRunning {
-            Logger.logger.reportErrorString("\(ctx) setAudioSessionRecord, audio engine not running")
+            Logger.logger.reportErrorString("[\(ctx)] setAudioSessionRecord, audio engine not running")
         }
     }
     
@@ -67,17 +67,17 @@ public class AudioManager {
             do {
                 try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .default)
                 try audioSession.setActive(true)
-                Logger.logger.log(self, "\(ctx) - set audio session play for first call. Set .playAndRecord, nodes:\(attachedNodes)")
+                Logger.logger.log(self, "[\(ctx)] Set audio session play for first call. Set .playAndRecord, nodes:\(attachedNodes)")
             } catch {
-                Logger.logger.reportErrorString("\(ctx) reset AVAudioSession failed, nodes:\(attachedNodes)", error)
+                Logger.logger.reportErrorString("[\(ctx)] Reset AVAudioSession failed, nodes:\(attachedNodes)", error)
             }
         }
         else {
-            Logger.logger.log(self, "\(ctx) - ignored set audio session play, nodes:\(attachedNodes), sessionCategory:\(audioSession.category)")
+            Logger.logger.log(self, "[\(ctx)] Ignored set audio session play, nodes:\(attachedNodes), sessionCategory:\(audioSession.category)")
         }
         AudioManager.callNumber += 1
         if !audioEngine.isRunning {
-            Logger.logger.reportErrorString("\(ctx) setAudioSessionPlayback, audio engine not running")
+            Logger.logger.reportErrorString("[\(ctx)] setAudioSessionPlayback, audio engine not running")
         }
     }
 }

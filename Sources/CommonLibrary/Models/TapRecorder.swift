@@ -18,13 +18,14 @@ public class TapSoundPlayer {
         //setupAudio()
     }
 
-    public func loadTapSoundPlayers() {
+    public func loadTapSoundPlayers(ctx:String) {
         audioPlayerNodes = []
         for _ in 0..<audioPlayersCount {
             let playerNode = AVAudioPlayerNode()
             audioPlayerNodes.append(playerNode)
             audioEngine.attach(playerNode)
         }
+        Logger.logger.log(self, "\(ctx) LoadTapSoundPlayers count:\(audioPlayersCount)")
         //Load a sound with minimum latency for tapping a rhythm
         let name = "audiomass-output"
         //if let fileURL = Bundle.main.url(forResource: name, withExtension: "mp3"),
@@ -38,23 +39,24 @@ public class TapSoundPlayer {
             }
         }
         else {
-            Logger.logger.reportError(self, "Filed load AVAudioPlayer sound")
+            Logger.logger.reportError(self, "[\(ctx)] Failed load AVAudioPlayer sound")
         }
 
         do {
             try audioEngine.start()
         } catch {
-            Logger.logger.reportError(self, "Error starting tap audio engine: \(error.localizedDescription)")
+            Logger.logger.reportError(self, "[\(ctx)] Error starting tap audio engine: \(error.localizedDescription)")
         }
     }
     
-    public func stopAudio() {
+    public func stopAudio(ctx:String) {
         for i in 0..<audioPlayersCount {
             audioPlayerNodes[i].stop()
         }
         for i in 0..<audioPlayersCount {
             audioEngine.detach(audioPlayerNodes[i])
         }
+        Logger.logger.log(self, "\(ctx) StopAudio count:\(audioPlayersCount)")
 //        audioEngine.stop() //Bad idea .... dont stop it
     }
 
@@ -97,7 +99,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             self.enableRecordingLight = true
         }
         self.metronomeTempoAtRecordingStart = metronomeTempoAtRecordingStart
-        tapSoundPlayer.loadTapSoundPlayers()
+        tapSoundPlayer.loadTapSoundPlayers(ctx: "TapRecorder.startRecording")
     }
     
     public func endMetronomePrefix() {
@@ -120,7 +122,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     }
 
     public func stopRecording(score:Score) -> ([Double]) {
-        tapSoundPlayer.stopAudio()
+        tapSoundPlayer.stopAudio(ctx:"TapRecorder.stopRecording")
         self.tapTimes.append(Date().timeIntervalSince1970) // record value of last tap made
         self.tappedValues = []
         var last:Double? = nil
