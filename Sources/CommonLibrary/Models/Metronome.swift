@@ -14,8 +14,9 @@ public class Metronome: ObservableObject  {
     @Published public var allowChangeTempo:Bool = false
     @Published public var tickingIsActive = false
     @Published public var speechEnabled = false
-
-    public var tempoMinimumSetting = 60
+    
+    public let defaultTempo = 90
+    public var tempoMinimumSetting = 90
     public var tempoMaximumSetting = 120
     
     public var tickTimes:[Date] = []
@@ -23,7 +24,7 @@ public class Metronome: ObservableObject  {
     
     var setCtr = 0
 
-    let midiSampler:AVAudioUnitSampler = AudioSamplerPlayer.getShared().getSampler()
+    //let midiSampler:AVAudioUnitSampler = AudioManager.shared.getAVAudioUnitSampler() // AudioSamplerPlayer.getShared().getSampler()
     let audioTickerMetronomeTick:MetronomeTickerPlayer = MetronomeTickerPlayer(tickStyle: true)
     let audioClapper:MetronomeTickerPlayer = MetronomeTickerPlayer(tickStyle: false)
 
@@ -233,7 +234,7 @@ public class Metronome: ObservableObject  {
     
     private func startPlayThreadRunning(timeSignature:TimeSignature) {
         self.isThreadRunning = true
-        AudioManager.shared.setAudioSessionPlayback("Metronome.startPlayThreadRunning")
+        AudioManager.shared.log("Metronome.startPlayThreadRunning")
         ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
         //AudioSamplerPlayer.reset()
         //tickTimes = []
@@ -282,7 +283,10 @@ public class Metronome: ObservableObject  {
                                                     audioClapper.soundTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
                                                 }
                                                 else {
-                                                    midiSampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
+                                                    if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+                                                        sampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
+                                                    }
+                                                    //midiSampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
                                                 }
                                                 note.setHilite(hilite: true)
                                                 DispatchQueue.global(qos: .background).async {

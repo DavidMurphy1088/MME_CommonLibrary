@@ -4,7 +4,7 @@ import AVFoundation
 
 public class AudioSamplerPlayer {
     static private var shared = AudioSamplerPlayer()
-    private var sampler = AVAudioUnitSampler()
+    //private var sampler:AVAudioUnitSampler
     private var stopPlayingNotes = false
         
     static public func getShared() -> AudioSamplerPlayer {
@@ -12,59 +12,31 @@ public class AudioSamplerPlayer {
     }
     
     private init() {
-        sampler = AVAudioUnitSampler()
-        AudioManager.shared.connectSampler("AudioSamplerPlayer.init()", sampler: sampler)
-        loadSoundFont()
+        //sampler = AudioManager.shared.getAVAudioUnitSampler("AudioSamplerPlayer.init()") //AVAudioUnitSampler()
+        //AudioManager.shared.connectSampler("AudioSamplerPlayer.init()", sampler: sampler)
+        //loadSoundFont()
     }
     
-    public func getSampler() -> AVAudioUnitSampler {
-        return sampler
-    }
-    
-    private func loadSoundFont() {
-        //https://www.rockhoppertech.com/blog/the-great-avaudiounitsampler-workout/#soundfont
-        //https://sites.google.com/site/soundfonts4u/
-        //let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
-        /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
-        let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
-        let samplerFileName = soundFontNames[0].1
-        
-        ///18May23 -For some unknown reason and after hours of investiagtion this loadSoundbank must oocur before every play, not just at init time
-        
-        if let url = Bundle.module.url(forResource: samplerFileName, withExtension: "sf2") {
-            let ins = 0
-            for instrumentProgramNumber in ins..<256 {
-                do {
-                    try sampler.loadSoundBankInstrument(at: url, program: UInt8(instrumentProgramNumber), bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB), bankLSB: UInt8(kAUSampler_DefaultBankLSB))
-                    break
-                }
-                catch {
-                    break
-                }
-            }
-        }
-        else {
-            Logger.logger.reportError(self, "Cannot loadSoundBankInstrument \(samplerFileName)")
-        }
-        if sampler == nil {
-            Logger.logger.reportError(self, "No soundfont loaded")
-        }
-        else {
-            Logger.logger.log(self, "Sampler loaded sound font")
-        }
-    }
-    
+//    public func getSampler() -> AVAudioUnitSampler {
+//        return sampler
+//    }
+//    
+
 //    public func stopPlaying()  {
 //        AudioSamplerPlayer.reset()
 //        stopPlayingNotes = true
 //    }
     
     public func play(note: UInt8) {
-        sampler.startNote(note, withVelocity: 127, onChannel: 0)
+        if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+            sampler.startNote(note, withVelocity: 127, onChannel: 0)
+        }
     }
 
     func stop(note: UInt8) {
-        sampler.stopNote(note, onChannel: 0)
+        if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+            sampler.stopNote(note, onChannel: 0)
+        }
     }
     
     func playNotes(notes: [Note]) {
@@ -79,7 +51,9 @@ public class AudioSamplerPlayer {
                 }
                 let dynamic:Double = 48
                 n += 1
-                sampler.startNote(UInt8(note.midiNumber + pitchAdjust), withVelocity:UInt8(dynamic), onChannel:0)
+                if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+                    sampler.startNote(UInt8(note.midiNumber + pitchAdjust), withVelocity:UInt8(dynamic), onChannel:0)
+                }
                 if stopPlayingNotes {
                     break
                 }

@@ -12,7 +12,7 @@ public class LogMessage : Identifiable {
     }
     
     public func getLogEvent() -> String {
-        var out = String(number)+"-"
+        var out = String(number)+"   "
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         let logTime = formatter.string(from: self.logTime)

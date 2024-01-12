@@ -52,7 +52,7 @@ public class Piano: ObservableObject {
     let id = UUID()
     var startMidi = 0
     @Published var keys:[PianoKey]
-    let midiSampler = AudioSamplerPlayer.getShared().getSampler()
+    let midiSampler = AudioManager.shared.getAVAudioUnitSampler() //AudioSamplerPlayer.getShared().getSampler()
     var lastGestureTime:Date? = nil
     @Published var lastMidiPressed:Int?
     var soundNotes = true
@@ -179,7 +179,9 @@ public class Piano: ObservableObject {
     }
 
     public func playNote(midi:Int) {
-        midiSampler.startNote(UInt8(midi), withVelocity:64, onChannel:UInt8(0))
+        if let midiSampler = self.midiSampler {
+            midiSampler.startNote(UInt8(midi), withVelocity:64, onChannel:UInt8(0))
+        }
     }
     
     func debug1(_ ctx:String, midi:Int? = nil) {

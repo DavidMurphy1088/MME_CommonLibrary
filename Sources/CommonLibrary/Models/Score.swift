@@ -879,7 +879,13 @@ public class Score : ObservableObject {
             let questionNoteValue = questionNote.getValue() + trailingRestsDuration
             var outputNoteValue = questionNote.getValue()
             var outputMidiValue = questionNote.midiNumber
-            
+            if tapIndex < userScore.getAllTimeSlices().count {
+                ///Make the midi the pitch played on the virtual keyboard
+                if userScore.getAllTimeSlices()[tapIndex].getTimeSliceNotes().count > 0 {
+                    outputMidiValue = userScore.getAllTimeSlices()[tapIndex].getTimeSliceNotes()[0].midiNumber
+                }
+            }
+
             if stopAnalysis {
                 //outputTimeSlice.statusTag = .afterError
                 ///Dont break yet.  Add empty timeslices to the output score so that it still lines up vertically with the question score
@@ -895,6 +901,7 @@ public class Score : ObservableObject {
                             note.isOnlyRhythmNote = questionNote.isOnlyRhythmNote
                             outputTimeSlice.statusTag = .afterError
                             outputTimeSlice.addNote(n: note)
+                            
                         }
                     }
                     break
