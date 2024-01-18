@@ -205,8 +205,10 @@ public class Note : TimeSliceEntry, Comparable {
     public init(note:Note) {
         self.midiNumber = note.midiNumber
         super.init(timeSlice:note.timeSlice, value: note.getValue(), staffNum: note.staffNum)
+        self.timeSlice.sequence = note.timeSlice.sequence
         self.writtenAccidental = note.writtenAccidental
         self.isOnlyRhythmNote = note.isOnlyRhythmNote
+        self.beamType = note.beamType
     }
     
     func setHilite(hilite: Bool) {

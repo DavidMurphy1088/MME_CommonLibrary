@@ -54,7 +54,8 @@ struct TimeSliceLabelView: View {
 
 
 struct ScoreEntriesView: View {
-    @ObservedObject var noteLayoutPositions:NoteLayoutPositions
+    //@ObservedObject 
+    var noteLayoutPositions:NoteLayoutPositions
     @ObservedObject var barLayoutPositions:BarLayoutPositions
 
     @ObservedObject var score:Score
@@ -121,7 +122,8 @@ struct ScoreEntriesView: View {
             return nil
         }
         let stemLength = max(startNote.stemLength, endNote.stemLength) * score.lineSpacing
-        let endNotePos = noteLayoutPositions.positions[endNote]
+        //let endNotePos = noteLayoutPositions.positions[endNote]
+        let endNotePos = noteLayoutPositions.getPositionForSequence(sequence: endNote.timeSlice.sequence)
         if let endNotePos = endNotePos {
             let xEndMid = endNotePos.origin.x + endNotePos.size.width / 2.0 + (noteWidth / 2.0 * stemDirection * -1.0)
             let yEndMid = endNotePos.origin.y + endNotePos.size.height / 2.0
@@ -195,9 +197,13 @@ struct ScoreEntriesView: View {
 //        return 0
 //    }
     
-//    func log(_ posn:NoteLayoutPositions) -> Bool {
-//        for n in posn.positions.keys {
-//            print("=========NoteLayoutPosition", n.midiNumber, "type:", n.beamType, "seq", n.timeSlice.sequence)
+//    func log(score:Score, pos:NoteLayoutPositions, _ p:[(Note, CGRect)]) -> Bool {
+//        print("\n")
+//        for n in p {
+//            let v = n.1
+//            let x = n.0.getBeamStartNote(score: score, np: pos)
+//            print("=========NoteLayoutPosition", n.0.midiNumber, "type:", n.0.beamType, "seq", n.0.timeSlice.sequence, v.midY, v.midX, 
+//                  x.timeSlice.sequence, x.midiNumber, x.beamType, x.beamEndNote)
 //        }
 //        return true
 //    }
@@ -222,13 +228,13 @@ struct ScoreEntriesView: View {
                                         .onAppear {
                                             if timeSlice.statusTag != .rhythmError {
                                                 if staff.staffNum == 0 {
-                                                    noteLayoutPositions.storePosition(notes: entries.getTimeSliceNotes(),rect: geometry.frame(in: .named("HStack")))
+                                                    noteLayoutPositions.storePosition(onAppear: true, notes: entries.getTimeSliceNotes(),rect: geometry.frame(in: .named("HStack")))
                                                 }
                                             }
                                         }
                                         .onChange(of: score.lineSpacing) { newValue in
                                             if staff.staffNum == 0 {
-                                                noteLayoutPositions.storePosition(notes: entries.getTimeSliceNotes(),rect: geometry.frame(in: .named("HStack")))
+                                                noteLayoutPositions.storePosition(onAppear: false, notes: entries.getTimeSliceNotes(),rect: geometry.frame(in: .named("HStack")))
                                             }
                                         }
                                 })
@@ -289,11 +295,14 @@ struct ScoreEntriesView: View {
             ///noteLayoutPositions has recorded the position of each note to enable drawing the quaver beam
             
             if staff.staffNum == 0 {
+                //let l = log(score:score, pos:noteLayoutPositions, noteLayoutPositions.getPositions())
+//                let s = noteLayoutPositions.positions.sorted(by: { $0.key.timeSlice.sequence < $1.key.timeSlice.sequence })
+//                let x = log(score:score, pos:noteLayoutPositions, s)
                 GeometryReader { geo in
                     ZStack {
                         ZStack {
-                            //let log = log(noteLayoutPositions)
                             ForEach(noteLayoutPositions.positions.sorted(by: { $0.key.timeSlice.sequence < $1.key.timeSlice.sequence }), id: \.key.id) {
+                            //ForEach(noteLayoutPositions.getPositions(), id: \.0.id) {
                                 endNote, endNotePos in
                                 if endNote.beamType == .end || endNote.beamType == .none {
                                     let startNote = endNote.getBeamStartNote(score: score, np:noteLayoutPositions)
@@ -315,6 +324,7 @@ struct ScoreEntriesView: View {
             }
         }
         .coordinateSpace(name: "ZStack0")
-    }    
+    }  
+    
 }
 

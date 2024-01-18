@@ -74,8 +74,10 @@ public class Score : ObservableObject {
     
     public var studentFeedback:StudentFeedback? = nil
     public var tempo:Int?
-    public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 15.0
+    
     //public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 8.0
+    //public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : 15.0
+    public var lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 8.0 : 15.0
 
     private var totalStaffLineCount:Int = 0
     static var accSharp = "\u{266f}"
@@ -137,6 +139,10 @@ public class Score : ObservableObject {
         return count + 1
     }
     
+    public func setLineSpacing(spacing:Double) {
+        self.lineSpacing = spacing
+    }
+    
     public func getTotalStaffLineCount() -> Int {
         return self.totalStaffLineCount
     }
@@ -187,7 +193,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore5(_ ctx:String, withBeam:Bool) {
+    public func debugScore3(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {

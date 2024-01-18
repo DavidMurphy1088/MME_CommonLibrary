@@ -125,7 +125,8 @@ public struct ScoreView: View {
                 ForEach(score.getStaff(), id: \.self.id) { staff in
                     if !staff.isHidden {
                         ZStack {
-                            StaffView(score: score, staff: staff, widthPadding: widthPadding)
+                            StaffView(score: score, staff: staff, 
+                                      widthPadding: widthPadding)
                                 .frame(height: score.getStaffHeight())
                                 //.border(Color .red, width: 2)
                             
@@ -147,7 +148,7 @@ public struct ScoreView: View {
             UIDevice.current.endGeneratingDeviceOrientationNotifications()
         }
         .coordinateSpace(name: "ScoreView")
-        .roundedBorderRectangle()
+        //.roundedBorderRectangle()
     }
 
 }

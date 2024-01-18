@@ -9,8 +9,6 @@ enum TickType {
 
 /// Provide sampled audio as ticks for metronome
 class MetronomeTickerPlayer {
-    //private var timeSignature:TimeSignature
-    
     //Use an array so that sound n+1 can start before n finishes. Required for faster tempos and short note values.
     private var audioPlayersLow:[AVAudioPlayer] = []
     private var audioPlayersHigh:[AVAudioPlayer] = []
@@ -58,8 +56,8 @@ class MetronomeTickerPlayer {
     func soundTick(timeSignature: TimeSignature, noteValue:Double?=nil, silent:Bool) {
         ///Stronger beat on first downbeat
         let nextAudioPlayer = newBar ? audioPlayersHigh[nextPlayer] : audioPlayersLow[nextPlayer]
-        nextAudioPlayer.volume = newBar ? 1.0 : 0.33
-        //log("soundTick \(nextAudioPlayer.volume) Bar:\(newBar)")
+        //nextAudioPlayer.volume = newBar ? 1.0 : 0.33
+        nextAudioPlayer.volume = newBar ? 1.0 : 0.50
         if !silent {
             nextAudioPlayer.play()
         }

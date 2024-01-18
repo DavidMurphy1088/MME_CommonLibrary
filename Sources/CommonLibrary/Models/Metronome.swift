@@ -24,7 +24,6 @@ public class Metronome: ObservableObject  {
     
     var setCtr = 0
 
-    //let midiSampler:AVAudioUnitSampler = AudioManager.shared.getAVAudioUnitSampler() // AudioSamplerPlayer.getShared().getSampler()
     let audioTickerMetronomeTick:MetronomeTickerPlayer = MetronomeTickerPlayer(tickStyle: true)
     let audioClapper:MetronomeTickerPlayer = MetronomeTickerPlayer(tickStyle: false)
 
@@ -172,9 +171,6 @@ public class Metronome: ObservableObject  {
     }
     
     public func playScore(score:Score, rhythmNotesOnly:Bool=false, onDone: (()->Void)? = nil) {
-//        let audioSamplerMIDI = AudioSamplerPlayer.shared.sampler
-        //AudioSamplerPlayer.shared.startSampler()
-        
         //find the first note to play
         nextScoreIndex = 0
         if score.scoreEntries.count > 0 {
@@ -234,11 +230,8 @@ public class Metronome: ObservableObject  {
     
     private func startPlayThreadRunning(timeSignature:TimeSignature) {
         self.isThreadRunning = true
-        AudioManager.shared.log("Metronome.startPlayThreadRunning")
-        ///This is required but dont know why. Without it the audio sampler does not sound notes after the app records an audio.
-        //AudioSamplerPlayer.reset()
-        //tickTimes = []
-        
+        AudioManager.shared.checkReadyToPlay("Metronome.startPlayThreadRunning")
+
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             var loopCtr = 0
             var keepRunning = true

@@ -75,7 +75,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             AVLinearPCMIsFloatKey: false
         ]
         
-        AudioManager.shared.log("AudioRecorder.startRecording")
+        AudioManager.shared.extLog("AudioRecorder.startRecording")
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             if audioRecorder == nil {
@@ -98,7 +98,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         setStatus("Recording stopped, successfull status:\(flag ? "OK" : "Error")")
-        AudioManager.shared.log("audioRecorderDidFinishRecording")
+        AudioManager.shared.extLog("audioRecorderDidFinishRecording")
     }
 
     public func stopRecording() {
@@ -111,7 +111,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             setStatus("Recorded time \(String(format: "%.1f", audioRecorder.currentTime)) seconds")
             audioRecorder.stop()
         }
-        AudioManager.shared.log("stopRecording")
+        AudioManager.shared.extLog("stopRecording")
     }
     
     public func getRecordedAudio(fileName:String) -> Data? {
@@ -185,7 +185,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     
     public func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         setStatus("audioPlayerDecodeErrorDidOccur, status:\(String(describing: error?.localizedDescription))")
-        AudioManager.shared.log("Recorder.audioPlayerDecodeErrorDidOccur")
+        AudioManager.shared.extLog("Recorder.audioPlayerDecodeErrorDidOccur")
     }
 
     public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {

@@ -5,8 +5,13 @@ import AVFoundation
 //https://mammothmemory.net/music/sheet-music/reading-music/treble-clef-and-bass-clef.html
 
 ///Used to record view positions of notes as they are drawn by a view so that a 2nd drawing pass can draw quaver beams to the right points
-public class NoteLayoutPositions: ObservableObject {
-    @Published public var positions:[Note: CGRect] = [:]
+///Jan18, 2024 Original version had positions as Published but this causes warning of updating publishable variable during view drawing
+///Have now made postions not published and NoteLayoutPostions not observable.
+///This assumes that all notes will be drawn and completed (and their postions recorded) by the time the quaver beam is drawn furhter down in ScoreEntriesView but this assumption seems to hold.
+///This approach makes the whole drawing of quaver beams much simpler - as long as the assumption holds always.
+public class NoteLayoutPositions {//}: ObservableObject {
+    //@Published public
+    public var positions:[Note: CGRect] = [:]
 
     var id:Int
     static var nextId = 0
@@ -15,23 +20,38 @@ public class NoteLayoutPositions: ObservableObject {
         self.id = id
     }
     
-    static func getShared() -> NoteLayoutPositions {
-        let lp = NoteLayoutPositions(id: nextId)
-        nextId += 1
-        return lp
+    public func getPositions() -> [(Note, CGRect)] {
+        //noteLayoutPositions.positions.sorted(by: { $0.key.timeSlice.sequence < $1.key.timeSlice.sequence })
+        var result:[(Note, CGRect)] = []
+        let notes = positions.keys.sorted(by: { $0.timeSlice.sequence < $1.timeSlice.sequence })
+        for n in notes {
+            let rect:CGRect = positions[n]!
+            let newNote = Note(note: n)
+            result.append((newNote, rect))
+        }
+        return result
     }
     
-    public func storePosition(notes: [Note], rect: CGRect) {
+    func getPositionForSequence(sequence:Int) -> CGRect? {
+        for k in positions.keys {
+            if k.timeSlice.sequence == sequence {
+                return positions[k]
+            }
+        }
+        return nil
+    }
+    
+    public func storePosition(onAppear:Bool, notes: [Note], rect: CGRect) {
         if notes.count > 0 {
             if notes[0].getValue() == Note.VALUE_QUAVER {
                 let rectCopy = CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))
-                DispatchQueue.main.async {
+                //DispatchQueue.main.async {
                     ///Make sure this fires after all other UI is rendered
                     ///Also can cause 'Publishing changes from within view updates is not allowed, this will cause undefined behavior.' - but cant see how to stop it :(
                     //sleep(UInt32(0.25))
-                    sleep(UInt32(0.5))
+                    //sleep(UInt32(0.5))
                     self.positions[notes[0]] = rectCopy
-                }
+                //}
             }
         }
     }

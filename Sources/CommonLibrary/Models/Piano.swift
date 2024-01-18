@@ -52,7 +52,7 @@ public class Piano: ObservableObject {
     let id = UUID()
     var startMidi = 0
     @Published var keys:[PianoKey]
-    let midiSampler = AudioManager.shared.getAVAudioUnitSampler() //AudioSamplerPlayer.getShared().getSampler()
+    let midiSampler = AudioManager.shared.getAVAudioUnitSampler()
     var lastGestureTime:Date? = nil
     @Published var lastMidiPressed:Int?
     var soundNotes = true

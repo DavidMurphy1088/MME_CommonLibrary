@@ -13,7 +13,6 @@ extension AudioManager {
         switch type {
         case .began:
             // Interruption began, pause or stop the audio
-            //pauseAudio()
             Logger.logger.reportError(self, "AudioManager.handleAudioSessionInterruption. Interruption started")
 
         case .ended:
@@ -34,35 +33,51 @@ extension AudioManager {
 }
 
 public class AudioManager {
-    public  static let shared = AudioManager()
+    public static let shared = AudioManager()
     private static var instanceCount = 0
     
     ///Best Practice:For the majority of apps, the best practice is to initialize AVAudioEngine once and use its methods to control its state throughout the app's lifecycle.
     private var audioEngine:AVAudioEngine?// = AVAudioEngine()
     private var audioUnitSampler:AVAudioUnitSampler? //()
-
-    //public var callNumber = 0
-    private var lastContext = ""
     
     private var audioPlayerNodes: [AVAudioPlayerNode] = []
     private var playerNodeIndex = 0
     private let audioPlayersCount = 32
     private var lastReset:Date?
-
+    private let id = UUID()
+    
     private init() {
         initAudio("init")
     }
     
-    public func fullReset(manual:Bool) {
-        if let lastReset = lastReset {
-            if Date().timeIntervalSince(lastReset) < 5 {
-                return
-            }
+    private func log(_ ctx:String, _ msg:String) {
+        let uuidString = id.uuidString
+        let last4 = String(uuidString.suffix(4))
+        let audioID = String(audioEngine.hashValue)
+        let audioID4 = audioID.suffix(4)
+        Logger.logger.log(self, "AudioManagerID:\(last4) AVAudioEngine:\(audioID4) ctx:\(ctx) \(msg)")
+    }
+    
+    public func extLog(_ msg:String) {
+        log("ExtLog --->", msg)
+    }
+    
+    public func checkReadyToPlay(_ ctx:String) {
+        guard let audioEngine = audioEngine else {
+            return
         }
-        lastReset = Date()
-        DispatchQueue.main.async {
-            Logger.logger.log(self, "Start RESETING AUDIO...instance:\(AudioManager.instanceCount)")
+        log(ctx, "CheckReadyToPlay")
+        if audioEngine.isRunning {
+            return
+        }
+        Logger.logger.reportError(self, "\(ctx) CheckReadyToPlay - Audio engine is stopped, so resetting")
+        fullReset()
+    }
+    
+    public func fullReset() {
+        //DispatchQueue.main.async {
             if let audioEngine = self.audioEngine {
+                self.log("fullReset", "Start RESETING AUDIO")
                 audioEngine.stop()
                 for player in self.audioPlayerNodes {
                     audioEngine.disconnectNodeInput(player)
@@ -81,21 +96,21 @@ public class AudioManager {
                 }
             }
             self.playerNodeIndex = 0
-            self.lastContext = "Reset"
             self.initAudio("Reset")
-            Logger.logger.log(self, "End RESETING AUDIO...")
-        }
+            self.log("fullReset", "End RESETING AUDIO...")
+        //}
     }
     
     private func initAudio(_ ctx:String) {
-        Logger.logger.log(self, "[\(ctx)] initAudio. Create audio engine, sampler and playerNodes. Instance:\( AudioManager.instanceCount)")
         AudioManager.instanceCount += 1
-        lastContext = "AudioManager initAudio"
+        //lastContext = "AudioManager initAudio"
 
         self.audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else {
             return
         }
+        log(ctx, "InitAudio. Create audio engine, sampler and playerNodes")
+
         self.audioUnitSampler = AVAudioUnitSampler()
         guard let audioUnitSampler = self.audioUnitSampler else {
             return
@@ -106,49 +121,76 @@ public class AudioManager {
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: audioEngine, queue: nil) { notification in
             if let audioEngine = self.audioEngine {
                 if audioEngine.isRunning {
-                    Logger.logger.log(self,"[\(ctx)] AVAudioEngineConfigurationChange, audio engine is RUNNING")
+                    self.log(ctx, "AVAudioEngineConfigurationChange, audio engine is RUNNING")
                 } else {
-                    Logger.logger.reportError(self, "AVAudioEngineConfigurationChange, audio engine is STOPPED. The last context was \(self.lastContext)")
-                    self.fullReset(manual: false)
+                    self.log(ctx, "AVAudioEngineConfigurationChange, audio engine is STOPPED")
+                    Logger.logger.reportError(self, "AVAudioEngineConfigurationChange, audio engine is STOPPED. AVAudioEngine instance:\(audioEngine.hashValue)")
+//                    var sessionInfo = "Session Category: \(AVAudioSession.sharedInstance().category) "
+//                    sessionInfo = " Category options:\(AVAudioSession.sharedInstance().categoryOptions)"
                 }
             }
         }
+        
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(handleAudioSessionInterruption),
                                                name: AVAudioSession.interruptionNotification,
                                                object: nil)
         
+        ///Play note pitches in a score
         loadSoundFont(audioUnitSampler: audioUnitSampler)
         audioEngine.attach(audioUnitSampler)
         audioEngine.connect(audioUnitSampler, to: audioEngine.mainMixerNode, format: nil)
+        
+        ///Load sound for optional drum sound taps
         loadTapSoundPlayers(ctx: "initAudio", audioEngine: audioEngine)
         
-        ///Cant start iaudioEngine until nodes are connected
+        ///Cant start audioEngine until nodes are connected
         do {
             try audioEngine.start()
-            Logger.logger.log(self, "[\(ctx)] audioEngine was started OK")
+            log(ctx, "audioEngine was started OK")
         } catch {
             Logger.logger.reportError(self, "[\(ctx)] Could not start the audio engine: \(error)")
         }
     }
+    
+    ///AVAudioEngine and AVKit VideoPlayer Competition: Both frameworks require exclusive access to the audio hardware on iOS devices. 
+    ///When you initiate video playback using AVKit VideoPlayer, it takes control of the audio hardware, causing AVAudioEngine to stop and subsequently trigger the AVAudioEngineConfigurationChange notification.
+    ///If you only need AVAudioEngine before or after video playback, pause it while the video is playing:
+//    public func pause(_ ctx:String, pause:Bool) {
+//        if let audioEngine = audioEngine {
+//            Logger.logger.log(self, "[\(ctx)] Pause engine for video way:\(pause). AVAudioEngine instance:\(audioEngine.hashValue)")
+//            if pause {
+//                audioEngine.pause()
+//            }
+//            else {
+//                do {
+//                    try audioEngine.start()
+//                    setAudioSession("Restart after pause. Is engine started \(audioEngine.isRunning). AVAudioEngine instance:\(audioEngine.hashValue)")
+//                }
+//                catch {
+//                    Logger.logger.reportError(self, "[\(ctx)] Could not restart the audio engine after video: \(error)")
+//                }
+//            }
+//        }
+//    }
     
     private func loadSoundFont(audioUnitSampler:AVAudioUnitSampler) {
         //https://www.rockhoppertech.com/blog/the-great-avaudiounitsampler-workout/#soundfont
         //https://sites.google.com/site/soundfonts4u/
         //let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
         /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
-        //let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
-        let soundFontNames = [("Piano", "Small Pianos Bank")] //, ("Guitar", "GuitarAcoustic")]
+        let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
+        //let soundFontNames = [("Piano", "Yamaha-Grand-Lite-v2.0")] //, ("Guitar", "GuitarAcoustic")]
         
         let samplerFileName = soundFontNames[0].1
-        
-        ///18May23 -For some unknown reason and after hours of investiagtion this loadSoundbank must oocur before every play, not just at init time
-        
         if let url = Bundle.module.url(forResource: samplerFileName, withExtension: "sf2") {
             let ins = 0
             for instrumentProgramNumber in ins..<256 {
                 do {
-                    try audioUnitSampler.loadSoundBankInstrument(at: url, program: UInt8(instrumentProgramNumber), bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB), bankLSB: UInt8(kAUSampler_DefaultBankLSB))
+                    try audioUnitSampler.loadSoundBankInstrument(at: url,
+                                                                 program: UInt8(instrumentProgramNumber),
+                                                                 bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
+                                                                 bankLSB: UInt8(kAUSampler_DefaultBankLSB))
                     break
                 }
                 catch {
@@ -159,7 +201,7 @@ public class AudioManager {
         else {
             Logger.logger.reportError(self, "Cannot loadSoundBankInstrument \(samplerFileName)")
         }
-        Logger.logger.log(self, "Sampler loaded sound font")
+        log("loadSoundFont", "Sampler loaded sound font")
     }
     
     public func getAVAudioUnitSampler() -> AVAudioUnitSampler? {
@@ -170,26 +212,16 @@ public class AudioManager {
         return self.audioEngine
     }
             
-    public func log(_ ctx:String) {
-        Logger.logger.log(self, "AudioManager log :: [\(ctx)]")
-    }
-    
     private func setAudioSession(_ ctx:String) {
         let audioSession = AVAudioSession.sharedInstance()
-        lastContext = ctx
-        //if callNumber == 0 {
-            do {
-                try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .default)
-                try audioSession.setActive(true)
-                Logger.logger.log(self, "[\(ctx)] Set audio session for first call. Set .playAndRecord")
-            } catch {
-                Logger.logger.reportErrorString("[\(ctx)] Set audio session failed", error)
-            }
-//        }
-//        else {
-//            Logger.logger.log(self, "[\(ctx)] Ignored set audio session play, sessionCategory:\(audioSession.category)")
-//        }
-        //callNumber += 1
+        //lastContext = ctx
+        do {
+            try audioSession.setCategory(AVAudioSession.Category.playAndRecord, mode: .default)
+            try audioSession.setActive(true)
+            log(ctx, "Set audio session for first call. Set .playAndRecord")
+        } catch {
+            Logger.logger.reportErrorString("[\(ctx)] Set audio session failed", error)
+        }
     }
     
     ///---------------- Tap sounds ----------------
@@ -216,7 +248,7 @@ public class AudioManager {
         else {
             Logger.logger.reportError(self, "[\(ctx)] Failed load AVAudioPlayer sound")
         }
-        Logger.logger.log(self, "\(ctx) LoadTapSoundPlayers count:\(audioPlayersCount)")
+        self.log(ctx, "LoadTapSoundPlayers count:\(audioPlayersCount)")
     }
     
 //    public func stopAudio(ctx:String) {

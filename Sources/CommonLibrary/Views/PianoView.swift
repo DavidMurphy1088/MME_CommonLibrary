@@ -115,7 +115,10 @@ public struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
             self.whiteKeyHeight = screenSize.height / 3.5
             self.handViewHeight = self.whiteKeyHeight * 0.20
             blackKeyWidth = whiteKeyWidth * 0.7
-            AudioManager.shared.log("KeyboardView .OnAppear")
+            AudioManager.shared.checkReadyToPlay("KeyboardView .OnAppear")
+        }
+        .onDisappear() {
+            AudioManager.shared.extLog("KeyboardView .OnDisappear")
         }
     }
 }
