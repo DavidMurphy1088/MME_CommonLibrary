@@ -907,7 +907,6 @@ public class Score : ObservableObject {
                             note.isOnlyRhythmNote = questionNote.isOnlyRhythmNote
                             outputTimeSlice.statusTag = .afterError
                             outputTimeSlice.addNote(n: note)
-                            
                         }
                     }
                     break

@@ -208,11 +208,12 @@ public struct TimeSliceView: View {
                 if note.staffNum == staff.staffNum  {
                     NoteHiliteView(entry: note, x: noteFrameWidth/2, y: noteEllipseMidpoint, width: noteWidth * 1.5)
                 }
-
             }
             else {
-                if note.staffNum == staff.staffNum  {
-                    NoteHiliteView(entry: note, x: noteFrameWidth/2, y: noteEllipseMidpoint, width: noteWidth * 1.5)
+                if statusTag != .afterError {
+                    if note.staffNum == staff.staffNum  {
+                        NoteHiliteView(entry: note, x: noteFrameWidth/2, y: noteEllipseMidpoint, width: noteWidth * 1.5)
+                    }
                 }
                 
                 if let accidental = accidental {
