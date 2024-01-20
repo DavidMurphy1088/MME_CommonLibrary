@@ -40,11 +40,12 @@ public class AudioManager {
     private var audioEngine:AVAudioEngine?// = AVAudioEngine()
     private var audioUnitSampler:AVAudioUnitSampler? //()
     
+    private let audioPlayersCount = 32 //Must be > max number of notes in any melody
     private var audioPlayerNodes: [AVAudioPlayerNode] = []
     private var playerNodeIndex = 0
-    private let audioPlayersCount = 32
     private var lastReset:Date?
     private let id = UUID()
+    private let audioResourceName = "audiomass-output"
     
     private init() {
         initAudio("init")
@@ -142,7 +143,7 @@ public class AudioManager {
         audioEngine.connect(audioUnitSampler, to: audioEngine.mainMixerNode, format: nil)
         
         ///Load sound for optional drum sound taps
-        loadTapSoundPlayers(ctx: "initAudio", audioEngine: audioEngine)
+        //loadTapPlayers(ctx: "initAudio", audioEngine: audioEngine)
         
         ///Cant start audioEngine until nodes are connected
         do {
@@ -225,8 +226,32 @@ public class AudioManager {
     }
     
     ///---------------- Tap sounds ----------------
+//    public func scheduleTapPlayers(ctx:String) { //call this whenever starting tapp
+//        if let fileURL = Bundle.module.url(forResource: audioResourceName, withExtension: "mp3"),
+//           let file = try? AVAudioFile(forReading: fileURL) {
+//            for i in 0..<audioPlayersCount {
+//                let node = audioPlayerNodes[i]
+//                //audioEngine.connect(node, to: audioEngine.mainMixerNode, format: file.processingFormat)
+//                node.reset()
+//                node.scheduleFile(file, at: nil, completionHandler: nil)
+//                node.volume = 1.0
+//            }
+//            Logger.logger.log(self, "[\(ctx)] loaded sound for \(audioPlayersCount) AVAudioPlayers")
+//        }
+//        else {
+//            Logger.logger.reportError(self, "[\(ctx)] Failed load AVAudioPlayer sound")
+//        }
+//    }
     
-    public func loadTapSoundPlayers(ctx:String, audioEngine:AVAudioEngine) {
+    public func scheduleTapPlayers(ctx:String) {
+        guard let audioEngine = self.audioEngine else {
+            return
+        }
+        for node in audioPlayerNodes {
+            node.stop()
+            audioEngine.detach(node)
+        }
+        self.log(ctx, "LoadTapSoundPlayers, detached \(audioPlayersCount) audio players")
         audioPlayerNodes = []
         for _ in 0..<audioPlayersCount {
             let playerNode = AVAudioPlayerNode()
@@ -234,9 +259,7 @@ public class AudioManager {
             audioEngine.attach(playerNode)
         }
         //Load a sound with minimum latency for tapping a rhythm
-        let name = "audiomass-output"
-        //if let fileURL = Bundle.main.url(forResource: name, withExtension: "mp3"),
-        if let fileURL = Bundle.module.url(forResource: name, withExtension: "mp3"),
+        if let fileURL = Bundle.module.url(forResource: audioResourceName, withExtension: "mp3"),
            let file = try? AVAudioFile(forReading: fileURL) {
             for i in 0..<audioPlayersCount {
                 let node = audioPlayerNodes[i]
@@ -248,7 +271,7 @@ public class AudioManager {
         else {
             Logger.logger.reportError(self, "[\(ctx)] Failed load AVAudioPlayer sound")
         }
-        self.log(ctx, "LoadTapSoundPlayers count:\(audioPlayersCount)")
+        self.log(ctx, "LoadTapSoundPlayers, scheduled \(audioPlayersCount) audio players")
     }
     
 //    public func stopAudio(ctx:String) {
@@ -270,7 +293,6 @@ public class AudioManager {
             playerNodeIndex = 0
         }
         self.audioPlayerNodes[playerNodeIndex].play()
-        //self.audioPlayerNodes[playerNodeIndex].stop()
         playerNodeIndex += 1
     }
 

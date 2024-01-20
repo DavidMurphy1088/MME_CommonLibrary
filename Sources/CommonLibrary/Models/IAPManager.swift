@@ -30,7 +30,6 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     @Published public var isInPurchasingState = false
 
     public static let shared = IAPManager()
-    //private let productIDs: Set<String> = ["NZMEB_Grade_2_2024", "MT_NZMEB_Grade_1_2024", "MT_NZMEB_Grade2_2024", "MT_NZMEB_Grade_3_2024"]
     private let productIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024"]
 
     private override init() {
@@ -93,16 +92,18 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         return false
     }
 
+    ///Called at app startup
     public func requestProducts() {
-        //print("=========IAPManager requestProducts", productIDs)
+        Logger.logger.log(self, "requestProducts \(productIDs)")
         let request = SKProductsRequest(productIdentifiers: productIDs)
         request.delegate = self
         request.start()
     }
     
     ///Load the licenses that are paid for
+    ///Called at app startup
     public func restoreTransactions() {
-        //print("=========IAPManager restoreTransactions")
+        Logger.logger.log(self, "restoreTransactions")
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
     
@@ -114,9 +115,9 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         let gradeToBuy = grade.replacingOccurrences(of: " ", with: "_")
 
         let productId = "NZMEB_\(gradeToBuy)_\(String(currentYear))"
-        //print("============== buyProduct, product id", productId)
+        Logger.logger.log(self, "BuyProduct, product id \(productId)")
         if let product = self.availableProducts[productId] {
-            //print("=========IAPManager buyProduct", productId, product)
+            Logger.logger.log(self, "BuyProduct is available, add queue, product id \(productId)")
             let payment = SKPayment(product: product)
             SKPaymentQueue.default().add(payment)
         }
@@ -126,7 +127,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     /// Sent immediately before -requestDidFinish
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
-            //print("=========IAPManager  productsRequest response", request, response)
+            Logger.logger.log(self, "productsRequest response \(self.productIDs) ProductCount:\(response.products.count)")
             for product in response.products {
                 self.availableProducts[product.productIdentifier] = product
                 Logger.logger.log(self, "Available licenseType \(product.productIdentifier)")
@@ -140,20 +141,15 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
 
     // SKPaymentTransactionObserver
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        //print("\n=========IAPManager  paymentQueue, updatedTransactions")
+        Logger.logger.log(self, "updatedTransactions")
         DispatchQueue.main.async {
             self.isInPurchasingState = false
             for transaction in transactions {
-//                print("  transaction", transaction.transactionState,
-//                      "\tstate:", self.getStateName(transaction.transactionState).0,
-//                      "\tdesc", transaction.description)
-                
                 switch transaction.transactionState {
                 case .purchasing:
                     /// Transaction is being added to the server queue. Client should not complete the transaction.
-                    //print("  -----> purchasing...", transaction.payment.productIdentifier)
+                    Logger.logger.log(self, "Purchasing: \(transaction.payment.productIdentifier)")
                     self.isInPurchasingState = true
-                    
                 case .purchased:
                     Logger.logger.log(self, "Purchased: \(transaction.payment.productIdentifier)")
                     self.purchasedProductIds.insert(transaction.payment.productIdentifier)

@@ -33,7 +33,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             self.enableRecordingLight = true
         }
         self.metronomeTempoAtRecordingStart = metronomeTempoAtRecordingStart
-        //tapSoundPlayer.loadTapSoundPlayers(ctx: "TapRecorder.startRecording")
+        AudioManager.shared.scheduleTapPlayers(ctx: "TapRecorder.startRecording")
     }
     
     public func endMetronomePrefix() {

@@ -239,7 +239,7 @@ public class Metronome: ObservableObject  {
             var ticksPlayed = 0
             var firstNote = true
             var tieWasFound = false
-            var debug = true
+            //var debug = true
             var lastTime = Date()
 
             while keepRunning {
@@ -248,7 +248,7 @@ public class Metronome: ObservableObject  {
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
                         let elapsedTimeMillis = Date().timeIntervalSince(lastTime) * 1000
-                        let elapsedTimeSeconds = String(format: "%.2f", elapsedTimeMillis / 1000)
+                        //let elapsedTimeSeconds = String(format: "%.2f", elapsedTimeMillis / 1000)
                         lastTime = Date()
                         audioTickerMetronomeTick.soundTick(timeSignature: timeSignature, silent: false)
                         ticksPlayed += 1
