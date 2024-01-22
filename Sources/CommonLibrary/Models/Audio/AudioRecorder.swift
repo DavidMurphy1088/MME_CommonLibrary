@@ -75,7 +75,8 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             AVLinearPCMIsFloatKey: false
         ]
         
-        AudioManager.shared.extLog("AudioRecorder.startRecording")
+        AudioManager.shared.setAudioSessionRecord("AudioRecorder.startRecording")
+        
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             if audioRecorder == nil {
@@ -98,7 +99,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         setStatus("Recording stopped, successfull status:\(flag ? "OK" : "Error")")
-        AudioManager.shared.extLog("audioRecorderDidFinishRecording")
+        AudioManager.shared.setAudioSessionPlayback("AudioRecorder.startRecording")
     }
 
     public func stopRecording() {

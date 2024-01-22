@@ -33,6 +33,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             self.enableRecordingLight = true
         }
         self.metronomeTempoAtRecordingStart = metronomeTempoAtRecordingStart
+        AudioManager.shared.checkReadyToPlay("TapRecorder.startRecording")
         AudioManager.shared.scheduleTapPlayers(ctx: "TapRecorder.startRecording")
     }
     
@@ -190,6 +191,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         }
         let firstTapValue = tapValues[0]
         let tempo = (firstScoreValue / firstTapValue) * 60.0
+        print("=============getTempoFromRecordingStart", tempo)
         return Int(tempo)
     }
     

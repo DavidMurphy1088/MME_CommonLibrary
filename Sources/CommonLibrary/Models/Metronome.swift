@@ -15,9 +15,8 @@ public class Metronome: ObservableObject  {
     @Published public var tickingIsActive = false
     @Published public var speechEnabled = false
     
-    public let defaultTempo = 90
-    public var tempoMinimumSetting = 90
-    public var tempoMaximumSetting = 120
+    public var tempoMinimumSetting = 40 //90
+    public var tempoMaximumSetting = 160 //120
     
     public var tickTimes:[Date] = []
     public var nextTickTime:Date?
@@ -40,9 +39,9 @@ public class Metronome: ObservableObject  {
     private let speech = SpeechSynthesizer.shared
     private var onDoneFunction:(()->Void)? = nil
     
-    public static func getMetronomeWithSettings(initialTempo:Int, allowChangeTempo:Bool, ctx:String,
+    public static func getMetronomeWithSettings(_ ctx:String, initialTempo:Int, allowChangeTempo:Bool,
                                                 minTempo:Int? = nil, maxTempo:Int? = nil) -> Metronome {
-        shared.setTempo(tempo: initialTempo, context: "getMetronomeWithSettings - \(ctx)")
+        shared.setTempo("getMetronomeWithSettings \(ctx)", tempo: initialTempo)
         shared.setAllowTempoChange("getMetronomeWithSettings", allow: allowChangeTempo)
         if let tempo = minTempo {
             shared.tempoMinimumSetting = tempo
@@ -60,11 +59,7 @@ public class Metronome: ObservableObject  {
     public init() {
         //super.init(parent: "Metronome")
     }
-    
-//    public func log(_ msg:String) {
-//        print("========= Metronome", msg)
-//    }
-    
+
     public func getTempo() -> Int {
         return self.tempo
     }
@@ -96,9 +91,9 @@ public class Metronome: ObservableObject  {
         }
     }
 
-    public func setTempo(tempo: Int, context:String, allowBeyondLimits:Bool = false) {
+    public func setTempo(_ ctx:String, tempo: Int, allowBeyondLimits:Bool = false) {
         //https://theonlinemetronome.com/blogs/12/tempo-markings-defined
-
+        print("========== SetTempo", ctx, tempo)
         var tempoToSet:Int
         var maxTempo = self.tempoMaximumSetting
         var minTempo = self.tempoMinimumSetting

@@ -217,7 +217,7 @@ public class Key : ObservableObject, Equatable, Hashable, Identifiable {
     }
     
     ///Get the notes names for the given triad symbol
-    func getTriadNotes(triadSymbol:String) -> String {
+    func getTriadNoteNames(triadSymbol:String) -> String {
         var result = ""
         var rootPos = 0
         switch triadSymbol {

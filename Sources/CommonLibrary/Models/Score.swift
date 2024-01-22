@@ -165,7 +165,7 @@ public class Score : ObservableObject {
         
         for tagSlice in taggedSlices {
             if let triad = tagSlice.tagLow {
-                let notes = key.getTriadNotes(triadSymbol:triad)
+                let notes = key.getTriadNoteNames(triadSymbol:triad)
                 if let hiTag:TagHigh = tagSlice.tagHigh {
                     hiTag.popup = notes
                     if let loTag = tagSlice.tagLow {

@@ -574,6 +574,9 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
             if pitch > 52 {
                 pitch -= 12
             }
+            if pitch > 52 {
+                pitch -= 12
+            }
         }
         let root = Note(timeSlice:timeSlice, num: pitch, staffNum: 0)
         timeSlice.setTags(high: TagHigh(content:Note.getNoteName(midiNum: root.midiNumber),
