@@ -22,7 +22,7 @@ public class Answer : ObservableObject, Identifiable, Codable {
     
     ///Rhythm
     public var rhythmValues:[Double]?
-    public var rhythmTolerancePercent:Double?
+    public var rhythmToleranceSetting:Int?
     
     ///Recording
     public var recordedData: Data?
@@ -44,7 +44,7 @@ public class Answer : ObservableObject, Identifiable, Codable {
         a.selectedIntervalName = self.selectedIntervalName
         a.explanation = self.explanation
         a.rhythmValues = self.rhythmValues
-        a.rhythmTolerancePercent = self.rhythmTolerancePercent
+        a.rhythmToleranceSetting = self.rhythmToleranceSetting
         a.recordedData = self.recordedData
         a.sightReadingNotePitches = self.sightReadingNotePitches
         a.sightReadingNoteTimes = self.sightReadingNoteTimes

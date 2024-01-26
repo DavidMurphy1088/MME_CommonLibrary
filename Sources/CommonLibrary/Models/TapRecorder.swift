@@ -111,7 +111,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     }
 
     ///Make a playable score of notes from the tap intervals
-    public func makeScoreFromTaps(questionScore:Score, questionTempo:Int, tapValues: [Double]) -> Score {
+    public func makeScoreFromTaps(questionScore:Score, tappedTempo:Int, tapValues: [Double]) -> Score {
         let outputScore = Score(key: questionScore.key, timeSignature: questionScore.timeSignature, linesPerStaff: 1)
         let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: 1)
         outputScore.createStaff(num: 0, staff: staff)
@@ -130,8 +130,8 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
 
         for i in 0..<tapValues.count {
             let tapDuration = tapValues[i]
-            var recordedTapDuration = tapDuration * Double(questionTempo) / 60.0
-            let roundedTappedValue = roundNoteValueToStandardValue(inValue: tapDuration, tempo: questionTempo)
+            var recordedTapDuration = tapDuration * Double(tappedTempo) / 60.0
+            let roundedTappedValue = roundNoteValueToStandardValue(inValue: tapDuration, tempo: tappedTempo)
             if var tappedValue = roundedTappedValue {
                 if i == tapValues.count - 1 {
                     ///The last tap value is when the student ended the recording and they may have delayed the stop recording
@@ -139,7 +139,8 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
                     ///But only allow an extra delay of 2.0 sec. i.e. they can't delay hitting stop for too long
                     ///Also if student ends too quickly that neeeds to be reported as a rhythm error so only modify the tapped value if they are too long
                     if lastQuestionNote != nil {
-                        if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + 2.0 {
+                        let extraValue = (Double(tappedTempo) / 60.0) * 4.0
+                        if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + extraValue {
                             //the student delayed the end of recording
                             tappedValue = lastQuestionNote!.getValue()
                             recordedTapDuration = tappedValue
@@ -191,7 +192,6 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         }
         let firstTapValue = tapValues[0]
         let tempo = (firstScoreValue / firstTapValue) * 60.0
-        print("=============getTempoFromRecordingStart", tempo)
         return Int(tempo)
     }
     
@@ -205,7 +205,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     public func getTappedAsAScore(timeSignatue:TimeSignature, questionScore:Score, tapValues:[Double]) -> Score {
         let recordedTempo = getTempoFromRecordingStart(tapValues: tapValues, questionScore: questionScore)
         ///G3,2,43 let tapValues = [0.5,0.5,1.5,0.5,   1.0,2.0,   0.5,0.5, 1, 3, 2]
-        let tappedScore = self.makeScoreFromTaps(questionScore: questionScore, questionTempo: recordedTempo, tapValues: tapValues) //, tapValues: self.tapValues1)
+        let tappedScore = self.makeScoreFromTaps(questionScore: questionScore, tappedTempo: recordedTempo, tapValues: tapValues) //, tapValues: self.tapValues1)
         tappedScore.tempo = recordedTempo
         return tappedScore
     }

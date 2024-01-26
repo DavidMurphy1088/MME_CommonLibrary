@@ -30,7 +30,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     @Published public var isInPurchasingState = false
 
     public static let shared = IAPManager()
-    private let productIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024"]
+    private let productIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024", "NZMEB_Grade_4_2024"]
 
     private override init() {
         super.init()
@@ -127,7 +127,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
     /// Sent immediately before -requestDidFinish
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
-            Logger.logger.log(self, "productsRequest response \(self.productIDs) ProductCount:\(response.products.count)")
+            Logger.logger.log(self, "productsRequest, availabe products response \(self.productIDs) ProductCount:\(response.products.count)")
             for product in response.products {
                 self.availableProducts[product.productIdentifier] = product
                 Logger.logger.log(self, "Available licenseType \(product.productIdentifier)")

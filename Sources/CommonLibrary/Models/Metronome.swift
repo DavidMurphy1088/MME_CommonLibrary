@@ -16,7 +16,7 @@ public class Metronome: ObservableObject  {
     @Published public var speechEnabled = false
     
     public var tempoMinimumSetting = 40 //90
-    public var tempoMaximumSetting = 160 //120
+    public var tempoMaximumSetting = 145 //120
     
     public var tickTimes:[Date] = []
     public var nextTickTime:Date?
@@ -93,7 +93,7 @@ public class Metronome: ObservableObject  {
 
     public func setTempo(_ ctx:String, tempo: Int, allowBeyondLimits:Bool = false) {
         //https://theonlinemetronome.com/blogs/12/tempo-markings-defined
-        print("========== SetTempo", ctx, tempo)
+        //print("========== SetTempo", ctx, tempo)
         var tempoToSet:Int
         var maxTempo = self.tempoMaximumSetting
         var minTempo = self.tempoMinimumSetting
@@ -225,7 +225,7 @@ public class Metronome: ObservableObject  {
     
     private func startPlayThreadRunning(timeSignature:TimeSignature) {
         self.isThreadRunning = true
-        AudioManager.shared.checkReadyToPlay("Metronome.startPlayThreadRunning")
+        AudioManager.shared.checkReadyToPlay("Metronome.startPlayThreadRunning. Temo:\(self.tempo)")
 
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             var loopCtr = 0

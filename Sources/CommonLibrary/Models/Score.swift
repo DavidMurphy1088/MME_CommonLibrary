@@ -2,6 +2,36 @@ import Foundation
 import AVKit
 import AVFoundation
 
+public class RhythmTolerance {
+    static func getTolerancePercent(_ setting:Int) -> Double {
+        switch setting {
+        case 0:
+            return 38.0
+        case 1:
+            return 47.0
+        case 2:
+            return 56.0
+        default:
+            return 65.0
+        }
+    }
+    
+    static public func getToleranceName(_ setting:Int) -> String {
+        switch setting {
+        case 0:
+            return "Hardest"
+        case 1:
+            return "Hard"
+        case 2:
+            return "Moderate"
+        case 3:
+            return "Easy"
+        default:
+            return "Unknown"
+        }
+    }
+}
+
 public class ScoreEntry : ObservableObject, Identifiable, Hashable {
     public let id = UUID()
     var sequence:Int = 0
@@ -850,7 +880,8 @@ public class Score : ObservableObject {
         }
     }
     ///Return a score based on the question score but modified to show where a tapped duration differs from the question
-    public func fitScoreToQuestionScore(userScore:Score, onlyRhythm:Bool, tolerancePercent:Double) -> (Score, StudentFeedback) {
+    //public func fitScoreToQuestionScore(userScore:Score, onlyRhythm:Bool, tolerancePercent:Double) -> (Score, StudentFeedback) {
+    public func fitScoreToQuestionScore(userScore:Score, onlyRhythm:Bool, toleranceSetting:Int) -> (Score, StudentFeedback) {
         let linesInStaff = onlyRhythm ? 1 : 5
         let outputScore = Score(key: self.key, timeSignature: self.timeSignature, linesPerStaff: linesInStaff)
         let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: linesInStaff)
@@ -921,6 +952,7 @@ public class Score : ObservableObject {
                 }
                 else {
                     let tap = userScore.getAllTimeSlices()[tapIndex]
+                    let tolerancePercent = RhythmTolerance.getTolerancePercent(toleranceSetting)
                     let delta = questionNoteValue * tolerancePercent * 0.01
                     let lowBound = questionNoteValue - delta
                     let hiBound = questionNoteValue + delta
