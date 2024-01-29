@@ -93,7 +93,6 @@ public class Metronome: ObservableObject  {
 
     public func setTempo(_ ctx:String, tempo: Int, allowBeyondLimits:Bool = false) {
         //https://theonlinemetronome.com/blogs/12/tempo-markings-defined
-        //print("========== SetTempo", ctx, tempo)
         var tempoToSet:Int
         var maxTempo = self.tempoMaximumSetting
         var minTempo = self.tempoMinimumSetting

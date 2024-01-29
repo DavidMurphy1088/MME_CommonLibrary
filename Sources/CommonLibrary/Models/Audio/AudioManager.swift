@@ -122,7 +122,6 @@ public class AudioManager {
                 if audioEngine.isRunning {
                     self.log(ctx, "AVAudioEngineConfigurationChange notification, audio engine is RUNNING")
                 } else {
-                   // print("====== NOT", notification.self, notification.userInfo, notification.object)
                     self.log(ctx, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
                     Logger.logger.reportError(self, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
                 }
@@ -154,8 +153,10 @@ public class AudioManager {
         //https://sites.google.com/site/soundfonts4u/
         //let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
         /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
-        let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
+        //let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
         //let soundFontNames = [("Piano", "Yamaha-Grand-Lite-v2.0")] //, ("Guitar", "GuitarAcoustic")]
+        let soundFontNames = [("akai_steinway", "akai_steinway")] //, ("Guitar", "GuitarAcoustic")]
+
         
         let samplerFileName = soundFontNames[0].1
         if let url = Bundle.module.url(forResource: samplerFileName, withExtension: "sf2") {

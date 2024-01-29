@@ -107,7 +107,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         if inValueAtTempo < 6.5 {
             return 6.0
         }
-        return 7.0
+        return Double(Int(inValueAtTempo))
     }
 
     ///Make a playable score of notes from the tap intervals
@@ -115,8 +115,6 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         let outputScore = Score(key: questionScore.key, timeSignature: questionScore.timeSignature, linesPerStaff: 1)
         let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: 1)
         outputScore.createStaff(num: 0, staff: staff)
-        
-        //var questionIdx = 0
         
         ///If the last tapped note has duration > question last note value set that value to the last question note value
         ///(Because we are not measuring how long it took the student to hit stop recording)
@@ -139,8 +137,13 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
                     ///But only allow an extra delay of 2.0 sec. i.e. they can't delay hitting stop for too long
                     ///Also if student ends too quickly that neeeds to be reported as a rhythm error so only modify the tapped value if they are too long
                     if lastQuestionNote != nil {
-                        let extraValue = (Double(tappedTempo) / 60.0) * 4.0
-                        if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + extraValue {
+                        //let extraValue = (Double(tappedTempo) / 60.0) * 4.0
+                        ///let the delay till the end of tapping be a percentage of the last note value
+                        let endTappingTolerance = 1.50
+                        //if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + extraValue {
+                        var maxEndTapValue = max(lastQuestionNote!.getValue() * (endTappingTolerance), 2.0)
+
+                        if tappedValue > lastQuestionNote!.getValue() && tappedValue <= maxEndTapValue {
                             //the student delayed the end of recording
                             tappedValue = lastQuestionNote!.getValue()
                             recordedTapDuration = tappedValue

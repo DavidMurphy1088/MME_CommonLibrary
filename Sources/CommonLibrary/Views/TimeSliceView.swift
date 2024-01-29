@@ -210,7 +210,8 @@ public struct TimeSliceView: View {
                 }
             }
             else {
-                if statusTag != .afterError {
+                //if ![StatusTag.afterErrorVisible, StatusTag.afterErrorInvisible].contains(statusTag) {
+                if ![StatusTag.afterErrorInvisible].contains(statusTag) {
                     if note.staffNum == staff.staffNum  {
                         NoteHiliteView(entry: note, x: noteFrameWidth/2, y: noteEllipseMidpoint, width: noteWidth * 1.5)
                     }
@@ -249,8 +250,9 @@ public struct TimeSliceView: View {
                     Ellipse()
                     //Open ellipse
                         .frame(width: noteWidth/3.0, height: noteWidth/3.0)
-                    //.position(x: noteFrameWidth/2 + noteWidth/0.90, y: noteEllipseMidpoint - yOffset)
-                        .position(x: noteFrameWidth/2 + noteWidth/1.1, y: noteEllipseMidpoint - yOffset)
+                        //.position(x: noteFrameWidth/2 + noteWidth/0.90, y: noteEllipseMidpoint - yOffset)
+                        //.position(x: noteFrameWidth/2 + noteWidth/1.1, y: noteEllipseMidpoint - yOffset)
+                        .position(x: noteFrameWidth/2 + noteWidth/1.3, y: noteEllipseMidpoint - yOffset)
                         .foregroundColor(note.getColor(staff: staff))
                 }
                 

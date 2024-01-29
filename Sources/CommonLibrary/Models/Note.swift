@@ -43,8 +43,10 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
         if timeSlice.statusTag == .rhythmError {
             out = Color(.red)
         }
-        if timeSlice.statusTag == .afterError {
-            //out = Color(.lightGray)
+        if timeSlice.statusTag == .afterErrorVisible {
+            out = Color(.lightGray)
+        }
+        if timeSlice.statusTag == .afterErrorInvisible {
             out = Color(.clear)
         }
 

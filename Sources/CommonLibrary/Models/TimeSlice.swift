@@ -15,7 +15,8 @@ public enum StatusTag {
     case noTag
     case rhythmError
     case pitchError
-    case afterError //e.g. all rhythm after a rhythm error is moot
+    case afterErrorVisible //e.g. all rhythm after a rhythm error is moot
+    case afterErrorInvisible 
     case hilightAsCorrect //hilight the correct note that was expected
 }
 
