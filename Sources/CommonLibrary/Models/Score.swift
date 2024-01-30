@@ -950,25 +950,30 @@ public class Score : ObservableObject {
                         rhythmErrors = true
                         let name = TimeSliceEntry.getValueName(value:questionNote.getValue())
                         //let tapName = TimeSliceEntry.getValueName(value:tap.getValue())
-                        explanation = "• The question note is a \(name)"
-                        if trailingRestsDuration > 0 {
-                            explanation += " followed by a rest"
+                        if tapIndex <= 1 {
+                            explanation = "• You had a false start"
                         }
                         else {
-                            explanation += ""
-                        }
-                        if !UIGlobalsCommon.isLandscape() {
-                            explanation += "\n• "
-                        }
-                        else {
-                            explanation += " - "
-                        }
-                        explanation += "Your \(tapType) was too "
-                        if questionNoteValue > tap.getValue() {
-                            explanation += "short 🫢"
-                        }
-                        else {
-                            explanation += "long 🫢"
+                            explanation = "• The question note is a \(name)"
+                            if trailingRestsDuration > 0 {
+                                explanation += " followed by a rest"
+                            }
+                            else {
+                                explanation += ""
+                            }
+                            if !UIGlobalsCommon.isLandscape() {
+                                explanation += "\n• "
+                            }
+                            else {
+                                explanation += " - "
+                            }
+                            explanation += "Your \(tapType) was too "
+                            if questionNoteValue > tap.getValue() {
+                                explanation += "short 🫢"
+                            }
+                            else {
+                                explanation += "long 🫢"
+                            }
                         }
                     }
                     else {
@@ -1021,6 +1026,7 @@ public class Score : ObservableObject {
         //
         
         if userScore.getAllTimeSlices().count > 0 {
+            Thread 1: Fatal error: Range requires lowerBound <= upperBound
             for t in tapIndex..<userScore.getAllTimeSlices().count {
                 let outputTimeSlice = outputScore.createTimeSlice()
                 let ts = userScore.getAllTimeSlices()[t]

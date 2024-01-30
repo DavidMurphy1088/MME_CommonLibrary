@@ -356,7 +356,6 @@ public class GoogleAPI {
             }
             else {
                 if loadedFromExternal {
-                    //self.logger.reportError(self, "Document data - the cache for file:[\(name)] in path:[\(cacheKey)] was empty")
                     onDone(.failed, nil)
                 }
             }
@@ -366,9 +365,7 @@ public class GoogleAPI {
                 return
             }
         }
-//        if log {
-//            logger.log(self, "start load \(cacheKey)")
-//        }
+        
         let rootFolderId = getAPIBundleData(key: "GoogleDriveDataFolderID") //NZMEB
         guard let rootFolderId = rootFolderId else {
             self.logger.reportError(self, "No folder Id")
@@ -382,7 +379,9 @@ public class GoogleAPI {
             while pathIndex < pathSegments.count + 1 {
                 let semaphore = DispatchSemaphore(value: 0)
                 if pathIndex == pathSegments.count {
+                    //print("============= getDocumentByName folderID:", folderId, "root:", rootFolderId, "name", name)
                     self.getFileTextContentsByNameInFolder(folderId: folderId, name: name, reportError: reportError, onDone: {status, document in
+                        
                         semaphore.signal()
                         if log {
                             log = log
@@ -514,6 +513,8 @@ public class GoogleAPI {
         let request = DataRequest(callType: .filesInFolder, id: folderId, context: "getAllFilesInFolder", targetExampleKey: nil)
         
         getDataByID(request: request) { status, data in
+            //print("============= getFileInFolder folderID:", folderId, "name", name)
+
             if let data = data {
                 struct FileSearch : Codable {
                       let kind:String
@@ -528,6 +529,7 @@ public class GoogleAPI {
                             return
                         }
                     }
+                    //print("============= getFileInFolder FAILED folderID:", folderId, "name", name)
                     onDone(.failed, nil)
                 }
                 catch  {
@@ -547,7 +549,7 @@ public class GoogleAPI {
                                onDone: @escaping (_ status:RequestStatus, _ document:String?) -> Void) {
         
         let request = DataRequest(callType: .filesInFolder, id: folderId, context: "getDocumentByName.filesInFolder:\(name)", targetExampleKey: nil)
-        
+        //print("============= getFileTextContentsByNameInFolder folderID:", folderId, "name", name)
         getDataByID(request: request) { status, data in
             let fileId = self.getFileIDFromName(name:name, reportError: reportError, data: data) //{status, data  in
             guard let fileId = fileId else {
