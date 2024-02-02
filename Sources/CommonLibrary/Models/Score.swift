@@ -224,7 +224,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore9(_ ctx:String, withBeam:Bool) {
+    public func debugScore3(_ ctx:String, withBeam:Bool) {
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
@@ -242,7 +242,7 @@ public class Score : ObservableObject {
                               "Value:", t.getValue() ,
                               "stemDirection", note.stemDirection,
                               "stemLength", note.stemLength,
-                              "writtenAccidental", note.writtenAccidental,
+                              "writtenAccidental", note.writtenAccidental ?? 0,
                               "\t[beamType:", note.beamType,"]",
                               "beamEndNoteSeq:", note.beamEndNote?.timeSlice.sequence ?? "_",
                               "]")
@@ -582,7 +582,7 @@ public class Score : ObservableObject {
                 lastNote = nil
                 continue
             }
-            var note = timeSlice.getTimeSliceNotes()[0]
+            let note = timeSlice.getTimeSliceNotes()[0]
             if note.beamType == .none {
                 lastNote = nil
                 continue
@@ -619,7 +619,7 @@ public class Score : ObservableObject {
                 lastNote = nil
                 continue
             }
-            var note = timeSlice.getTimeSliceNotes()[0]
+            let note = timeSlice.getTimeSliceNotes()[0]
             if note.beamType != .none {
                 notesUnderBeam.append(note)
                 if note.beamType == .end {
@@ -874,7 +874,7 @@ public class Score : ObservableObject {
     
     public func clearAllStatus() {
         for ts in self.getAllTimeSlices() {
-            ts.setStatusTag(.noTag)
+            ts.setStatusTag("clearAllStatus", .noTag)
         }
     }
     ///Return a score based on the question score but modified to show where a tapped duration differs from the question
@@ -945,7 +945,7 @@ public class Score : ObservableObject {
                     //                    }
                     if tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound {
                         outputTimeSlice.statusTag = .rhythmError
-                        questionTimeSlice.statusTag = .hilightAsCorrect
+                        questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
                         outputNoteValue = tap.getValue()
                         rhythmErrors = true
                         let name = TimeSliceEntry.getValueName(value:questionNote.getValue())
@@ -983,18 +983,18 @@ public class Score : ObservableObject {
                                 if tappedNote.midiNumber != questionNote.midiNumber {
                                     explanation = "Wrong note"
                                     outputTimeSlice.statusTag = .pitchError
-                                    questionTimeSlice.statusTag = .hilightAsCorrect
+                                    questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
                                     outputNoteValue = tap.getValue()
                                     outputMidiValue = tappedNote.midiNumber
                                 }
                             }
                         }
                     }
+                    tapIndex += 1
                 }
                 let outputNote = Note(timeSlice: outputTimeSlice, num: outputMidiValue, value: outputNoteValue, staffNum: questionNote.staffNum)
                 outputNote.setIsOnlyRhythm(way: questionNote.isOnlyRhythmNote)
                 outputTimeSlice.addNote(n: outputNote)
-                tapIndex += 1
             }
         }
         
@@ -1026,7 +1026,7 @@ public class Score : ObservableObject {
         //
         
         if userScore.getAllTimeSlices().count > 0 {
-            Thread 1: Fatal error: Range requires lowerBound <= upperBound
+            ///Thread 1: Fatal error: Range requires lowerBound <= upperBound
             for t in tapIndex..<userScore.getAllTimeSlices().count {
                 let outputTimeSlice = outputScore.createTimeSlice()
                 let ts = userScore.getAllTimeSlices()[t]
@@ -1084,7 +1084,7 @@ public class Score : ObservableObject {
 
     func clearTags() {
         for ts in getAllTimeSlices() {
-            ts.setStatusTag(.noTag)
+            ts.setStatusTag("clearTags", StatusTag.noTag)
         }
     }
     

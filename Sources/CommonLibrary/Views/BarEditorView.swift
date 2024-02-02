@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import CommonLibrary
 
 ///Show the bar view based on the positions of the bar lines
 public struct BarEditorView: View {
@@ -40,7 +39,7 @@ public struct BarEditorView: View {
         }
         let sortedBarLineCovers = barLineCovers.sorted{ $0.0 < $1.0}
         ///The barLayoutPositions dont include the last bar. So calculate the average width per note and make the last bar that width * the number of notes in the last bar
-        var noteCounts = getNoteCountsPerBar()
+        let noteCounts = getNoteCountsPerBar()
         let noteCount = noteCounts.dropLast().reduce(0, +)
         var avgLen = 0.0
         if noteCount > 0 {

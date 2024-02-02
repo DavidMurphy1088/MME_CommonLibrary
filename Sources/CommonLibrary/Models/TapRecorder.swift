@@ -141,7 +141,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
                         ///let the delay till the end of tapping be a percentage of the last note value
                         let endTappingTolerance = 1.50
                         //if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + extraValue {
-                        var maxEndTapValue = max(lastQuestionNote!.getValue() * (endTappingTolerance), 2.0)
+                        let maxEndTapValue = max(lastQuestionNote!.getValue() * (endTappingTolerance), 2.0)
 
                         if tappedValue > lastQuestionNote!.getValue() && tappedValue <= maxEndTapValue {
                             //the student delayed the end of recording

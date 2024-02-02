@@ -32,11 +32,13 @@ public struct StemView: View {
         return (stemDirection * -1.0 * getNoteWidth())
     }
 
-//    func log(_ ctx:String) -> Bool {
+//    func log(_ n:Note) -> Bool {
+//        if n.midiNumber == 74 {
+//            print("========== HERE")
+//        }
 //        return true
 //    }
-//
-    
+
     func getStaffNotes(staff:Staff) -> [Note] {
         var notes:[Note] = []
         for n in self.notes {
@@ -53,6 +55,7 @@ public struct StemView: View {
                 let staffNotes = getStaffNotes(staff: staff)
                 if staffNotes.count > 0 {
                     if staffNotes.count <= 1 {
+                        //let x = log(staffNotes[0])
                         ///Draw in the stem lines for all notes under the current stem line if this is one.
                         ///For a group of notes under a quaver beam the the stem direction (and later length...) is determined by only one note in the group
                         let startNote = staffNotes[0].getBeamStartNote(score: score, np: notePositionLayout)
@@ -62,7 +65,6 @@ public struct StemView: View {
                                 //Note this code eventually has to go adjust the stem length for notes under a quaver beam
                                 //3.5 lines is a full length stem
                                 let stemDirection = startNote.stemDirection == .up ? -1.0 : 1.0 //stemDirection(note: startNote)
-                                //let midX = geo.size.width / 2.0 + (stemDirection * -1.0 * noteWidth / 2.0)
                                 let midX = (geo.size.width + (midPointXOffset(notes: notes, staff: staff, stemDirection: stemDirection))) / 2.0
                                 let midY = geo.size.height / 2.0
                                 let offsetY = CGFloat(notes[0].getNoteDisplayCharacteristics(staff: staff).offsetFromStaffMidline) * 0.5 * score.lineSpacing + inErrorAjdust
@@ -70,7 +72,7 @@ public struct StemView: View {
                                     path.move(to: CGPoint(x: midX, y: midY - offsetY))
                                     path.addLine(to: CGPoint(x: midX, y: midY - offsetY + (stemDirection * (getStemLength() - inErrorAjdust))))
                                 }
-                                .stroke(notes[0].getColor(staff: staff), lineWidth: 1.5)
+                                .stroke(notes[0].getColor(ctx: "StemView1", staff: staff), lineWidth: 1.5)
                             //}
                         }
                     }
@@ -91,7 +93,7 @@ public struct StemView: View {
                                         path.move(to: CGPoint(x: midX, y: midY - offsetY))
                                         path.addLine(to: CGPoint(x: midX, y: midY - offsetY + (stemDirection * (getStemLength() - inErrorAjdust))))
                                     }
-                                    .stroke(staffNotes[0].getColor(staff: staff), lineWidth: 1.5)
+                                    .stroke(staffNotes[0].getColor(ctx: "StemView2", staff: staff), lineWidth: 1.5)
                                 }
                             }
                         }

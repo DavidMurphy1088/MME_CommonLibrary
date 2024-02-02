@@ -163,7 +163,7 @@ public class BarEditor: ObservableObject {
         for entry in score.scoreEntries {
             if currentBarNo == bar {
                 if let ts = entry as? TimeSlice {
-                    ts.setStatusTag(way ? .hilightAsCorrect : .noTag)
+                    ts.setStatusTag("hiliteNotesInBar", way ? .hilightAsCorrect : .noTag)
                 }
             }
             if entry is BarLine {

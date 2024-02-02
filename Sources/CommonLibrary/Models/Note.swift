@@ -34,9 +34,10 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
     }
     
     //Cause notes that are set for specifc staff to be transparent on other staffs
-    public func getColor(staff:Staff, log:Bool? = false) -> Color {
+    public func getColor(ctx:String, staff:Staff, log:Bool? = false) -> Color {
         var out:Color? = nil
-        
+
+        //}
         if timeSlice.statusTag == .pitchError {
             out = Color(.red)
         }

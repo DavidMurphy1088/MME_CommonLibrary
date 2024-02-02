@@ -1,6 +1,5 @@
 import SwiftUI
 import CoreData
-import CommonLibrary
 
 struct TimeSliceLabelView: View {
     var score:Score
@@ -163,7 +162,7 @@ struct ScoreEntriesView: View {
                 getQuaverImage(note:startNote)
                     .resizable()
                     .renderingMode(.template)
-                    .foregroundColor(startNote.getColor(staff: staff))
+                    .foregroundColor(startNote.getColor(ctx: "quaverBeamView1", staff: staff))
                     .scaledToFit()
                     .frame(height: height)
                     .position(x: line.0.x + width / 3.0 , y: line.1.y + height / 3.5 - flippedHeightOffset)
@@ -172,7 +171,7 @@ struct ScoreEntriesView: View {
                     getQuaverImage(note:startNote)
                         .resizable()
                         .renderingMode(.template)
-                        .foregroundColor(startNote.getColor(staff: staff))
+                        .foregroundColor(startNote.getColor(ctx: "quaverBeamView2", staff: staff))
                         .scaledToFit()
                         .frame(height: height)
                         .position(x: line.0.x + width / 3.0 , y: line.1.y + height / 3.5 - flippedHeightOffset + lineSpacing)
@@ -184,30 +183,11 @@ struct ScoreEntriesView: View {
                     path.move(to: CGPoint(x: line.0.x, y: line.0.y))
                     path.addLine(to: CGPoint(x: line.1.x, y: line.1.y))
                 }
-                .stroke(endNote.getColor(staff: staff), lineWidth: 3)
+                .stroke(endNote.getColor(ctx: "quaverBeamView3", staff: staff), lineWidth: 3)
             }
         }
     }
-    
-//    func getTagOffset(_ ts:TimeSlice) -> Double {
-//        if ts.getTimeSliceNotes().count > 0 {
-//            let note = ts.getTimeSliceNotes()[0]
-//            return note.midiNumber < 64 ? 1 : 0
-//        }
-//        return 0
-//    }
-    
-//    func log(score:Score, pos:NoteLayoutPositions, _ p:[(Note, CGRect)]) -> Bool {
-//        print("\n")
-//        for n in p {
-//            let v = n.1
-//            let x = n.0.getBeamStartNote(score: score, np: pos)
-//            print("=========NoteLayoutPosition", n.0.midiNumber, "type:", n.0.beamType, "seq", n.0.timeSlice.sequence, v.midY, v.midX, 
-//                  x.timeSlice.sequence, x.midiNumber, x.beamType, x.beamEndNote)
-//        }
-//        return true
-//    }
-    
+        
     var body: some View {
         ZStack {
             let noteWidth = score.lineSpacing * 1.2

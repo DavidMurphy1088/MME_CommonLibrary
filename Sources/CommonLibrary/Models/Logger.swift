@@ -31,8 +31,16 @@ public class Logger : ObservableObject {
     public init() {
     }
     
+    private func getTime() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd-MMM-yyyy HH:mm:ss"
+        let now = Date()
+        let s = dateFormatter.string(from: now)
+        return s
+    }
+    
     public func reportError(_ reporter:AnyObject, _ context:String, _ err:Error? = nil) {
-        var msg = String("🛑 =========== ERROR =========== ErrNo:\(errorNo): " + String(describing: type(of: reporter))) + " " + context
+        var msg = String("\(getTime()) 🛑 =========== ERROR =========== ErrNo:\(errorNo): " + String(describing: type(of: reporter))) + " " + context
         if let err = err {
             msg += ", "+err.localizedDescription
         }
@@ -50,7 +58,7 @@ public class Logger : ObservableObject {
 
     public func log(_ reporter:AnyObject, _ msg:String) {
         let msg = String(describing: type(of: reporter)) + ":" + msg
-        print("Logger:", msg)
+        print("\(getTime()) Logger:", msg)
         loggedMsgs.append(LogMessage(num: loggedMsgs.count, msg))
     }
     

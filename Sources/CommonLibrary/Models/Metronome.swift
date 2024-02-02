@@ -234,17 +234,17 @@ public class Metronome: ObservableObject  {
             var firstNote = true
             var tieWasFound = false
             //var debug = true
-            var lastTime = Date()
+            //var lastTime = Date()
 
             while keepRunning {
                 ///Sound the metronome tick. %4 because its counting at semiquaver intervals
                 ///Make sure score playing is synched to the metronome tick
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
-                        let elapsedTimeMillis = Date().timeIntervalSince(lastTime) * 1000
+                        //let elapsedTimeMillis = Date().timeIntervalSince(lastTime) * 1000
                         //let elapsedTimeSeconds = String(format: "%.2f", elapsedTimeMillis / 1000)
-                        lastTime = Date()
-                        audioTickerMetronomeTick.soundTick(timeSignature: timeSignature, silent: false)
+                        //lastTime = Date()
+                        audioTickerMetronomeTick.soundMetronomeTick(timeSignature: timeSignature, silent: false)
                         ticksPlayed += 1
                     }
                 }
@@ -258,7 +258,7 @@ public class Metronome: ObservableObject  {
                                 let entry = timeSlice.entries[0]
                                 if currentNoteTimeToLive >= entry.getValue() {
                                     if entry is Rest {
-                                        audioClapper.soundTick(timeSignature: timeSignature, noteValue: entry.getValue(), silent: true)
+                                        audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: entry.getValue(), silent: true)
                                     }
                                     else {
                                         for note in timeSlice.getTimeSliceNotes() {
@@ -267,10 +267,10 @@ public class Metronome: ObservableObject  {
                                             }
                                             else {
                                                 if note.isOnlyRhythmNote  {
-                                                    audioClapper.soundTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
+                                                    audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
                                                 }
                                                 else {
-                                                    if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+                                                    if let sampler = AudioManager.shared.getMidiAudioUnitSampler() {
                                                         sampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
                                                     }
                                                     //midiSampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
@@ -294,7 +294,7 @@ public class Metronome: ObservableObject  {
                                 while nextScoreIndex < score.scoreEntries.count {
                                     let entry = score.scoreEntries[nextScoreIndex]
                                     if entry is TimeSlice {
-                                        nextScoreTimeSlice = entry as! TimeSlice
+                                        nextScoreTimeSlice = (entry as! TimeSlice)
                                         if nextScoreTimeSlice!.entries.count > 0 {
                                             nextScoreIndex += 1
                                             //currentNoteTimeToLive = nextScoreTimeSlice!.getNotes()[0].getValue()

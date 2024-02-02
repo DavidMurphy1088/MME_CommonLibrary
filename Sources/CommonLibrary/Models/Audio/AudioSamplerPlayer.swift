@@ -28,13 +28,13 @@ public class AudioSamplerPlayer {
 //    }
     
     public func play(note: UInt8) {
-        if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+        if let sampler = AudioManager.shared.getMidiAudioUnitSampler() {
             sampler.startNote(note, withVelocity: 127, onChannel: 0)
         }
     }
 
     func stop(note: UInt8) {
-        if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+        if let sampler = AudioManager.shared.getMidiAudioUnitSampler() {
             sampler.stopNote(note, onChannel: 0)
         }
     }
@@ -51,7 +51,7 @@ public class AudioSamplerPlayer {
                 }
                 let dynamic:Double = 48
                 n += 1
-                if let sampler = AudioManager.shared.getAVAudioUnitSampler() {
+                if let sampler = AudioManager.shared.getMidiAudioUnitSampler() {
                     sampler.startNote(UInt8(note.midiNumber + pitchAdjust), withVelocity:UInt8(dynamic), onChannel:0)
                 }
                 if stopPlayingNotes {

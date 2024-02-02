@@ -37,10 +37,12 @@ public class AudioManager {
     
     ///Best Practice:For the majority of apps, the best practice is to initialize AVAudioEngine once and use its methods to control its state throughout the app's lifecycle.
     private var audioEngine:AVAudioEngine?// = AVAudioEngine()
-    private var audioUnitSampler:AVAudioUnitSampler? //()
+    private var midiAudioUnitSampler:AVAudioUnitSampler? //()
     
-    private let audioPlayersCount = 32 //Must be > max number of notes in any melody
-    private var audioPlayerNodes: [AVAudioPlayerNode] = []
+    ///Used if user wants audio sounds for each rhythm tap
+    private let tappingAudioPlayersCount = 32 //Must be > max number of notes in any melody
+    private var tappingAudioPlayerNodes: [AVAudioPlayerNode] = []
+    
     private var playerNodeIndex = 0
     private var lastReset:Date?
     private let id = UUID()
@@ -75,19 +77,25 @@ public class AudioManager {
             return
         }
         log(ctx, "CheckReadyToPlay - Audio engine is not ready so resetting it")
-        fullReset()
+        self.fullReset()
+        if audioEngine.isRunning {
+            self.log(ctx, "CheckReadyToPlay - Audio engine is ready to play after reset")
+        }
+        else {
+            Logger.logger.reportError(self, "CheckReadyToPlay - Audio engine is not ready to play after reset")
+        }
     }
     
     public func fullReset() {
         if let audioEngine = self.audioEngine {
             self.log("fullReset", "Start RESETING AUDIO")
             audioEngine.stop()
-            for player in self.audioPlayerNodes {
+            for player in self.tappingAudioPlayerNodes {
                 audioEngine.disconnectNodeInput(player)
                 audioEngine.detach(player)
             }
-            self.audioPlayerNodes = []
-            if let sampler = self.audioUnitSampler {
+            self.tappingAudioPlayerNodes = []
+            if let sampler = self.midiAudioUnitSampler {
                 audioEngine.disconnectNodeInput(sampler)
                 audioEngine.detach(sampler)
             }
@@ -99,19 +107,22 @@ public class AudioManager {
             }
         }
         self.playerNodeIndex = 0
+        ///self.audioEngine = nil
         self.initAudio("Reset")
         self.log("fullReset", "End RESETING AUDIO...")
     }
     
     private func initAudio(_ ctx:String) {
         AudioManager.instanceCount += 1
-
-        self.audioEngine = AVAudioEngine()
+        if self.audioEngine == nil {
+            self.audioEngine = AVAudioEngine()
+        }
         guard let audioEngine = audioEngine else {
             return
         }
-        self.audioUnitSampler = AVAudioUnitSampler()
-        guard let audioUnitSampler = self.audioUnitSampler else {
+        self.midiAudioUnitSampler = AVAudioUnitSampler()
+        //self.midiAudioUnitSampler.
+        guard let midiAudioUnitSampler = self.midiAudioUnitSampler else {
             return
         }
         
@@ -123,7 +134,8 @@ public class AudioManager {
                     self.log(ctx, "AVAudioEngineConfigurationChange notification, audio engine is RUNNING")
                 } else {
                     self.log(ctx, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
-                    Logger.logger.reportError(self, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
+                    ///Its not an error. e.g happens if student records acoustic piano in SR
+                    //Logger.logger.reportError(self, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
                 }
             }
         }
@@ -134,14 +146,15 @@ public class AudioManager {
                                                object: nil)
         
         ///Load sound font to play note pitches in a score
-        loadSoundFont(audioUnitSampler: audioUnitSampler)
-        audioEngine.attach(audioUnitSampler)
-        audioEngine.connect(audioUnitSampler, to: audioEngine.mainMixerNode, format: nil)
+        loadSoundFont(audioUnitSampler: midiAudioUnitSampler)
+        audioEngine.attach(midiAudioUnitSampler)
+        audioEngine.connect(midiAudioUnitSampler, to: audioEngine.mainMixerNode, format: nil)
 
         ///Cant start audioEngine until nodes are connected
         do {
             try audioEngine.start()
             log(ctx, "InitAudio. Created audio engine and sampler")
+            setAudioSessionPlayback("initAudio")
 
         } catch {
             Logger.logger.reportError(self, "[\(ctx)] Could not start the audio engine: \(error)")
@@ -155,8 +168,9 @@ public class AudioManager {
         /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
         //let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
         //let soundFontNames = [("Piano", "Yamaha-Grand-Lite-v2.0")] //, ("Guitar", "GuitarAcoustic")]
+        //let soundFontNames = [("akai_steinway", "akai_steinway")] //, ("Guitar", "GuitarAcoustic")]
         let soundFontNames = [("akai_steinway", "akai_steinway")] //, ("Guitar", "GuitarAcoustic")]
-
+        //let soundFontNames = [("GD_Clean_Concert_Grand", "GD_Clean_Concert_Grand")] //, ("Guitar", "GuitarAcoustic")]
         
         let samplerFileName = soundFontNames[0].1
         if let url = Bundle.module.url(forResource: samplerFileName, withExtension: "sf2") {
@@ -167,6 +181,7 @@ public class AudioManager {
                                                                  program: UInt8(instrumentProgramNumber),
                                                                  bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
                                                                  bankLSB: UInt8(kAUSampler_DefaultBankLSB))
+                    //audioUnitSampler.
                     break
                 }
                 catch {
@@ -177,11 +192,11 @@ public class AudioManager {
         else {
             Logger.logger.reportError(self, "Cannot loadSoundBankInstrument \(samplerFileName)")
         }
-        log("loadSoundFont", "Sampler loaded sound font")
+        log("loadSoundFont", "Sampler loaded sound font \(samplerFileName)")
     }
     
-    public func getAVAudioUnitSampler() -> AVAudioUnitSampler? {
-        return audioUnitSampler
+    public func getMidiAudioUnitSampler() -> AVAudioUnitSampler? {
+        return midiAudioUnitSampler
     }
     
     public func getAudioEngine() -> AVAudioEngine? {
@@ -216,22 +231,22 @@ public class AudioManager {
         guard let audioEngine = self.audioEngine else {
             return
         }
-        for node in audioPlayerNodes {
+        for node in tappingAudioPlayerNodes {
             node.stop()
             audioEngine.detach(node)
         }
-        self.log(ctx, "ScheduleTapPlayers, detached \(audioPlayersCount) audio players")
-        audioPlayerNodes = []
-        for _ in 0..<audioPlayersCount {
+        self.log(ctx, "ScheduleTapPlayers, detached \(tappingAudioPlayersCount) audio players")
+        tappingAudioPlayerNodes = []
+        for _ in 0..<tappingAudioPlayersCount {
             let playerNode = AVAudioPlayerNode()
-            audioPlayerNodes.append(playerNode)
+            tappingAudioPlayerNodes.append(playerNode)
             audioEngine.attach(playerNode)
         }
         //Load a sound with minimum latency for tapping a rhythm
         if let fileURL = Bundle.module.url(forResource: audioResourceName, withExtension: "mp3"),
            let file = try? AVAudioFile(forReading: fileURL) {
-            for i in 0..<audioPlayersCount {
-                let node = audioPlayerNodes[i]
+            for i in 0..<tappingAudioPlayersCount {
+                let node = tappingAudioPlayerNodes[i]
                 audioEngine.connect(node, to: audioEngine.mainMixerNode, format: file.processingFormat)
                 node.scheduleFile(file, at: nil, completionHandler: nil)
                 node.volume = 1.0
@@ -240,15 +255,15 @@ public class AudioManager {
         else {
             Logger.logger.reportError(self, "[\(ctx)] ScheduleTapPlayers, failed load AVAudioPlayer sound")
         }
-        self.log(ctx, "ScheduleTapPlayers, scheduled \(audioPlayersCount) audio players")
+        self.log(ctx, "ScheduleTapPlayers, scheduled \(tappingAudioPlayersCount) audio players")
     }
     
     public func playSound() {
-        if playerNodeIndex >= audioPlayerNodes.count {
+        if playerNodeIndex >= tappingAudioPlayerNodes.count {
             playerNodeIndex = 0
         }
         do {
-            self.audioPlayerNodes[playerNodeIndex].play()
+            self.tappingAudioPlayerNodes[playerNodeIndex].play()
         }
         playerNodeIndex += 1
     }

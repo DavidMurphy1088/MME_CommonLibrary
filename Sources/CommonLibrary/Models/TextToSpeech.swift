@@ -108,7 +108,7 @@ public class TextToSpeech { //}: AudioPlayerUser {
     
     public func playAudioData(data:Data) {
         do {
-            let log:String
+            //let log:String
             if self.audioPlayer == nil {
                 self.audioPlayer = try AVAudioPlayer(data: data)
             }

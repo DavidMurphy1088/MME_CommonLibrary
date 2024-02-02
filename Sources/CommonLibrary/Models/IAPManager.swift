@@ -34,7 +34,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
 
     private override init() {
         super.init()
-        self.emailLicenses.insert(FreeLicenseUser(email:"xxx", allowTest:true)) ///Testing
+        //self.emailLicenses.insert(FreeLicenseUser(email:"xxx", allowTest:true)) ///Testing
         //SKPaymentQueue.default().add(self)
         //requestProducts()
     }
@@ -83,7 +83,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         for productId in self.availableProducts.keys {
             if productId.contains(gradeToCheck) {
                 if productId.contains(String(currentYear)) {
-                    if let product = availableProducts[productId] {
+                    if availableProducts[productId] != nil {
                         return true
                     }
                 }

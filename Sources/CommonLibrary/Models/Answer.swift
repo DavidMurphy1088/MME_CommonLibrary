@@ -5,6 +5,7 @@ public enum AnswerState {
     case notRecorded
     case recorded
     case recording
+    case tryingKeyboard
     case answered
     case submittedAnswer
 }
@@ -61,8 +62,7 @@ public class Answer : ObservableObject, Identifiable, Codable {
                 lastTime = noteTime
                 continue
             }
-            var duration:Double = noteTime.timeIntervalSince(lastTime)
-            self.rhythmValues!.append(duration)
+            self.rhythmValues!.append(noteTime.timeIntervalSince(lastTime))
             lastTime = noteTime
         }
     }

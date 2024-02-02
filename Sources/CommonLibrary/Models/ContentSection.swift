@@ -84,24 +84,24 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
 //            self.homeworkIsAssigned = false
             return
         //}
-        let path = self.getPathAsArray()
-        if path.count == 0 {
-            return
-        }
-        let leafs = path[path.count-1].split(separator: " ")
-        if leafs.count < 2 {
-            return
-        }
-        if leafs[0] != "Example" {
-            return
-        }
-        guard let exNum = Int(leafs[1]) else {
-            return
-        }
-        if exNum > 7 {
-            return
-        }
-        self.homeworkIsAssigned = true
+//        let path = self.getPathAsArray()
+//        if path.count == 0 {
+//            return
+//        }
+//        let leafs = path[path.count-1].split(separator: " ")
+//        if leafs.count < 2 {
+//            return
+//        }
+//        if leafs[0] != "Example" {
+//            return
+//        }
+//        guard let exNum = Int(leafs[1]) else {
+//            return
+//        }
+//        if exNum > 7 {
+//            return
+//        }
+//        self.homeworkIsAssigned = true
     }
     
     public func setStoredAnswer(answer:Answer, ctx:String) {
@@ -257,10 +257,10 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
     public func debug() {
         let spacer = String(repeating: " ", count: 4 * (level))
         print(spacer, "--->", "path:[\(self.getPath())]", "\tname:", self.name, "\ttype:[\(self.type)]")
-        let sorted:[ContentSection] = subSections.sorted { (c1, c2) -> Bool in
-            //return c1.loadedRow < c2.loadedRow
-            return c1.name < c2.name
-        }
+//        let sorted:[ContentSection] = subSections.sorted { (c1, c2) -> Bool in
+//            //return c1.loadedRow < c2.loadedRow
+//            return c1.name < c2.name
+//        }
         for s in self.subSections {
             s.debug()
         }

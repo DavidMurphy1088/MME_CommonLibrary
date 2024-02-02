@@ -1,7 +1,6 @@
 import SwiftUI
 import CoreData
 import MessageUI
-import CommonLibrary
 
 public struct FeedbackView: View {
     @ObservedObject var score:Score

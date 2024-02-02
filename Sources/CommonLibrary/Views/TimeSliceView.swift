@@ -124,7 +124,7 @@ public struct TimeSliceView: View {
             if entry.getValue() == 0 {
                 Text("?")
                     .font(.largeTitle)
-                    .foregroundColor(entry.getColor(staff: staff, log: true))
+                    .foregroundColor(entry.getColor(ctx: "RestView1", staff: staff, log: true))
                 Spacer()
             }
             else {
@@ -132,7 +132,7 @@ public struct TimeSliceView: View {
                     Image("rest_quarter_grayscale")
                         .resizable()
                         .renderingMode(.template)
-                        .foregroundColor(entry.getColor(staff: staff, log: true))
+                        .foregroundColor(entry.getColor(ctx: "RestView2", staff: staff, log: true))
                         .scaledToFit()
                         .frame(height: lineSpacing * 3)
                 }
@@ -140,7 +140,7 @@ public struct TimeSliceView: View {
                     if entry.getValue() == 2 {
                         let height = lineSpacing / 2.0
                         Rectangle()
-                            .fill(entry.getColor(staff: staff, log: true))
+                            .fill(entry.getColor(ctx: "RestView3", staff: staff, log: true))
                             .frame(width: lineSpacing * 1.5, height: height)
                             .offset(y: 0 - height / 2.0)
                     }
@@ -150,19 +150,19 @@ public struct TimeSliceView: View {
                                 Image("rest_quarter_grayscale")
                                     .resizable()
                                     .renderingMode(.template)
-                                    .foregroundColor(entry.getColor(staff: staff, log: true))
+                                    .foregroundColor(entry.getColor(ctx: "RestView4", staff: staff, log: true))
                                     .scaledToFit()
                                     .frame(height: lineSpacing * 3)
                                 Text(".")
                                     .font(.largeTitle)
-                                    .foregroundColor(entry.getColor(staff: staff, log: true))
+                                    .foregroundColor(entry.getColor(ctx: "RestView5", staff: staff, log: true))
                             }
                         }
                         else {
                             if (entry.getValue() == 4.0) {
                                 let height = lineSpacing / 2.0
                                 Rectangle()
-                                    .fill(entry.getColor(staff: staff, log: true))
+                                    .fill(entry.getColor(ctx: "RestView6", staff: staff, log: true))
                                     .frame(width: lineSpacing * 1.5, height: height)
                                     .offset(y: 0 - height * 1.5)
                             }
@@ -171,7 +171,7 @@ public struct TimeSliceView: View {
                                     Image("rest_quaver")
                                         .resizable()
                                         .renderingMode(.template)
-                                        .foregroundColor(entry.getColor(staff: staff, log: true))
+                                        .foregroundColor(entry.getColor(ctx: "RestView7", staff: staff, log: true))
                                         .scaledToFit()
                                         .frame(height: lineSpacing * 2)
                                     
@@ -180,7 +180,7 @@ public struct TimeSliceView: View {
                                     VStack {
                                         Text("?")
                                             .font(.largeTitle)
-                                            .foregroundColor(entry.getColor(staff: staff, log: true))
+                                            .foregroundColor(entry.getColor(ctx: "RestView8", staff: staff, log: true))
                                         Spacer()
                                     }
                                 }
@@ -224,21 +224,21 @@ public struct TimeSliceView: View {
                         .frame(width: noteWidth, height: CGFloat(Double(lineSpacing) * 1.0))
                         .position(x: noteFrameWidth/2 - lineSpacing * (timeSlice.anyNotesRotated() ? 3.0 : 1.5),
                                   y: noteEllipseMidpoint + yOffset)
-                        .foregroundColor(note.getColor(staff: staff))
+                        .foregroundColor(note.getColor(ctx: "NoteView1", staff: staff))
                     
                 }
                 if [Note.VALUE_QUARTER, Note.VALUE_QUAVER, Note.VALUE_SEMIQUAVER].contains(noteValueUnDotted )  {
                     Ellipse()
                     //Closed ellipse
-                        .foregroundColor(note.getColor(staff: staff))
+                        .foregroundColor(note.getColor(ctx: "NoteView2", staff: staff))
                         .frame(width: noteWidth, height: CGFloat(Double(lineSpacing) * 1.0))
                         .position(x: noteFrameWidth/2  - (note.rotated ? noteWidth : 0), y: noteEllipseMidpoint)
                 }
                 if noteValueUnDotted == Note.VALUE_HALF || noteValueUnDotted == Note.VALUE_WHOLE {
                     Ellipse()
                     //Open ellipse
-                        .stroke(note.getColor(staff: staff), lineWidth: 2)
-                        .foregroundColor(note.getColor(staff: staff))
+                        .stroke(note.getColor(ctx: "NoteView3", staff: staff), lineWidth: 2)
+                        .foregroundColor(note.getColor(ctx: "NoteView4", staff: staff))
                         .frame(width: noteWidth, height: CGFloat(Double(lineSpacing) * 0.9))
                         .position(x: noteFrameWidth/2 - (note.rotated ? noteWidth : 0), y: noteEllipseMidpoint)
                 }
@@ -253,7 +253,7 @@ public struct TimeSliceView: View {
                         //.position(x: noteFrameWidth/2 + noteWidth/0.90, y: noteEllipseMidpoint - yOffset)
                         //.position(x: noteFrameWidth/2 + noteWidth/1.1, y: noteEllipseMidpoint - yOffset)
                         .position(x: noteFrameWidth/2 + noteWidth/1.3, y: noteEllipseMidpoint - yOffset)
-                        .foregroundColor(note.getColor(staff: staff))
+                        .foregroundColor(note.getColor(ctx: "NoteView5", staff: staff))
                 }
                 
                 if !note.isOnlyRhythmNote {
@@ -267,7 +267,7 @@ public struct TimeSliceView: View {
                             path.move(to: CGPoint(x: x + xOffset, y: y))
                             path.addLine(to: CGPoint(x: x + (2 * noteWidth) - xOffset, y: y))
                         }
-                        .stroke(note.getColor(staff: staff), lineWidth: 1)
+                        .stroke(note.getColor(ctx: "NoteView6", staff: staff), lineWidth: 1)
                     }
                     //}
                 }

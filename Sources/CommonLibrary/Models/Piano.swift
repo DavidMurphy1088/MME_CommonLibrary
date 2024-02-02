@@ -1,5 +1,4 @@
 import SwiftUI
-import CommonLibrary
 import Combine
 import Foundation
 
@@ -52,7 +51,7 @@ public class Piano: ObservableObject {
     let id = UUID()
     var startMidi = 0
     @Published var keys:[PianoKey]
-    let midiSampler = AudioManager.shared.getAVAudioUnitSampler()
+    let midiSampler = AudioManager.shared.getMidiAudioUnitSampler()
     var lastGestureTime:Date? = nil
     @Published var lastMidiPressed:Int?
     var soundNotes = true

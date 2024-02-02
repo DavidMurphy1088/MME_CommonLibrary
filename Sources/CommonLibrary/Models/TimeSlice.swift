@@ -45,10 +45,11 @@ public class TimeSlice : ScoreEntry {
         return [StatusTag.pitchError, StatusTag.rhythmError].contains(self.statusTag)
     }
     
-    public func setStatusTag(_ tag: StatusTag) {
-        DispatchQueue.main.async {
+    public func setStatusTag(_ ctx:String, _ tag: StatusTag) {
+        //DispatchQueue.main.async {
+            //print("========== setStatusTag ctx:", ctx, "seq:", self.sequence, "tag:", tag)
             self.statusTag = tag
-        }
+        //}
     }
 
     public func getValue() -> Double {
