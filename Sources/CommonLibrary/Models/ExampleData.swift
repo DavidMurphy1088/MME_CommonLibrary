@@ -27,7 +27,7 @@ public class ExampleData : ObservableObject {
                         let sheetRows = jsonData.values
                         //self.loadSheetData(sheetRows: sheetRows)
                         loadFunction(sheetRows)
-                        Logger.logger.log(self, "\(context) loaded \(sheetRows.count) sheet rows")
+                        Logger.logger.log(self, "\(context) Loaded \(sheetRows.count) rows from sheet rows")
                         self.setDataReady(context: context, way: status)
                     }
                     catch {

@@ -381,7 +381,6 @@ public class GoogleAPI {
                 if pathIndex == pathSegments.count {
                     //print("============= getDocumentByName folderID:", folderId, "root:", rootFolderId, "name", name)
                     self.getFileTextContentsByNameInFolder(folderId: folderId, name: name, reportError: reportError, onDone: {status, document in
-                        
                         semaphore.signal()
                         if log {
                             log = log

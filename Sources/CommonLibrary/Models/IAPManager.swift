@@ -123,7 +123,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
         }
     }
 
-    /// Response to requestProducts() - avalable products
+    /// Response to requestProducts() - available products
     /// Sent immediately before -requestDidFinish
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
@@ -155,7 +155,7 @@ public class IAPManager: NSObject, ObservableObject, SKProductsRequestDelegate, 
                     self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     SKPaymentQueue.default().finishTransaction(transaction)
                 case .restored:
-                    Logger.logger.log(self, "Restored from history: \(transaction.payment.productIdentifier)")
+                    Logger.logger.log(self, "Purchased licenses restored from history: \(transaction.payment.productIdentifier)")
                     self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     SKPaymentQueue.default().finishTransaction(transaction)
                 case .failed:

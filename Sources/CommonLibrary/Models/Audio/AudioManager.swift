@@ -1,7 +1,7 @@
 import Foundation
 import AVFoundation
 
-///Notification of session interruptions. e.g. phone call
+///Notification of temporary session interruptions. e.g. phone call. Should get a .begin then a .ended
 extension AudioManager {
     @objc func handleAudioSessionInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -12,13 +12,27 @@ extension AudioManager {
 
         switch type {
         case .began:
-            // Interruption began, pause or stop the audio
-            Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption started")
+            /// Interruption began, pause or stop the audio
+            /// ///The typical case for this app is that the user played a student video example. This causes the .begin, .end sequence of interruption
+            let running = self.audioEngine?.isRunning
+            Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption started, engine running?:\(running)")
 
         case .ended:
             if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
                 let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-                Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption ended")
+                let running = self.audioEngine?.isRunning
+                Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption ended, engine running?:\(running) Options:\(options)")
+                if let engine = self.audioEngine {
+                    if !engine.isRunning {
+                        do {
+                            try engine.start()
+                            Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Audio engine was restarted OK after interruption")
+                        }
+                        catch {
+                            Logger.logger.reportError(self, "Could not start the audio engine after interruption: \(error)")
+                        }
+                    }
+                }
                 if options.contains(.shouldResume) {
                     // Interruption ended. Attempt to resume playback, if appropriate
                 }
@@ -77,7 +91,23 @@ public class AudioManager {
             return
         }
         log(ctx, "CheckReadyToPlay - Audio engine is not ready so resetting it")
-        self.fullReset()
+        ///Full reset never worked on first return to keyboard appearing - pitches were silent. It required a 2nd appearance of the keyboad view
+        //////Whereas only reloading the midi sampler does appear to aloow first appearance of keyboard to sound pitches
+        //self.fullReset()
+        if !audioEngine.isRunning {
+            do {
+                //audioEngine.reset()
+                if let sampler = midiAudioUnitSampler {
+                    loadSoundFont(audioUnitSampler: sampler)
+                }
+                try audioEngine.start()
+                Logger.logger.log(self, "CheckReadyToPlay - Audio engine was restarted OK after interruption")
+            }
+            catch {
+                Logger.logger.reportError(self, "CheckReadyToPlay - Could not start the audio engine after interruption: \(error)")
+            }
+        }
+
         if audioEngine.isRunning {
             self.log(ctx, "CheckReadyToPlay - Audio engine is ready to play after reset")
         }
@@ -135,7 +165,6 @@ public class AudioManager {
                 } else {
                     self.log(ctx, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
                     ///Its not an error. e.g happens if student records acoustic piano in SR
-                    //Logger.logger.reportError(self, "AVAudioEngineConfigurationChange notification, audio engine is STOPPED")
                 }
             }
         }
