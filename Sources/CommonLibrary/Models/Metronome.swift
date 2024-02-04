@@ -270,10 +270,8 @@ public class Metronome: ObservableObject  {
                                                     audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
                                                 }
                                                 else {
-                                                    if let sampler = AudioManager.shared.getMidiAudioUnitSampler() {
-                                                        sampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
-                                                    }
-                                                    //midiSampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
+                                                    //sampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
+                                                    AudioManager.shared.playPitch(midiPitch: note.midiNumber)
                                                 }
                                                 note.setHilite(hilite: true)
                                                 DispatchQueue.global(qos: .background).async {

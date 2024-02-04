@@ -195,12 +195,14 @@ public class AudioManager {
         //https://sites.google.com/site/soundfonts4u/
         //let soundFontNames = [("Piano", "Nice-Steinway-v3.8")] //, ("Guitar", "GuitarAcoustic")]
         /// From https://www.producersbuzz.com/downloads/download-free-soundfonts-sf2/top-18-free-piano-soundfonts-sf2/
-        //let soundFontNames = [("Piano", "Piano")] //, ("Guitar", "GuitarAcoustic")]
-        //let soundFontNames = [("Piano", "Yamaha-Grand-Lite-v2.0")] //, ("Guitar", "GuitarAcoustic")]
-        //let soundFontNames = [("akai_steinway", "akai_steinway")] //, ("Guitar", "GuitarAcoustic")]
-        let soundFontNames = [("akai_steinway", "akai_steinway")] //, ("Guitar", "GuitarAcoustic")]
-        //let soundFontNames = [("GD_Clean_Concert_Grand", "GD_Clean_Concert_Grand")] //, ("Guitar", "GuitarAcoustic")]
-        
+        //let soundFontNames = [("Piano", "Piano")]
+        //let soundFontNames = [("Piano", "Yamaha-Grand-Lite-v2.0")]
+        //let soundFontNames = [("akai_steinway", "akai_steinway")]
+        //let soundFontNames = [("GD_Clean_Concert_Grand", "GD_Clean_Concert_Grand")]
+        //let soundFontNames = [("Chateau Grand-SF-Lite-v1.0", "Chateau Grand-SF-Lite-v1.0")]
+        //let soundFontNames = [("Yamaha-Grand-Lite-v2.0", "Yamaha-Grand-Lite-v2.0")]
+        let soundFontNames = [("akai_steinway", "akai_steinway")]
+
         let samplerFileName = soundFontNames[0].1
         if let url = Bundle.module.url(forResource: samplerFileName, withExtension: "sf2") {
             let ins = 0
@@ -210,7 +212,6 @@ public class AudioManager {
                                                                  program: UInt8(instrumentProgramNumber),
                                                                  bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
                                                                  bankLSB: UInt8(kAUSampler_DefaultBankLSB))
-                    //audioUnitSampler.
                     break
                 }
                 catch {
@@ -224,8 +225,20 @@ public class AudioManager {
         log("loadSoundFont", "Sampler loaded sound font \(samplerFileName)")
     }
     
-    public func getMidiAudioUnitSampler() -> AVAudioUnitSampler? {
-        return midiAudioUnitSampler
+    public func playPitch(midiPitch: Int) {
+        if let sampler = midiAudioUnitSampler {
+            sampler.startNote(UInt8(midiPitch), withVelocity: 127, onChannel: 0)
+//            DispatchQueue.global(qos: .background).async {
+//                usleep(useconds_t(500000))
+//                self.stopPitch(note: midiPitch)
+//            }
+        }
+    }
+
+    func stopPitch(note: Int) {
+        if let sampler = midiAudioUnitSampler {
+            sampler.stopNote(UInt8(note), onChannel: 0)
+        }
     }
     
     public func getAudioEngine() -> AVAudioEngine? {
