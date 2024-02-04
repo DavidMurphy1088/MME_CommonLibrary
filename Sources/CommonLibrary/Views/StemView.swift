@@ -32,13 +32,6 @@ public struct StemView: View {
         return (stemDirection * -1.0 * getNoteWidth())
     }
 
-//    func log(_ n:Note) -> Bool {
-//        if n.midiNumber == 74 {
-//            print("========== HERE")
-//        }
-//        return true
-//    }
-
     func getStaffNotes(staff:Staff) -> [Note] {
         var notes:[Note] = []
         for n in self.notes {
