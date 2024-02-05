@@ -225,13 +225,16 @@ public class AudioManager {
         log("loadSoundFont", "Sampler loaded sound font \(samplerFileName)")
     }
     
-    public func playPitch(midiPitch: Int) {
+    public func playPitch(midiPitch: Int, timeDurationSecs:Double? = nil) {
         if let sampler = midiAudioUnitSampler {
             sampler.startNote(UInt8(midiPitch), withVelocity: 127, onChannel: 0)
-//            DispatchQueue.global(qos: .background).async {
-//                usleep(useconds_t(500000))
-//                self.stopPitch(note: midiPitch)
-//            }
+            if let timeDurationSecs = timeDurationSecs {
+                DispatchQueue.global(qos: .background).async {
+                    print("=================play", midiPitch, timeDurationSecs)
+                    usleep(useconds_t(timeDurationSecs * 1000000.0))
+                    self.stopPitch(note: midiPitch)
+                }
+            }
         }
     }
 

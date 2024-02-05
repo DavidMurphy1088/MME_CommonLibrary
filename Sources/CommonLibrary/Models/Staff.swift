@@ -64,7 +64,7 @@ public class BarLayoutPositions: ObservableObject {
     }
     public func storePosition(barLine:BarLine, rect: CGRect, ctx:String) {
         DispatchQueue.main.async {
-            let rectCopy = rect //CGRect(origin: CGPoint(x: rect.minX, y: rect.minY), size: CGSize(width: rect.size.width, height: rect.size.height))
+            let rectCopy = rect 
             self.positions[barLine] = rectCopy
         }
     }

@@ -241,9 +241,6 @@ public class Metronome: ObservableObject  {
                 ///Make sure score playing is synched to the metronome tick
                 if loopCtr % 4 == 0 {
                     if self.tickingIsActive {
-                        //let elapsedTimeMillis = Date().timeIntervalSince(lastTime) * 1000
-                        //let elapsedTimeSeconds = String(format: "%.2f", elapsedTimeMillis / 1000)
-                        //lastTime = Date()
                         audioTickerMetronomeTick.soundMetronomeTick(timeSignature: timeSignature, silent: false)
                         ticksPlayed += 1
                     }
@@ -261,6 +258,13 @@ public class Metronome: ObservableObject  {
                                         audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: entry.getValue(), silent: true)
                                     }
                                     else {
+                                        ///Limit the sound duration for the final note of the score
+                                        var timeDurationSecs:Double? = nil
+                                        if let lastTimeSlice = score.getLastTimeSlice() {
+                                            if lastTimeSlice.sequence == timeSlice.sequence {
+                                                timeDurationSecs = 1.2
+                                            }
+                                        }
                                         for note in timeSlice.getTimeSliceNotes() {
                                             if tieWasFound {
                                                 tieWasFound = false
@@ -270,8 +274,7 @@ public class Metronome: ObservableObject  {
                                                     audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
                                                 }
                                                 else {
-                                                    //sampler.startNote(UInt8(note.midiNumber), withVelocity:64, onChannel:UInt8(0))
-                                                    AudioManager.shared.playPitch(midiPitch: note.midiNumber)
+                                                    AudioManager.shared.playPitch(midiPitch: note.midiNumber, timeDurationSecs: timeDurationSecs)
                                                 }
                                                 note.setHilite(hilite: true)
                                                 DispatchQueue.global(qos: .background).async {
@@ -295,7 +298,6 @@ public class Metronome: ObservableObject  {
                                         nextScoreTimeSlice = (entry as! TimeSlice)
                                         if nextScoreTimeSlice!.entries.count > 0 {
                                             nextScoreIndex += 1
-                                            //currentNoteTimeToLive = nextScoreTimeSlice!.getNotes()[0].getValue()
                                             currentNoteTimeToLive = nextScoreTimeSlice!.entries[0].getValue()
                                             break
                                         }

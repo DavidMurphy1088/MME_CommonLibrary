@@ -105,12 +105,16 @@ public struct KeyboardView<PianoUser>: View where PianoUser: PianoUserProtocol {
             }
         }
         //.border(Color .red)
-
         .onAppear() {
             let screenSize = UIScreen.main.bounds
             let screenWidth = screenSize.width
-            ///Some keys (black) are narrower
-            self.whiteKeyWidth = (screenWidth * 1.6) / Double(piano.keys.count)
+            var keyCount = piano.keys.count
+            if UIGlobalsCommon.isLandscape() {
+                ///avoid short squat keys in landscape when there are only a few keys
+                keyCount = max(piano.keys.count, 20)
+            }
+            ///Some keys (black) are narrower so use 1.6 multiplier
+            self.whiteKeyWidth = (screenWidth * 1.6) / Double(keyCount)
             self.whiteKeyHeight = screenSize.height / 3.5
             self.handViewHeight = self.whiteKeyHeight * 0.20
             blackKeyWidth = whiteKeyWidth * 0.7
@@ -135,6 +139,7 @@ public struct PianoView<PianoUserView>: View where PianoUserView: PianoUserProto
         VStack {
             KeyboardView<PianoUserView>(piano: piano, user: user)
                 //.border(Color .blue)
+                
         }
     }
 }
