@@ -47,7 +47,6 @@ public class TimeSlice : ScoreEntry {
     
     public func setStatusTag(_ ctx:String, _ tag: StatusTag) {
         //DispatchQueue.main.async {
-            //print("========== setStatusTag ctx:", ctx, "seq:", self.sequence, "tag:", tag)
             self.statusTag = tag
         //}
     }
