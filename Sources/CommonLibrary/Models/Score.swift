@@ -224,8 +224,13 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore33(_ ctx:String, withBeam:Bool) {
-        print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, "StaffCount", self.staffs.count)
+    public func debugScore4(_ ctx:String, withBeam:Bool, toleranceLevel:Int) {
+        let tolerance = RhythmTolerance.getTolerancePercent(toleranceLevel)
+        print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, 
+              //"StaffCount", self.staffs.count,
+                "toleranceLevel:\(toleranceLevel)",
+                "toleranceLevel:\(tolerance)"
+        )
         for t in self.getAllTimeSlices() {
             if t.entries.count == 0 {
                 print("ZERO ENTRIES")
@@ -233,7 +238,6 @@ public class Score : ObservableObject {
             }
             if t.getTimeSliceNotes().count > 0 {
                 let note = t.getTimeSliceNotes()[0]
-                //for ts in t.getTimeSlices() {
                     if withBeam {
                         print("  Seq", t.sequence, 
                               "type:", type(of: t.entries[0]),
@@ -251,19 +255,27 @@ public class Score : ObservableObject {
                         print("  Seq", t.sequence,
                               "[type:", type(of: t.entries[0]), "]",
                               "[midi:",note.midiNumber, "]",
-                              "[TapDuration Seconds:",t.tapSecondsNormalizedToTempo,"]",
+                              "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo),"]",
                               "[Note Value:", note.getValue(),"]",
                               "[status]",t.statusTag,
                               "[beat]",t.beatNumber,
                               "[writtenAccidental:",note.writtenAccidental ?? "","]",
                               "[Staff:",note.staffNum,"]"
-//                              "[stem:",note.stemDirection, note.stemLength, "]",
-//                              "[placement:",note.noteStaffPlacements[0]?.offsetFromStaffMidline ?? "none", note.noteStaffPlacements[0]?.accidental ?? "none","]",
-//                              t.getValue() ,
-//                              "tagHigh", t.tagHigh ?? ""
                         )
                     }
-                //}
+            }
+            else {
+                //let rest = t.
+                print("  Seq", t.sequence,
+                      "[type:", type(of: t.entries[0]), "]",
+                      "[rest:","R ", "]",
+                      "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo),"]",
+                      "[Note Value:", t.getValue(),"]",
+                      "[status]",t.statusTag,
+                      "[beat]",t.beatNumber,
+                      "[writtenAccidental:","_","]",
+                      "[Staff:","_","]"
+                    )
             }
         }
     }
@@ -391,39 +403,6 @@ public class Score : ObservableObject {
             }
         }
     }
-
-    ///Determine whether quavers can be beamed within a bar's strong and weak beats
-    ///startBeam is the possible start of beam, lastBeat is the end of beam
-//    func canBeBeamedTo(timeSignature:TimeSignature, startBeamTimeSlice:TimeSlice, lastBeat:Double) -> Bool {
-//        //self.debugScore1("CanBeam start:\(startBeamTimeSlice.sequence) latBeat:\(lastBeat)", withBeam: true)
-//        if timeSignature.top == 4 {
-//            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-//            if lastBeat > 2 {
-//                return [2, 3].contains(startBeatInt)
-//            }
-//            else {
-//                return [0, 1].contains(startBeatInt)
-//            }
-//        }
-//        if timeSignature.top == 3 {
-//            ///Check is integer to check start beat is on a main beat
-//            ///If check integer then 3/4 with values : 1.5, 0.5, 0.5, 0.5 the 2nd is standalone and 3 and 4 are beamed - which is correct. without check, 3 is beamed to 2
-//            ///but with check 1, .5,.5,  .5,.5 beams are 2 and 3 and 4 and 5 but not 2 thru 5 all together. But this is a less bad sin than the one above. So keep integer check inplace
-//            ///Beaming code needs a rewrite but first needs 100% definite and simple to understand rules
-//            if floor(startBeamTimeSlice.beatNumber) == ceil(startBeamTimeSlice.beatNumber) {
-//                let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-//                return [0, 1, 2].contains(startBeatInt)
-//            }
-//            else {
-//                return false
-//            }
-//        }
-//        if timeSignature.top == 2 {
-//            let startBeatInt = Int(startBeamTimeSlice.beatNumber)
-//            return [0, 1].contains(startBeatInt)
-//        }
-//        return false
-//    }
     
     private func determineStemDirections(staff:Staff, notesUnderBeam:[Note], linesForFullStemLength:Double) {
         
@@ -631,186 +610,6 @@ public class Score : ObservableObject {
         }
     }
 
-    ///If the last note added was a quaver, identify any previous adjoining quavers and set them to be joined with a quaver bar
-    ///Set the beginning, middle and end quavers for the beam
-//    private func addStemCharaceteristicsOld() {
-//        let lastNoteIndex = self.scoreEntries.count - 1
-//        let scoreEntry = self.scoreEntries[lastNoteIndex]
-//        guard scoreEntry is TimeSlice else {
-//            return
-//        }
-//
-//        let lastTimeSlice = scoreEntry as! TimeSlice
-//        let notes = lastTimeSlice.getTimeSliceNotes()
-//        if notes.count == 0 {
-//            return
-//        }
-//
-//        let lastNote = notes[0]
-//        //lastNote.sequence1 = self.getAllTimeSlices().count
-//
-//        //The number of staff lines for a full stem length
-//        let linesForFullStemLength = 3.5
-//
-//        if lastNote.getValue() != Note.VALUE_QUAVER {
-//            for staffIndex in 0..<self.staffs.count {
-//                let stemDirection = getStemDirection(staff: self.staffs[staffIndex], notes: notes)
-//                let staffNotes = lastTimeSlice.getTimeSliceNotes(staffNum: staffIndex)
-//                for note in staffNotes {
-//                    note.stemDirection = stemDirection
-//                    note.stemLength = linesForFullStemLength
-//                    ///Dont try yet to beam semiquavers
-//                    if lastNote.getValue() == Note.VALUE_SEMIQUAVER {
-//                        note.beamType = .end
-//                    }
-//                }
-//            }
-//            return
-//        }
-//
-//        let staff = self.staffs[lastNote.staffNum]
-//        //apply the quaver beam back from the last note
-//        var notesUnderBeam:[Note] = []
-//        notesUnderBeam.append(lastNote)
-//
-//        ///Figure out the start, middle and end of this group of quavers
-//        for i in stride(from: lastNoteIndex - 1, through: 0, by: -1) {
-//            let scoreEntry = self.scoreEntries[i]
-//            if !(scoreEntry is TimeSlice) {
-//                break
-//            }
-//            let timeSlice = scoreEntry as! TimeSlice
-//            if timeSlice.entries.count > 0 {
-//                if timeSlice.entries[0] is Rest {
-//                    break
-//                }
-//            }
-//            let notes = timeSlice.getTimeSliceNotes()
-//            if notes.count > 0 {
-//                if notes[0].getValue() == Note.VALUE_QUAVER {
-//                    if !canBeBeamedTo(timeSignature: self.timeSignature, startBeamTimeSlice: timeSlice, lastBeat: lastTimeSlice.beatNumber) {
-//                        break
-//                    }
-//                    let note = notes[0]
-//                    notesUnderBeam.append(note)
-//                }
-//                else {
-//                    break
-//                }
-//            }
-//        }
-//
-//        ///Check if beam is valid
-//        var totalValueUnderBeam = 0.0
-//        var valid = true
-//
-//        for note in notesUnderBeam {
-////            if note.beamType == .start {
-////                if note.timeSlice?.beatNumber.truncatingRemainder(dividingBy: 1.0) != 0 {
-////                    valid = false
-////                    break
-////                }
-////            }
-//            totalValueUnderBeam += note.getValue()
-//        }
-//        
-//        if valid {
-//            valid = totalValueUnderBeam.truncatingRemainder(dividingBy: 1) == 0
-//        }
-//            
-//        ///Its not valid so unbeam
-//        if !valid {
-//            ///Discard the beam group because cant beam to an off-beat note
-//            notesUnderBeam = []
-//            notesUnderBeam.append(lastNote)
-//        }
-//        
-//        ///Determine if the quaver group has up or down stems based on the overall staff placement of the group
-//        var totalOffset = 0
-//        for note in notesUnderBeam {
-//            let placement = staff.getNoteViewPlacement(note: note)
-//            totalOffset += placement.offsetFromStaffMidline
-//        }
-//        
-//        ///Set each note's beam type and calculate the nett above r below the staff line for the quaver group (for the subsequnet stem up or down decison)
-//        let startNote = notesUnderBeam[0]
-//        let startPlacement = staff.getNoteViewPlacement(note: startNote)
-//
-//        let endNote = notesUnderBeam[notesUnderBeam.count - 1]
-//        let endPlacement = staff.getNoteViewPlacement(note: endNote)
-//
-//        var beamSlope:Double = Double(endPlacement.offsetFromStaffMidline - startPlacement.offsetFromStaffMidline)
-//        beamSlope = beamSlope / Double(notesUnderBeam.count - 1)
-//
-//        var requiredBeamPosition = Double(startPlacement.offsetFromStaffMidline)
-//        var minStemLength = linesForFullStemLength
-//        
-//        for i in 0..<notesUnderBeam.count {
-//            let note = notesUnderBeam[i]
-//            if i == 0 {
-//                note.beamType = .end
-//                note.stemLength = linesForFullStemLength
-//            }
-//            else {
-//                if i == notesUnderBeam.count-1 {
-//                    note.beamType = .start
-//                    note.stemLength = linesForFullStemLength
-//                }
-//                else {
-//                    note.beamType = .middle
-//                    let placement = staff.getNoteViewPlacement(note: note)
-//                    ///adjust the stem length according to where the note is positioned vs. where the beam slope position requires
-//                    let stemDiff = Double(placement.offsetFromStaffMidline) - requiredBeamPosition
-//                    note.stemLength = linesForFullStemLength + (stemDiff / 2.0 * (totalOffset > 0 ? 1.0 : -1.0))
-//                    if note.stemLength < minStemLength {
-//                        minStemLength = note.stemLength
-//                    }
-//                }
-//            }
-//            requiredBeamPosition += beamSlope
-//            note.stemDirection = totalOffset > 0 ? .down : .up
-//        }
-//        
-//        if minStemLength < 2 {
-//            let delta = 3 - minStemLength
-//            for i in 0..<notesUnderBeam.count {
-//                let note = notesUnderBeam[i]
-//                note.stemLength += delta
-//            }
-//        }
-//        
-//        ///Check no stranded beam starts. A note with beamStart without a beamEnd. Every beam start must have a beam end so it is rendered correctly.
-//        ///Quavers under beams only have their stems rendered by the presence of an end note in their beam group
-//        func getFirstNoteInTS(_ tsIndex:Int) -> Note? {
-//            if tsIndex < self.getAllTimeSlices().count {
-//                let ts = getAllTimeSlices()[tsIndex]
-//                if ts.getTimeSliceNotes().count > 0 {
-//                    return ts.getTimeSliceNotes()[0]
-//                }
-//            }
-//            return nil
-//        }
-//
-//        for i in 0..<getAllTimeSlices().count {
-//            let note = getFirstNoteInTS(i)
-//            if let note = note {
-//                if note.beamType == .start {
-//                    let nextNote = getFirstNoteInTS(i+1)
-//                    if let nextNote = nextNote {
-//                        if !([QuaverBeamType.end, QuaverBeamType.middle].contains(nextNote.beamType)) {
-//                            note.beamType = .end
-//                            ///Undo any stem direction that might have been previousy applied
-//                            note.stemDirection = getStemDirection(staff: staff, notes: [note])
-//                            note.stemLength = linesForFullStemLength
-//                            break
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        debugScore44("end of beaming, scoreSize:\(lastNoteIndex+1)", withBeam: true)
-//    }
-    
     public func copyEntries(from:Score, count:Int? = nil) {
         let staff = self.staffs[0]
         createStaff(num: 0, staff: Staff(score: self, type: staff.type, staffNum: 0, linesInStaff: staff.linesInStaff))
@@ -877,6 +676,7 @@ public class Score : ObservableObject {
             ts.setStatusTag("clearAllStatus", .noTag)
         }
     }
+    
     ///Return a score based on the question score but modified to show where a tapped duration differs from the question
     //public func fitScoreToQuestionScore(userScore:Score, onlyRhythm:Bool, tolerancePercent:Double) -> (Score, StudentFeedback) {
     public func fitScoreToQuestionScore(userScore:Score, onlyRhythm:Bool, toleranceSetting:Int) -> (Score, StudentFeedback) {
@@ -889,7 +689,8 @@ public class Score : ObservableObject {
         ///Stop analysis after a rhythm error (but not a pitch error)
         var rhythmErrors = false
         
-        //userScore.debugScorexx("User at start FIT", withBeam: false)
+        //self.debugScore333     ("Ques score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
+        //userScore.debugScore333("User score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
         var tapIndex = 0
         var explanation = ""
         let tapType = onlyRhythm ? "tap" : "note"
@@ -912,7 +713,7 @@ public class Score : ObservableObject {
                 }
                 continue
             }
-            
+
             let trailingRestsDuration = self.getTrailingRestsDuration(index: questionIndex + 1)
             let questionNoteValue = questionNote.getValue() + trailingRestsDuration
             var outputNoteValue = questionNote.getValue()
@@ -937,12 +738,13 @@ public class Score : ObservableObject {
                 else {
                     let tap = userScore.getAllTimeSlices()[tapIndex]
                     let tolerancePercent = RhythmTolerance.getTolerancePercent(toleranceSetting)
-                    let delta = questionNoteValue * tolerancePercent * 0.01
+                    //let delta = questionNoteValue * tolerancePercent * 0.01
+                    //let delta = 1.0 * tolerancePercent * 0.01
+                    let delta = min(1.0, questionNoteValue) * tolerancePercent * 0.01
+
                     let lowBound = questionNoteValue - delta
                     let hiBound = questionNoteValue + delta
-                    //                    if tapIndex == userScore.getAllTimeSlices().count - 1 {
-                    //                        tap.tapSecondsNormalizedToTempo = questionNoteValue
-                    //                    }
+
                     if tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound {
                         outputTimeSlice.statusTag = .rhythmError
                         questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
@@ -997,7 +799,8 @@ public class Score : ObservableObject {
                 outputTimeSlice.addNote(n: outputNote)
             }
         }
-        
+        //outputScore.debugScore33("Output Fit 0000", withBeam: false)
+
         ///Check if a rhythm error occured on the last note. It may have occured if the student tapped more notes beyond the question end.
         var tapsAfterEnd = false
         if questionPosition == self.scoreEntries.count - 1  {
@@ -1006,14 +809,15 @@ public class Score : ObservableObject {
                 tapsAfterEnd = true
                 let verb = onlyRhythm ? "tapped" : "played"
                 explanation = "You \(verb) a \(tapType) after the end of the question"
-            }
-            ///The last tap may have been flagged as error due to its duration being measured from a tap after the end of the question melody
-            ///So set it correct but the student attempt will next be flagged as an error due to excess taps at the end
-            if let lastOutput = outputScore.getLastTimeSlice() {
-                if lastOutput.statusTag == .rhythmError {
-                    ///Ther are taps beyond end of question
-                    lastOutput.statusTag = .noTag
-                    rhythmErrors = false
+                
+                ///The last tap may have been flagged as error due to its duration being measured from a tap after the end of the question melody
+                ///So set it correct but the student attempt will next be flagged as an error due to excess taps at the end
+                if let lastOutput = outputScore.getLastTimeSlice() {
+                    if lastOutput.statusTag == .rhythmError {
+                        ///Ther are taps beyond end of question
+                        lastOutput.statusTag = .noTag
+                        rhythmErrors = false
+                    }
                 }
             }
         }
@@ -1047,7 +851,7 @@ public class Score : ObservableObject {
         let feedback = StudentFeedback()
         feedback.feedbackExplanation = explanation
 
-//        outputScore.debugScore3("Output Fit", withBeam: false)
+        //outputScore.debugScore33("Output Fit 11111", withBeam: false)
         return (outputScore, feedback)
     }
 

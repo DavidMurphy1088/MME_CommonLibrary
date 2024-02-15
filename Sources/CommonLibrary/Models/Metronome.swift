@@ -258,13 +258,7 @@ public class Metronome: ObservableObject  {
                                         audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: entry.getValue(), silent: true)
                                     }
                                     else {
-                                        ///Limit the sound duration for the final note of the score
-                                        var timeDurationSecs:Double? = nil
-                                        if let lastTimeSlice = score.getLastTimeSlice() {
-                                            if lastTimeSlice.sequence == timeSlice.sequence {
-                                                timeDurationSecs = 1.2
-                                            }
-                                        }
+
                                         for note in timeSlice.getTimeSliceNotes() {
                                             if tieWasFound {
                                                 tieWasFound = false
@@ -274,7 +268,7 @@ public class Metronome: ObservableObject  {
                                                     audioClapper.soundMetronomeTick(timeSignature: timeSignature, noteValue: note.getValue(), silent: false)
                                                 }
                                                 else {
-                                                    AudioManager.shared.playPitch(midiPitch: note.midiNumber, timeDurationSecs: timeDurationSecs)
+                                                    AudioManager.shared.playPitch(midiPitch: note.midiNumber)
                                                 }
                                                 note.setHilite(hilite: true)
                                                 DispatchQueue.global(qos: .background).async {
