@@ -198,16 +198,67 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         return Int(tempo)
     }
     
+    //From the recording calculate the average tempo of all taps
+    public func getTempoFromRecordingAverage(tapValues:[Double], questionScore: Score) -> Int {
+        let scoreTimeSlices = questionScore.getAllTimeSlices()
+        if scoreTimeSlices.count == 0 {
+            return 60
+        }
+        
+        var currentScoreValue = 0.0
+        var lastTapDuration:Double? = nil
+        var tapIndex = 0
+        var tempos:[Double] = []
+        
+        for i in 0..<scoreTimeSlices.count {
+            let entries = scoreTimeSlices[i].getTimeSliceEntries()
+            if entries.count > 0 {
+                let entry = entries[0]
+                if entry is Note {
+                    if let tapDuration = lastTapDuration {
+                        if tapDuration > 0 {
+                            let tempo = (currentScoreValue / tapDuration) * 60.0
+                            tempos.append(tempo)
+                            if tempos.count > 4 {
+                                break
+                            }
+                            currentScoreValue = 0
+                        }
+                    }
+                    if tapIndex < tapValues.count {
+                        lastTapDuration = tapValues[tapIndex]
+                        tapIndex += 1
+                        currentScoreValue += entry.getValue()
+                    }
+                }
+                else {
+                    if entry is Rest {
+                        currentScoreValue += entry.getValue()
+                    }
+                }
+            }
+        }
+        //if self.tappedValues.count == 0
+        if tempos.count == 0 {
+            return 60
+        }
+        let sum = tempos.reduce(0, +)
+        let average = sum / Double(tempos.count)
+        //print("========= AVG Tempos", tempos, "AVG:------>", average)
+        return Int(average)
+    }
+    
     //return the tempo of the students recording
     public func getRecordedTempo(questionScore:Score) -> Int {
-        let tempo = getTempoFromRecordingStart(tapValues: self.tappedValues, questionScore: questionScore)
+        //let tempo = getTempoFromRecordingStart(tapValues: self.tappedValues, questionScore: questionScore)
+        let tempo = getTempoFromRecordingAverage(tapValues: self.tappedValues, questionScore: questionScore)
         return tempo
     }
     
     //Read the user's tapped rhythm and return a score representing the ticks they ticked
     public func getTappedAsAScore(timeSignatue:TimeSignature, questionScore:Score, tapValues:[Double]) -> Score {
-        let recordedTempo = getTempoFromRecordingStart(tapValues: tapValues, questionScore: questionScore)
-        ///G3,2,43 let tapValues = [0.5,0.5,1.5,0.5,   1.0,2.0,   0.5,0.5, 1, 3, 2]
+        //let recordedTempo = getTempoFromRecordingStart(tapValues: tapValues, questionScore: questionScore)
+        let recordedTempo = getTempoFromRecordingAverage(tapValues: tapValues, questionScore: questionScore)
         let tappedScore = self.makeScoreFromTaps(questionScore: questionScore, tappedTempo: recordedTempo, tapValues: tapValues) //, tapValues: self.tapValues1)
         tappedScore.tempo = recordedTempo
         return tappedScore

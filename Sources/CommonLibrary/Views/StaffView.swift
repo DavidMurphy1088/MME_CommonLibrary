@@ -227,8 +227,10 @@ public struct StaffView: View {
         return offsets
     }
     
+
     public var body: some View {
         ZStack {
+
             StaffLinesView(score:score, staff: staff, widthPadding: widthPadding)
                 .frame(height: score.getStaffHeight())
                 .padding([.leading, .trailing], widthPadding ? score.lineSpacing * 4 : 0)

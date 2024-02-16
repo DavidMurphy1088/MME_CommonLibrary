@@ -56,9 +56,37 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
                 out = Color(red: 0.0, green: 0.6, blue: 0.0)
             }
         }
-        if out == nil {
-            out = Color(staffNum == staff.staffNum ? .black : .clear)
-        }
+        //Attempt to color notes based on their realtive +/- vs the tempo, rubato...
+//        if out == nil {
+//            if self.getValue() > 0 {
+//                let tapValue = self.timeSlice.tapSecondsNormalizedToTempo
+//                let ratio = tapValue / self.getValue()
+//                if ratio > 0 {
+//                    let minValue = 0.887
+//                    let maxValue = 1.09
+//                    let scaled = (ratio - minValue) / (maxValue - minValue)
+//                    var fast = 0.0
+//                    var slow = 0.0
+//                    if scaled < 0.5 {
+//                        fast = scaled
+//                    }
+//                    else {
+//                        slow = scaled
+//                    }
+//                    let cc = UIColor(red: fast, green: 0.5, blue: slow, alpha: 1.0)
+//                    //print("=============NOTE TEMPO", x, delta, "RED:", red)
+//                    print("==== COLOR ratio:", ratio, "fast:", fast, "slow:", slow)
+//                    out = Color(cc)
+//                }
+//                else {
+//                    out = Color(.blue)
+//                }
+//                          
+//            }
+//            else {
+                out = Color(staffNum == staff.staffNum ? .black : .clear)
+            //}
+//        }
 
         return out!
     }

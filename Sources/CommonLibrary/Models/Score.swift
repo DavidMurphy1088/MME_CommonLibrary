@@ -4,13 +4,24 @@ import AVFoundation
 
 public class RhythmTolerance {
     static func getTolerancePercent(_ setting:Int) -> Double {
-        switch setting {
+//        switch setting {
+//        case 0:
+//            return 38.0
+//            //return 30.0
+//        case 1:
+//            return 47.0
+//        case 2:
+//            return 56.0
+//        default:
+//            return 65.0
+//        }        switch setting {
+    switch setting {
         case 0:
-            return 38.0
+            return 34.0
         case 1:
-            return 47.0
+            return 43.0
         case 2:
-            return 56.0
+            return 55.0
         default:
             return 65.0
         }
@@ -687,10 +698,11 @@ public class Score : ObservableObject {
         //userScore.debugScore3("Input Fit", withBeam: false)
         
         ///Stop analysis after a rhythm error (but not a pitch error)
-        var rhythmErrors = false
-        
-        //self.debugScore333     ("Ques score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
-        //userScore.debugScore333("User score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
+        var userRhythmErrorIndex:Int? = nil
+        var userPitchErrorIndex:Int? = nil
+
+//        self.debugScore44     ("Ques score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
+//        userScore.debugScore44("User score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
         var tapIndex = 0
         var explanation = ""
         let tapType = onlyRhythm ? "tap" : "note"
@@ -699,7 +711,9 @@ public class Score : ObservableObject {
         for questionIndex in 0..<self.scoreEntries.count {
             questionPosition = questionIndex
             guard let questionTimeSlice:TimeSlice = self.scoreEntries[questionIndex] as? TimeSlice else {
-                outputScore.addBarLine()
+                if userRhythmErrorIndex == nil {
+                    outputScore.addBarLine()
+                }
                 continue
             }
             if questionTimeSlice.entries.count == 0 {
@@ -707,12 +721,14 @@ public class Score : ObservableObject {
             }
             
             guard let questionNote = questionTimeSlice.entries[0] as? Note else {
-                if !rhythmErrors {
+                if userRhythmErrorIndex == nil {
                     let outputTimeSlice = outputScore.createTimeSlice()
                     outputTimeSlice.addRest(rest: Rest(timeSlice: outputTimeSlice, value: questionTimeSlice.getValue(), staffNum: 0))
                 }
                 continue
             }
+//            print("===========ANAL00Start questionIndex:", questionIndex, "questValue", questionNote.getValue(),
+//                  "userCount:", userScore.getAllTimeSlices().count, "tapIndex:", tapIndex)
 
             let trailingRestsDuration = self.getTrailingRestsDuration(index: questionIndex + 1)
             let questionNoteValue = questionNote.getValue() + trailingRestsDuration
@@ -725,129 +741,168 @@ public class Score : ObservableObject {
                 }
             }
             
-            if rhythmErrors {
+            let outputTimeSlice = outputScore.createTimeSlice()
+
+            if tapIndex >= userScore.getAllTimeSlices().count {
+                ///Set the error index beyond the user score length
+                userRhythmErrorIndex = tapIndex
+                outputTimeSlice.statusTag = .rhythmError
+            }
+            else {
+                let tap = userScore.getAllTimeSlices()[tapIndex]
+                let tolerancePercent = RhythmTolerance.getTolerancePercent(toleranceSetting)
+                //let delta = questionNoteValue * tolerancePercent * 0.01
+                //let delta = 1.0 * tolerancePercent * 0.01
+                let delta = min(1.0, questionNoteValue) * tolerancePercent * 0.01
+
+                let lowBound = questionNoteValue - delta
+                let hiBound = questionNoteValue + delta
+                if tapIndex >= 0 && (tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound) {
+                    outputTimeSlice.statusTag = .rhythmError
+                    questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
+                    outputNoteValue = tap.getValue()
+                    userRhythmErrorIndex = tapIndex
+                    let name = TimeSliceEntry.getValueName(value:questionNote.getValue())
+                    if tapIndex <= 1 {
+                        explanation = "• You had a false start"
+                    }
+                    else {
+                        explanation = "• The question note is a \(name)"
+                        if trailingRestsDuration > 0 {
+                            explanation += " followed by a rest"
+                        }
+                        else {
+                            explanation += ""
+                        }
+                        if !UIGlobalsCommon.isLandscape() {
+                            explanation += "\n• "
+                        }
+                        else {
+                            explanation += " - "
+                        }
+                        explanation += "Your \(tapType) was too "
+                        if questionNoteValue > tap.getValue() {
+                            explanation += "short"
+                        }
+                        else {
+                            explanation += "long"
+                        }
+                    }
+                }
+                else {
+                    if !onlyRhythm {
+                        if tap.getTimeSliceNotes().count > 0 {
+                            let tappedNote = tap.getTimeSliceNotes()[0]
+                            if tappedNote.midiNumber != questionNote.midiNumber {
+                                explanation = "Wrong note"
+                                outputTimeSlice.statusTag = .pitchError
+                                questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
+                                outputNoteValue = tap.getValue()
+                                outputMidiValue = tappedNote.midiNumber
+                                userPitchErrorIndex = tapIndex
+                            }
+                        }
+                    }
+                }
+            }
+            let outputNote = Note(timeSlice: outputTimeSlice, num: outputMidiValue, value: outputNoteValue, staffNum: questionNote.staffNum)
+            if tapIndex < userScore.getAllTimeSlices().count {
+                let tap = userScore.getAllTimeSlices()[tapIndex] //DPM
+                outputNote.timeSlice.tapSecondsNormalizedToTempo = tap.tapSecondsNormalizedToTempo //DPM
+            }
+            outputNote.setIsOnlyRhythm(way: questionNote.isOnlyRhythmNote)
+            outputTimeSlice.addNote(n: outputNote)
+            if userRhythmErrorIndex != nil {
                 break
             }
             else {
-                let outputTimeSlice = outputScore.createTimeSlice()
-                if tapIndex >= userScore.getAllTimeSlices().count {
-                    rhythmErrors = true
+                tapIndex += 1
+            }
+        }
+        
+        let tapVerb = onlyRhythm ? "tap" : "play"
+        var tapsAfterEnd = false
+        ///Check if error was flagged on the last tap. It can be casued by multiple reasons that should be described individually.
+        if let lastOutput = outputScore.getLastTimeSlice() {
+//            print("===========ANAL RHYTHM ERROR", "questCount:", self.scoreEntries.count , "questPosition:" , questionPosition,
+//                  "userCount:", userScore.getAllTimeSlices().count, "tapIndex:", tapIndex, "errIndex:", userRhythmErrorIndex)
+            if let userRhythmErrorIndex = userRhythmErrorIndex {
+                if userRhythmErrorIndex == (userScore.getAllTimeSlices().count) {
+                    ///The error index is beyond the end of the student taps.
+                    ///The user stopped tapping before the question end but the rhythm was correct up until then.
                     explanation = "• There was no \(tapType) here"
-                    outputTimeSlice.statusTag = .rhythmError
                 }
                 else {
-                    let tap = userScore.getAllTimeSlices()[tapIndex]
-                    let tolerancePercent = RhythmTolerance.getTolerancePercent(toleranceSetting)
-                    //let delta = questionNoteValue * tolerancePercent * 0.01
-                    //let delta = 1.0 * tolerancePercent * 0.01
-                    let delta = min(1.0, questionNoteValue) * tolerancePercent * 0.01
-
-                    let lowBound = questionNoteValue - delta
-                    let hiBound = questionNoteValue + delta
-
-                    if tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound {
-                        outputTimeSlice.statusTag = .rhythmError
-                        questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
-                        outputNoteValue = tap.getValue()
-                        rhythmErrors = true
-                        let name = TimeSliceEntry.getValueName(value:questionNote.getValue())
-                        //let tapName = TimeSliceEntry.getValueName(value:tap.getValue())
-                        if tapIndex <= 1 {
-                            explanation = "• You had a false start"
+                    ///The error index is within the student taps.
+                    if questionPosition < self.scoreEntries.count - 1 {
+                        ///The student made less taps than question taps.
+                        if tapIndex == userScore.getAllTimeSlices().count -  1 {
+                            ///The tap duration was wrong (short or long) on their last tap and
+                            ///the duration of that last tap was measured by the end of tap recording, not a subsequent tap
+                            explanation += ", you didn't \(tapVerb) all the \(tapType)s"
                         }
                         else {
-                            explanation = "• The question note is a \(name)"
-                            if trailingRestsDuration > 0 {
-                                explanation += " followed by a rest"
-                            }
-                            else {
-                                explanation += ""
-                            }
-                            if !UIGlobalsCommon.isLandscape() {
-                                explanation += "\n• "
-                            }
-                            else {
-                                explanation += " - "
-                            }
-                            explanation += "Your \(tapType) was too "
-                            if questionNoteValue > tap.getValue() {
-                                explanation += "short 🫢"
-                            }
-                            else {
-                                explanation += "long 🫢"
-                            }
+                            ///Student made a mistake on a tap other than their last tap so no need to further modify the existing explanation
                         }
                     }
                     else {
-                        if !onlyRhythm {
-                            if tap.getTimeSliceNotes().count > 0 {
-                                let tappedNote = tap.getTimeSliceNotes()[0]
-                                if tappedNote.midiNumber != questionNote.midiNumber {
-                                    explanation = "Wrong note"
-                                    outputTimeSlice.statusTag = .pitchError
-                                    questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
-                                    outputNoteValue = tap.getValue()
-                                    outputMidiValue = tappedNote.midiNumber
-                                }
+                        ///Student got to the end of the question but there was a rhythm error on their last tap
+                        let lastTap = userScore.getAllTimeSlices()[tapIndex]
+                        let lastQuestion = getAllTimeSlices()[getAllTimeSlices().count-1]
+                        if tapIndex < userScore.getAllTimeSlices().count -  1 {
+                            explanation += ", there were extra \(tapType)s at the end"
+                            tapsAfterEnd = true
+                            //tapIndex += 1
+                        }
+                        else {
+                            if lastTap.tapSecondsNormalizedToTempo > lastQuestion.getValue() {
+                                explanation += ", you waited too long to end"
+                            }
+                            else {
+                                explanation += ", you ended too quickly"
                             }
                         }
                     }
-                    tapIndex += 1
                 }
-                let outputNote = Note(timeSlice: outputTimeSlice, num: outputMidiValue, value: outputNoteValue, staffNum: questionNote.staffNum)
-                outputNote.setIsOnlyRhythm(way: questionNote.isOnlyRhythmNote)
-                outputTimeSlice.addNote(n: outputNote)
             }
-        }
-        //outputScore.debugScore33("Output Fit 0000", withBeam: false)
+            else {
+                ///All student taps were correct and the student tap for the last question tap was correct but its duration was set by a subsequent tap (rather than ending the recording)
+                if tapIndex < userScore.getAllTimeSlices().count  {
+                    explanation = "• Correct but there were extra \(tapType)s at the end"
+                    tapsAfterEnd = true
+                    tapIndex -= 1
+                }
 
-        ///Check if a rhythm error occured on the last note. It may have occured if the student tapped more notes beyond the question end.
-        var tapsAfterEnd = false
-        if questionPosition == self.scoreEntries.count - 1  {
-            ///At end of question but still taps are left over
-            if userScore.getAllTimeSlices().count - tapIndex > 0 {
-                tapsAfterEnd = true
-                let verb = onlyRhythm ? "tapped" : "played"
-                explanation = "You \(verb) a \(tapType) after the end of the question"
-                
-                ///The last tap may have been flagged as error due to its duration being measured from a tap after the end of the question melody
-                ///So set it correct but the student attempt will next be flagged as an error due to excess taps at the end
-                if let lastOutput = outputScore.getLastTimeSlice() {
-                    if lastOutput.statusTag == .rhythmError {
-                        ///Ther are taps beyond end of question
-                        lastOutput.statusTag = .noTag
-                        rhythmErrors = false
-                    }
-                }
+            }
+            if explanation.count > 0 {
+                explanation += " 🫢"
             }
         }
         
-        //
-        //        ///Add empty timeslices to the output score so that it still lines up vertically with the question score
-        //        ///Changed 21Dec2023 Inlcude in the output any remaining rhythm the student tapped.
-        //        ///Rationale is for student to be able to hear their full rhythm regardless of any mistakes made
-        //        ///Changed 20Jan2024 to include now any taps beyond the question score length
-        //
-        
+        ///Ensure the student hears all their taps even when there are errors
+        ///Tap index (zero based) is at the note that was in error and that error was larady written to the output score
         if userScore.getAllTimeSlices().count > 0 {
-            ///Thread 1: Fatal error: Range requires lowerBound <= upperBound
-            for t in tapIndex..<userScore.getAllTimeSlices().count {
-                let outputTimeSlice = outputScore.createTimeSlice()
-                let ts = userScore.getAllTimeSlices()[t]
-                let note = Note(timeSlice: outputTimeSlice, num: ts.getTimeSliceNotes()[0].midiNumber, value: ts.getValue(), staffNum: 0)
-                note.isOnlyRhythmNote = onlyRhythm
-                if tapsAfterEnd {
-                    outputTimeSlice.statusTag = .rhythmError
+            if tapIndex+1 < userScore.getAllTimeSlices().count  {
+//                print("===========ANAL FILL NOTES", "questCount:", self.scoreEntries.count , "questPosition:" , questionPosition,
+//                      "tapIndex:", tapIndex, "userCount:", userScore.getAllTimeSlices().count, "errIndex:", userRhythmErrorIndex)
+
+                for t in tapIndex+1..<userScore.getAllTimeSlices().count {
+                    let outputTimeSlice = outputScore.createTimeSlice()
+                    let ts = userScore.getAllTimeSlices()[t]
+                    let note = Note(timeSlice: outputTimeSlice, num: ts.getTimeSliceNotes()[0].midiNumber, value: ts.getValue(), staffNum: 0)
+                    note.isOnlyRhythmNote = onlyRhythm
+                    if tapsAfterEnd {
+                        outputTimeSlice.statusTag = .rhythmError
+                    }
+                    else {
+                        ///Dont show the notes on the stave since we want to retain the veritical alignment of where the rhythm error was made.
+                        ///But record the notes in the output so that the audio playback includes them.
+                        outputTimeSlice.statusTag = onlyRhythm ? .afterErrorInvisible : .afterErrorVisible
+                    }
+                    outputTimeSlice.addNote(n: note)
                 }
-                else {
-                    ///Dont show the notes on the stave since we want to retain the veritical alignment of where the rhythm error was made.
-                    ///But record the notes in the output so that the audio playback includes them.
-                    outputTimeSlice.statusTag = onlyRhythm ? .afterErrorInvisible : .afterErrorVisible
-                }
-                outputTimeSlice.addNote(n: note)
             }
         }
-    
         let feedback = StudentFeedback()
         feedback.feedbackExplanation = explanation
 
