@@ -162,6 +162,8 @@ public struct StaffView: View {
     @State private var rotationId: UUID = UUID()
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var position: CGPoint = .zero
+    @State var isTempoHelpPopupPresented = false
+    
     var entryPositions:[Double] = []
     var totalDuration = 0.0
     
@@ -227,10 +229,32 @@ public struct StaffView: View {
         return offsets
     }
     
+    struct TempoInfoView:View {
+        let played:Bool
+        public var body: some View {
+            VStack {
+                let bullet = "\u{2022}" + " "
+                let verb = played ? "played" : "tapped"
+                HStack {
+                    Text("👉 Notes shaded")
+                    Text("red").foregroundColor(.red)
+                    Text("were correct and \(verb) slightly quicker than tempo")
+                }
+                .padding()
+                
+                HStack {
+                    Text("👉 Notes shaded")
+                    Text("green").foregroundColor(.green)
+                    Text("were correct and \(verb) slightly slower than tempo")
+                }
+                .padding()
+            }
+            .padding()
+        }
+    }
 
     public var body: some View {
         ZStack {
-
             StaffLinesView(score:score, staff: staff, widthPadding: widthPadding)
                 .frame(height: score.getStaffHeight())
                 .padding([.leading, .trailing], widthPadding ? score.lineSpacing * 4 : 0)
@@ -256,10 +280,38 @@ public struct StaffView: View {
                     .coordinateSpace(name: "StaffNotesView")
             }
             .padding([.leading, .trailing], widthPadding ? score.lineSpacing * 4 : 0)
+            
+//            if let showTempos = score.showTempos  {
+//                VStack {
+//                    Spacer()
+//                    HStack {
+//                        Spacer()
+//                        Button(action: {
+//                            score.setShowTempos(way: !score.showTempos!)
+//                        }) {
+//                            HStack {
+//                                Text("Tempos")
+//                                Image(systemName: score.showTempos! ? "checkmark.square" : "square")
+//                            }
+//                        }
+//                        ///Disabled temporarily
+//                        Button(action: {
+//                            isTempoHelpPopupPresented.toggle()
+//                        }) {
+//                            HStack {
+//                                Image(systemName: "questionmark.circle")
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
         .coordinateSpace(name: "StaffView.ZStack")
         .frame(height: score.getStaffHeight())
         //.border(Color .blue, width: 2)
+        .popover(isPresented: $isTempoHelpPopupPresented) {
+            TempoInfoView(played: !score.isOnlyRhythm())
+        }
     }
 }
 

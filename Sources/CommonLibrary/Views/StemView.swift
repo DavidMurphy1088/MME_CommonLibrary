@@ -3,7 +3,7 @@ import SwiftUI
 import CoreData
 
 public struct StemView: View {
-    @State var score: Score
+    @ObservedObject var score: Score
     @State var staff: Staff
     @State var notePositionLayout: NoteLayoutPositions
     var notes: [Note]

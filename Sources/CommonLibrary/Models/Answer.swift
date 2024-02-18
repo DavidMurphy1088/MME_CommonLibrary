@@ -15,7 +15,8 @@ public class Answer : ObservableObject, Identifiable, Codable {
     public var id:UUID
     public var correct: Bool = false
     public var explanation = ""
-
+    public var wasCancelled = false
+    
     ///Intervals
     public var correctIntervalHalfSteps = 0
     public var correctIntervalName = ""
@@ -34,7 +35,6 @@ public class Answer : ObservableObject, Identifiable, Codable {
 
     public init() {
         id = UUID()
-        //self.questionMode = questionMode
     }
     
     public func copyAnwser() -> Answer {

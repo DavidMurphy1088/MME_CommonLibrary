@@ -109,7 +109,8 @@ public class Score : ObservableObject {
     @Published public var barEditor:BarEditor?
 
     @Published public var scoreEntries:[ScoreEntry] = []
-    
+    @Published public var showTempos:Bool? = nil //nil=>dont show on/off UI, false=>show regular notes, on=>show tempo colored notes
+
     let ledgerLineCount =  2 //3//4 is required to represent low E
     public var staffs:[Staff] = []
     
@@ -235,7 +236,7 @@ public class Score : ObservableObject {
         return result
     }
 
-    public func debugScore4(_ ctx:String, withBeam:Bool, toleranceLevel:Int) {
+    public func debugScore5(_ ctx:String, withBeam:Bool, toleranceLevel:Int) {
         let tolerance = RhythmTolerance.getTolerancePercent(toleranceLevel)
         print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, 
               //"StaffCount", self.staffs.count,
@@ -266,7 +267,7 @@ public class Score : ObservableObject {
                         print("  Seq", t.sequence,
                               "[type:", type(of: t.entries[0]), "]",
                               "[midi:",note.midiNumber, "]",
-                              "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo),"]",
+                              "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo ?? 0),"]",
                               "[Note Value:", note.getValue(),"]",
                               "[status]",t.statusTag,
                               "[beat]",t.beatNumber,
@@ -280,7 +281,7 @@ public class Score : ObservableObject {
                 print("  Seq", t.sequence,
                       "[type:", type(of: t.entries[0]), "]",
                       "[rest:","R ", "]",
-                      "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo),"]",
+                      "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo ?? 0),"]",
                       "[Note Value:", t.getValue(),"]",
                       "[status]",t.statusTag,
                       "[beat]",t.beatNumber,
@@ -303,22 +304,48 @@ public class Score : ObservableObject {
         }
     }
     
+    public func setShowTempos(way:Bool) {
+        DispatchQueue.main.async {
+            self.showTempos = way
+            if way {
+                self.calculateTapToValueRatios()
+            }
+            else {
+                self.resetTapToValueRatios()
+            }
+        }
+    }
+
     public func setStudentFeedback(studentFeedack:StudentFeedback? = nil) {
         //DispatchQueue.main.async {
             self.studentFeedback = studentFeedack
         //}
     }
 
-    public func getLastTimeSlice() -> TimeSlice? {
-        var ts:TimeSlice?
+//    public func getLastTimeSlice1() -> TimeSlice? {
+//        var ts:TimeSlice?
+//        for index in stride(from: scoreEntries.count - 1, through: 0, by: -1) {
+//            let element = scoreEntries[index]
+//            if element is TimeSlice {
+//                ts = element as? TimeSlice
+//                break
+//            }
+//        }
+//        return ts
+//    }    
+    
+    public func getLastNoteTimeSlice() -> TimeSlice? {
+        var result:TimeSlice?
         for index in stride(from: scoreEntries.count - 1, through: 0, by: -1) {
-            let element = scoreEntries[index]
-            if element is TimeSlice {
-                ts = element as? TimeSlice
-                break
+            let entry = scoreEntries[index]
+            if let ts = entry as? TimeSlice {
+                if ts.getTimeSliceNotes().count > 0 {
+                    result = ts
+                    break
+                }
             }
         }
-        return ts
+        return result
     }
 
     public func updateStaffs() {
@@ -388,7 +415,7 @@ public class Score : ObservableObject {
     }
     
     func addStemAndBeamCharaceteristics() {
-        guard let timeSlice = self.getLastTimeSlice() else {
+        guard let timeSlice = self.getLastNoteTimeSlice() else {
             return
         }
         if timeSlice.entries.count == 0 {
@@ -699,10 +726,10 @@ public class Score : ObservableObject {
         
         ///Stop analysis after a rhythm error (but not a pitch error)
         var userRhythmErrorIndex:Int? = nil
-        var userPitchErrorIndex:Int? = nil
+        //var userPitchErrorIndex:Int? = nil
 
-//        self.debugScore44     ("Ques score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
-//        userScore.debugScore44("User score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
+//        self.debugScore4     ("Ques score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
+//        userScore.debugScore4("User score at start FIT", withBeam: false, toleranceLevel: toleranceSetting)
         var tapIndex = 0
         var explanation = ""
         let tapType = onlyRhythm ? "tap" : "note"
@@ -732,6 +759,7 @@ public class Score : ObservableObject {
 
             let trailingRestsDuration = self.getTrailingRestsDuration(index: questionIndex + 1)
             let questionNoteValue = questionNote.getValue() + trailingRestsDuration
+
             var outputNoteValue = questionNote.getValue()
             var outputMidiValue = questionNote.midiNumber
             if tapIndex < userScore.getAllTimeSlices().count {
@@ -753,11 +781,15 @@ public class Score : ObservableObject {
                 let tolerancePercent = RhythmTolerance.getTolerancePercent(toleranceSetting)
                 //let delta = questionNoteValue * tolerancePercent * 0.01
                 //let delta = 1.0 * tolerancePercent * 0.01
+                ///Use the tolerance relative to a short note's value. For longer notes (minim, smibrive) limit the tolerance if above 1.0
                 let delta = min(1.0, questionNoteValue) * tolerancePercent * 0.01
 
                 let lowBound = questionNoteValue - delta
                 let hiBound = questionNoteValue + delta
-                if tapIndex >= 0 && (tap.tapSecondsNormalizedToTempo < lowBound || tap.tapSecondsNormalizedToTempo > hiBound) {
+                if tap.tapSecondsNormalizedToTempo == nil {
+                    break
+                }
+                if tap.tapSecondsNormalizedToTempo! < lowBound || tap.tapSecondsNormalizedToTempo! > hiBound {
                     outputTimeSlice.statusTag = .rhythmError
                     questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
                     outputNoteValue = tap.getValue()
@@ -799,7 +831,7 @@ public class Score : ObservableObject {
                                 questionTimeSlice.setStatusTag("fitScore", StatusTag.hilightAsCorrect)
                                 outputNoteValue = tap.getValue()
                                 outputMidiValue = tappedNote.midiNumber
-                                userPitchErrorIndex = tapIndex
+                                //userPitchErrorIndex = tapIndex
                             }
                         }
                     }
@@ -823,7 +855,7 @@ public class Score : ObservableObject {
         let tapVerb = onlyRhythm ? "tap" : "play"
         var tapsAfterEnd = false
         ///Check if error was flagged on the last tap. It can be casued by multiple reasons that should be described individually.
-        if let lastOutput = outputScore.getLastTimeSlice() {
+        if let lastOutput = outputScore.getLastNoteTimeSlice() {
 //            print("===========ANAL RHYTHM ERROR", "questCount:", self.scoreEntries.count , "questPosition:" , questionPosition,
 //                  "userCount:", userScore.getAllTimeSlices().count, "tapIndex:", tapIndex, "errIndex:", userRhythmErrorIndex)
             if let userRhythmErrorIndex = userRhythmErrorIndex {
@@ -839,7 +871,10 @@ public class Score : ObservableObject {
                         if tapIndex == userScore.getAllTimeSlices().count -  1 {
                             ///The tap duration was wrong (short or long) on their last tap and
                             ///the duration of that last tap was measured by the end of tap recording, not a subsequent tap
-                            explanation += ", you didn't \(tapVerb) all the \(tapType)s"
+                            let trailingRestsValue = getTrailingRestsDuration(index: questionPosition + 1)
+                            if trailingRestsValue == 0 {
+                                explanation += ", you didn't \(tapVerb) all the \(tapType)s"
+                            }
                         }
                         else {
                             ///Student made a mistake on a tap other than their last tap so no need to further modify the existing explanation
@@ -855,12 +890,12 @@ public class Score : ObservableObject {
                             //tapIndex += 1
                         }
                         else {
-                            if lastTap.tapSecondsNormalizedToTempo > lastQuestion.getValue() {
-                                explanation += ", you waited too long to end"
-                            }
-                            else {
-                                explanation += ", you ended too quickly"
-                            }
+//                            if lastTap.tapSecondsNormalizedToTempo! > lastQuestion.getValue() {
+//                                explanation += ", you waited too long to end"
+//                            }
+//                            else {
+//                                explanation += ", you ended too quickly"
+//                            }
                         }
                     }
                 }
@@ -909,17 +944,112 @@ public class Score : ObservableObject {
         //outputScore.debugScore33("Output Fit 11111", withBeam: false)
         return (outputScore, feedback)
     }
+    
+    public func resetTapToValueRatios() {
+        for i in 0..<self.scoreEntries.count {
+            if let ts = self.scoreEntries[i] as? TimeSlice {
+                ts.tapTempoRatio = nil
+            }
+        }
+    }
+        
+    public func calculateTapToValueRatios() {
+        ///Calculate tapped time to note value with any trailing rests
+        ///The tapped value for a note must be compared against the note's value plus and traling rests
+        var lastValue:Double = 0
+        var lastNoteIndex:Int?
+        
+        func set(index:Int, lastValue:Double) {
+            if let ts:TimeSlice = self.scoreEntries[index] as? TimeSlice {
+                if let tapped = ts.tapSecondsNormalizedToTempo {
+                    if lastValue > 0 {
+                        let ratio = tapped / lastValue
+                        ts.tapTempoRatio = ratio
+                    }
+                }
+            }
+        }
+        
+        for i in 0..<self.scoreEntries.count {
+            if let ts = self.scoreEntries[i] as? TimeSlice {
+                if ts.entries.count > 0 {
+                    if let note = ts.entries[0] as? Note {
+                        if let index = lastNoteIndex {
+                            set(index: index, lastValue: lastValue)
+                            lastValue = 0
+                        }
+                        lastValue += ts.getValue()
+                        lastNoteIndex = i
+                    }
+                    if let note = ts.entries[0] as? Rest {
+                        lastValue += ts.getValue()
+                    }
+                }
+            }
+        }
+        if let index = lastNoteIndex {
+            set(index: index, lastValue: lastValue)
+        }
+        
+        ///calculate the min, max ratios
+        var minRatio:Double?
+        var maxRatio:Double?
+        ///exclude the last tap which is often long and then skews the result
+        for i in 0..<self.scoreEntries.count-1 {
+            if let ts = self.scoreEntries[i] as? TimeSlice {
+                if let ratio = ts.tapTempoRatio {
+                    if minRatio == nil || ratio < minRatio! {
+                        minRatio = ratio
+                    }
+                    if maxRatio == nil || ratio > maxRatio! {
+                        maxRatio = ratio
+                    }
+                }
+            }
+        }
+        guard let maxRatio = maxRatio else {
+            return
+        }
+        guard let minRatio = minRatio else {
+            return
+        }
 
+        ///Scale all the ratios according to the min, max. Fill the space 0..1 so that the slowest ratio is 0 an dthe highest ratio is 1
+        for i in 0..<self.scoreEntries.count {
+            if let ts = self.self.scoreEntries[i] as? TimeSlice {
+                if let ratio = ts.tapTempoRatio {
+                    let scaled = (ratio - minRatio) / (maxRatio - minRatio)
+                    //print("====== ADJUST", ts.sequence, "\tratio", ratio, "scaled", scaled)
+                    ts.tapTempoRatio = scaled
+                }
+            }
+        }
+    }
+    
+    public func isOnlyRhythm() -> Bool {
+        if let last = self.getLastNoteTimeSlice() {
+            if last.getTimeSliceNotes().count > 0 {
+                if last.getTimeSliceNotes().count > 0 {
+                    let lastNote = last.getTimeSliceNotes()[0]
+                    return lastNote.isOnlyRhythmNote
+                }
+            }
+        }
+        return false
+    }
+    
     public func getTrailingRestsDuration(index:Int) -> Double {
         var totalDuration = 0.0
-        for i in index..<self.scoreEntries.count {
-            if let ts = self.self.scoreEntries[i] as? TimeSlice {
-                if ts.entries.count > 0 {
-                    if let rest = ts.entries[0] as? Rest {
-                        totalDuration += rest.getValue()
-                    }
-                    else {
-                        break
+        if index < self.scoreEntries.count {
+            for i in index..<self.scoreEntries.count {
+                if let ts = self.self.scoreEntries[i] as? TimeSlice {
+                    if ts.entries.count > 0 {
+                        if let rest = ts.entries[0] as? Rest {
+                            totalDuration += rest.getValue()
+                        }
+                        else {
+                            break
+                        }
                     }
                 }
             }

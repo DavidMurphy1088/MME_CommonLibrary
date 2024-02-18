@@ -116,13 +116,15 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: 1)
         outputScore.createStaff(num: 0, staff: staff)
         
-        ///If the last tapped note has duration > question last note value set that value to the last question note value
+        ///If the last tapped note has duration > question last note value set that value to the last question note value + any trailing rests
         ///(Because we are not measuring how long it took the student to hit stop recording)
-        let lastQuestionTimeslice = questionScore.getLastTimeSlice()
-        var lastQuestionNote:Note?
+        let lastQuestionTimeslice = questionScore.getLastNoteTimeSlice()
+        var lastValue:Double?
         if let ts = lastQuestionTimeslice {
             if ts.getTimeSliceNotes().count > 0 {
-                lastQuestionNote = ts.getTimeSliceNotes()[0]
+                lastValue = ts.getTimeSliceNotes()[0].getValue()
+                let trailingRestsDuration = questionScore.getTrailingRestsDuration(index: ts.sequence + 1)
+                lastValue! += trailingRestsDuration
             }
         }
 
@@ -133,19 +135,17 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             if var tappedValue = roundedTappedValue {
                 if i == tapValues.count - 1 {
                     ///The last tap value is when the student ended the recording and they may have delayed the stop recording
-                    ///So instead of using the tapped value, let the last note value be the last question note value so the rhythm is not marked wrong
-                    ///But only allow an extra delay of 2.0 sec. i.e. they can't delay hitting stop for too long
+                    ///So instead of using the tapped value, let the last note value be the last question note (+any trailing rests) value so the rhythm is not marked wrong
+                    ///But only allow an extra delay of 2.0 beats. i.e. they can't delay hitting stop for too long
                     ///Also if student ends too quickly that neeeds to be reported as a rhythm error so only modify the tapped value if they are too long
-                    if lastQuestionNote != nil {
-                        //let extraValue = (Double(tappedTempo) / 60.0) * 4.0
+                    if let lastValue = lastValue {
                         ///let the delay till the end of tapping be a percentage of the last note value
-                        let endTappingTolerance = 1.50
-                        //if tappedValue > lastQuestionNote!.getValue() && tappedValue <= lastQuestionNote!.getValue() + extraValue {
-                        let maxEndTapValue = max(lastQuestionNote!.getValue() * (endTappingTolerance), 2.0)
-
-                        if tappedValue > lastQuestionNote!.getValue() && tappedValue <= maxEndTapValue {
+                        //let endTappingTolerance = 1.50
+                        //let maxEndTapValue = max(lastQuestionNote!.getValue() * (endTappingTolerance), 2.0)
+                        let maxEndTapValue = lastValue + 2.0
+                        if tappedValue > lastValue && tappedValue <= maxEndTapValue {
                             //the student delayed the end of recording
-                            tappedValue = lastQuestionNote!.getValue()
+                            tappedValue = lastValue
                             recordedTapDuration = tappedValue
                         }
                     }

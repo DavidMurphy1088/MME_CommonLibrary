@@ -623,57 +623,57 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
         }
     }
     
-    func getTotalAnswerScore() -> Int {
-        var score = 0
-        for s in getNavigableChildSections() {
-            if let answer = s.storedAnswer {
-                if answer.correct {
-                    score += 1
-                }
-            }
-        }
-        return score
-    }
+//    func getTotalAnswerScore() -> Int {
+//        var score = 0
+//        for s in getNavigableChildSections() {
+//            if let answer = s.storedAnswer {
+//                if answer.correct {
+//                    score += 1
+//                }
+//            }
+//        }
+//        return score
+//    }
     
-    public func getGradeImage() -> Image? {
-        var name = ""
-        if isExamTypeContentSection() {
-            //test section group header
-            if !hasStoredAnswers() {
-                return nil
-            }
-            else {
-                if self.getTotalAnswerScore() == getNavigableChildSections().count {
-                    name = "checkmark_ok" //grade_a"
-                }
-                else {
-                    name = "checkmark_ok" //grade_b"
-                }
-            }
-        }
-        else {
-            //individual tests
-            if !homeworkIsAssigned {
-                return nil
-            }
-            else {
-                if let answer = storedAnswer {
-                    if answer.correct {
-                        name = "grade_a"
-                    }
-                    else {
-                        name = "grade_b"
-                    }
-                }
-                else {
-                    name = "todo_transparent"
-                }
-            }
-        }
-        var image:Image
-        image = Image(name)
-        return image
-    }
+//    public func getGradeImage() -> Image? {
+//        var name = ""
+//        if isExamTypeContentSection() {
+//            //test section group header
+//            if !hasStoredAnswers() {
+//                return nil
+//            }
+//            else {
+//                if self.getTotalAnswerScore() == getNavigableChildSections().count {
+//                    name = "checkmark_ok" //grade_a"
+//                }
+//                else {
+//                    name = "checkmark_ok" //grade_b"
+//                }
+//            }
+//        }
+//        else {
+//            //individual tests
+//            if !homeworkIsAssigned {
+//                return nil
+//            }
+//            else {
+//                if let answer = storedAnswer {
+//                    if answer.correct {
+//                        name = "grade_a"
+//                    }
+//                    else {
+//                        name = "grade_b"
+//                    }
+//                }
+//                else {
+//                    name = "todo_transparent"
+//                }
+//            }
+//        }
+//        var image:Image
+//        image = Image(name)
+//        return image
+//    }
     
     public func isTakingExam() -> Bool {
         guard let parent = parent else {

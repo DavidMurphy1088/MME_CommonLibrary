@@ -32,12 +32,31 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
     public func getValue() -> Double {
         return self.value
     }
-    
+
+    func gradualColorForValue(_ value: Double) -> UIColor {
+        // Define start and end colors as RGB
+        let startColor = UIColor.red // Start with red for low values
+        let endColor = UIColor.green // End with green for high values
+        
+        // Extract RGBA components for start and end colors
+        var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
+        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+        
+        startColor.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        endColor.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        
+        // Calculate the interpolated color components based on the input value
+        let red = r1 + (r2 - r1) * CGFloat(value) // Interpolate red component
+        let green = g1 + (g2 - g1) * CGFloat(value) // Interpolate green component
+        let blue = b1 + (b2 - b1) * CGFloat(value) // Interpolate blue component (should be minimal in red-green transition)
+        
+        return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+    }
+
     //Cause notes that are set for specifc staff to be transparent on other staffs
     public func getColor(ctx:String, staff:Staff, log:Bool? = false) -> Color {
         var out:Color? = nil
 
-        //}
         if timeSlice.statusTag == .pitchError {
             out = Color(.red)
         }
@@ -56,38 +75,16 @@ public class TimeSliceEntry : ObservableObject, Identifiable, Equatable, Hashabl
                 out = Color(red: 0.0, green: 0.6, blue: 0.0)
             }
         }
-        //Attempt to color notes based on their realtive +/- vs the tempo, rubato...
-//        if out == nil {
-//            if self.getValue() > 0 {
-//                let tapValue = self.timeSlice.tapSecondsNormalizedToTempo
-//                let ratio = tapValue / self.getValue()
-//                if ratio > 0 {
-//                    let minValue = 0.887
-//                    let maxValue = 1.09
-//                    let scaled = (ratio - minValue) / (maxValue - minValue)
-//                    var fast = 0.0
-//                    var slow = 0.0
-//                    if scaled < 0.5 {
-//                        fast = scaled
-//                    }
-//                    else {
-//                        slow = scaled
-//                    }
-//                    let cc = UIColor(red: fast, green: 0.5, blue: slow, alpha: 1.0)
-//                    //print("=============NOTE TEMPO", x, delta, "RED:", red)
-//                    print("==== COLOR ratio:", ratio, "fast:", fast, "slow:", slow)
-//                    out = Color(cc)
-//                }
-//                else {
-//                    out = Color(.blue)
-//                }
-//                          
-//            }
-//            else {
+        //Attempt to color notes based on their relative +/- vs the tempo, rubato...
+        if out == nil {
+            //print("=============== getColor", ctx, "\tsecs:", self.timeSlice.tapSecondsNormalizedToTempo, "\tratio", self.timeSlice.tapTempoRatio)
+            if let tap = timeSlice.tapTempoRatio {
+                out = Color(gradualColorForValue(tap))
+            }
+            else {
                 out = Color(staffNum == staff.staffNum ? .black : .clear)
-            //}
-//        }
-
+            }
+        }
         return out!
     }
 
