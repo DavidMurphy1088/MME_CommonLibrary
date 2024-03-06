@@ -15,16 +15,16 @@ public class RhythmTolerance {
 //        default:
 //            return 65.0
 //        }        switch setting {
-    switch setting {
-        case 0:
-            return 34.0
-        case 1:
-            return 43.0
-        case 2:
-            return 55.0
-        default:
-            return 65.0
-        }
+        switch setting {
+            case 0:
+                return 34.0
+            case 1:
+                return 43.0
+            case 2:
+                return 55.0
+            default:
+                return 65.0
+            }
     }
     
     static public func getToleranceName(_ setting:Int) -> String {

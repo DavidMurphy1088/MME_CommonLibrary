@@ -20,11 +20,16 @@ import StoreKit
 
 /// - On next startup the app retreives the receipt it last stored locally and again passes it to the Apple verification API to ensure the subscriptioin is still valid. e..g mayube the user cancelled the subscription after puchase
 /// - When the subscription auto-renews it arrives in the payment Queue as .purchased and the app stores the receipt and new subscription expiry date.
-
+/// - note that we cannot store the subscription receipt along with its expiry. The expiry for any receit must be determined by a current time remote verification via Apple. e.g. the saved subscription was then leter cancelled.
 ///Notes
 ///- using a Sandbox test user a subscrioption is renewed just before the current one expires. (same as default live behaviour)
 ///- But can clear purchase history on Sandbox user - then when the app starts and verifies its locally stored transaction receipt that verification finds no expiry date. i.e. the content is then blocked as unlicenced.
 ///- Use Settings->App Store->SanboxAccount on iPad to set testing sandbox user
+///In sandbox testing (by design) -
+///2-month subscriptions expire in about 5 minutes.
+///3-month subscriptions expire in about 8 minutes.
+///6-month subscriptions expire in about 15 minutes.
+///1-year subscriptions expire in about 5 hours.
 
 public class FreeLicenseUser:Hashable {
     public var email:String
@@ -46,8 +51,8 @@ public class FreeLicenseUser:Hashable {
 
 ///The subscription transaction receipt
 ///All dates are GMT
-private class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodable,
-    var expiryDate:Date
+public class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodable,
+    public var expiryDate:Date
     let name:String
     let data:Data
     
@@ -59,7 +64,15 @@ private class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodab
         self.expiryDate = expiryDate
     }
     
-    public func subscriptionDescription() -> String {
+    public func getDescription() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "d MMMM yyyy h:mm a"
+        dateFormatter.timeZone = TimeZone.current // Use the device's current time zone
+        let localDateString = dateFormatter.string(from: expiryDate)
+        return self.name + "\nexpiring " + localDateString
+    }
+    
+    public func allDatesDescription() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
@@ -106,13 +119,19 @@ private class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodab
 /// - app sends list of configured subscription product ids to StoreKit and waits for
 public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelegate, SKPaymentTransactionObserver {
     @Published public var purchaseableProducts:[String: SKProduct] = [:] ///Product id's that are returned from a product request to StoreKit
-    @Published public var emailLicenses = Set<FreeLicenseUser>()
+    //@Published
+    //public
+    var emailLicenses = Set<FreeLicenseUser>()
     @Published public var isInPurchasingState = false
-    public static let shared = LicenceManager()
-    //private let configuredProductIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024", "NZMEB_Grade_4_2024", "MT_NZMEB_Grade_00"]
-    private let configuredProductIDs: Set<String> = ["MT_NZMEB_Subscription_Month_6, MT_NZMEB_Subscription_Month_3, MT_NZMEB_Subscription_Month_12"] ///Product ID's that are known to the app
-    //private let configuredProductIDs: Set<String> = ["MT_NZMEB_Subscription_Month_3"] ///Product ID's that are known to the app
+    //@Published private var hasCurrentSubscription:Bool = false
+    
     private let localSubscriptionStorageKey = "subscription"
+    public static let shared = LicenceManager()
+    
+    //private let configuredProductIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024", "NZMEB_Grade_4_2024", "MT_NZMEB_Grade_00"]
+    private let configuredProductIDs:[String] = ["MT_NZMEB_Subscription_Month_3", "MT_NZMEB_Subscription_Month_6", "MT_NZMEB_Subscription_Month_12"] ///Product ID's that are known to the app
+    //private let configuredProductIDs: Set<String> = ["MT_NZMEB_Subscription_Month_3"] ///Product ID's that are known to the app
+    //TOOD what about old licenses?
     
     private override init() {
         super.init()
@@ -129,23 +148,12 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
             }
             let email = rowCells[1]
             let allowTest = rowCells[2] == "Y"
-            DispatchQueue.main.async {
+            //DispatchQueue.main.async {
                 self.emailLicenses.insert(FreeLicenseUser(email:email, allowTest: allowTest))
-            }
+            //}
         }
     }
-    
-    public func getNameOfStoredSubscription(email:String) -> String? {
-        let iap = LicenceManager.shared
-        if iap.emailIsLicensed(email: email) {
-            return email
-        }
-        if let receipt = SubscriptionTransactionReceipt.load() {
-            return receipt.subscriptionDescription()
-        }
-        return nil
-    }
-    
+            
     public func emailIsLicensed(email:String) -> Bool {
         for user in self.emailLicenses {
             if user.email == email {
@@ -155,7 +163,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         return false
     }
     
-    public func getLicenseUser(email:String) -> FreeLicenseUser? {
+    public func getFreeLicenceUser(email:String) -> FreeLicenseUser? {
         for user in self.emailLicenses {
             if user.email == email {
                 return user
@@ -185,16 +193,21 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
 //        return false
 //    }
     
-    public func isLicenseAvailable(grade:String) -> Bool {
+    public func isLicenseAvailableToPurchase(grade:String) -> Bool {
         return self.purchaseableProducts.keys.count > 0
     }
     
     ///Called at app startup to ask for the purchasable products defined for this app
     public func requestProducts() {
-        Logger.logger.log(self, "Request purchaseable products from list of configured product IDs:\(configuredProductIDs)")
-        let request = SKProductsRequest(productIdentifiers: configuredProductIDs)
-        request.delegate = self
-        request.start()
+        for product in self.configuredProductIDs {
+            let requested:Set<String> = [product]
+            //Logger.logger.log(self, "Request purchaseable products from list of configured product IDs:\(configuredProductIDs)")
+            Logger.logger.log(self, "Request purchaseable products for configured product ID:\(requested)")
+            //let request = SKProductsRequest(productIdentifiers: configuredProductIDs)
+            let request = SKProductsRequest(productIdentifiers: requested)
+            request.delegate = self
+            request.start()
+        }
     }
     
     ///Load the licenses that are paid for
@@ -238,21 +251,21 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         }
     }
 
-    ///Buy an In-App-Purchase for this grade for this calendar year
-    public func buyProduct(grade: String) {
-        let now = Date()
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: now)
-        let gradeToBuy = grade.replacingOccurrences(of: " ", with: "_")
-        
-        let productId = "NZMEB_\(gradeToBuy)_\(String(currentYear))"
-        Logger.logger.log(self, "BuyProduct, product id \(productId)")
-        if let product = self.purchaseableProducts[productId] {
-            Logger.logger.log(self, "BuyProduct is available, add queue, product id \(productId)")
-            let payment = SKPayment(product: product)
-            SKPaymentQueue.default().add(payment)
-        }
-    }    
+//    ///Buy an In-App-Purchase for this grade for this calendar year
+//    public func buyProduct(grade: String) {
+//        let now = Date()
+//        let calendar = Calendar.current
+//        let currentYear = calendar.component(.year, from: now)
+//        let gradeToBuy = grade.replacingOccurrences(of: " ", with: "_")
+//        
+//        let productId = "NZMEB_\(gradeToBuy)_\(String(currentYear))"
+//        Logger.logger.log(self, "BuyProduct, product id \(productId)")
+//        if let product = self.purchaseableProducts[productId] {
+//            Logger.logger.log(self, "BuyProduct is available, add queue, product id \(productId)")
+//            let payment = SKPayment(product: product)
+//            SKPaymentQueue.default().add(payment)
+//        }
+//    }    
     
     ///Buy a subscription
     public func buyProductSubscription(product: SKProduct) {
@@ -274,7 +287,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         #if DEBUG
         guard let url = URL(string: "https://sandbox.itunes.apple.com/verifyReceipt") else {
             return
-        } //TODO
+        }
         #else        
         guard let url = URL(string: "https://buy.itunes.apple.com/verifyReceipt") else {
         return
@@ -333,7 +346,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
                         }
                     }
                     else {
-                        Logger.logger.reportError(self, "Transaction verification returned no receipts. Context:\(ctx)")
+                        Logger.logger.log(self, "Transaction verification returned no receipts. Context:\(ctx)")
                         onDone(nil)
                     }
                 }
@@ -361,12 +374,14 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     }
     
     /// Store the receipt data locally for subscription expiry checking until the next subscription renewal
-    func storeReceiptData(name:String, receiptData: Data) {
+    func storeSubscriptionReceipt(ctx:String, name:String, receiptData: Data) {
         self.validateSubscriptionReceipt(ctx: "Storing new receipt", receiptData: receiptData, onDone: {expiryDate in
             if let expiryDate = expiryDate {
-                let subscription = SubscriptionTransactionReceipt(name:name, data: receiptData, expiryDate: expiryDate)
-                subscription.save()
-                Logger.logger.log(self, "Stored new receipt locally:\(subscription.subscriptionDescription())")
+                let subscriptionReceipt = SubscriptionTransactionReceipt(name:name, data: receiptData, expiryDate: expiryDate)
+                subscriptionReceipt.save()
+                Logger.logger.log(self, "Stored new receipt locally:\(subscriptionReceipt.allDatesDescription()), context:\(ctx)")
+                subscriptionReceipt.expiryDate = expiryDate
+                //LicenceManager.shared.setLicensedBySubscription(expiryDate: expiryDate)
             }
             else {
                 Logger.logger.reportError(self, "Receipt \(name) has no expiry date so clearing local storage")
@@ -376,12 +391,14 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     }
     
     ///Verify a subscription and save it if it has an expiry date. Otherwise clear any locally stored subscription.
-    public func verifyStoredSubscription(ctx: String) {
+    public func verifyStoredSubscriptionReceipt(ctx: String) {
         if let receipt = SubscriptionTransactionReceipt.load() {
             Logger.logger.log(self, "A stored subscription transaction exists so verifying it. Context:\(ctx)")
             self.validateSubscriptionReceipt(ctx: "Verifying stored subscription. Context:\(ctx)", receiptData: receipt.data, onDone: {expiryDate in
                 if let expiryDate = expiryDate {
-                    
+                    Logger.logger.log(self, "Stored subscription transaction verified and so set app's licence expiry to:[\(receipt.allDatesDescription())], Context:\(ctx)")
+                    receipt.expiryDate = expiryDate
+                    //LicenceManager.shared.setLicensedBySubscription(expiryDate: expiryDate)
                 }
                 else {
                     Logger.logger.log(self, "Stored subscription has no expiry date. Context:\(ctx)")
@@ -411,23 +428,25 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
                     Logger.logger.log(self, "Purchasing: \(transaction.payment.productIdentifier)")
                     self.isInPurchasingState = true
                 case .purchased:
-                    Logger.logger.log(self, "Purchased: \(transaction.payment.productIdentifier)")
+                    Logger.logger.log(self, "Purchased: \(transaction.payment.productIdentifier) ")
                     //self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     SKPaymentQueue.default().finishTransaction(transaction)
                     if let receiptData = self.extractTransactionReceipt() {
-                        self.storeReceiptData(name: transaction.payment.productIdentifier, receiptData: receiptData)
+                        self.storeSubscriptionReceipt(ctx: "paymentQueue.purchased", name: transaction.payment.productIdentifier, receiptData: receiptData)
                     }
                 case .restored:
                     /// Transaction was restored from user's purchase history.  Client should complete the transaction.
-                    Logger.logger.log(self, "Purchased licenses restored from history: \(transaction.payment.productIdentifier)")
+                    let restored:SKPayment = transaction.payment
+                    //print("==============>>>", restored.applicationUsername, restored)
+                    Logger.logger.log(self, "Purchased licences restored from history: \(transaction.payment.productIdentifier)")
                     //self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     SKPaymentQueue.default().finishTransaction(transaction)
                     if let receiptData = self.extractTransactionReceipt() {
-                        self.storeReceiptData(name: transaction.payment.productIdentifier, receiptData: receiptData)
+                        self.storeSubscriptionReceipt(ctx: "paymentQueue.restored",  name:transaction.payment.productIdentifier, receiptData: receiptData)
                     }
                 case .failed:
                     let err:String = transaction.error?.localizedDescription ?? ""
-                    Logger.logger.reportError(self, "paymentQueue didFailWithError \(err)")
+                    Logger.logger.reportError(self, "paymentQueue.failed didFailWithError \(err) or the user cancelled the purchase")
                     SKPaymentQueue.default().finishTransaction(transaction)
                 default:
                     break

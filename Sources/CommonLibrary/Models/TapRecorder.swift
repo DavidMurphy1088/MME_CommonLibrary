@@ -219,7 +219,12 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
                         if tapDuration > 0 {
                             let tempo = (currentScoreValue / tapDuration) * 60.0
                             tempos.append(tempo)
-                            if tempos.count > 4 {
+                            let sum = tempos.reduce(0, +)
+                            let average = sum / Double(tempos.count)
+                            print("========= AVG TEMP === Tempos", tempos, "AVG:------>", average)
+
+                            //if tempos.count > 4 {
+                            if tempos.count > 3 {
                                 break
                             }
                             currentScoreValue = 0
@@ -244,7 +249,7 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         }
         let sum = tempos.reduce(0, +)
         let average = sum / Double(tempos.count)
-        //print("========= AVG Tempos", tempos, "AVG:------>", average)
+        print("   ========= AVG Tempos", tempos, "AVG:------>", average)
         return Int(average)
     }
     
