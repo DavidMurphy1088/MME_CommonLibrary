@@ -22,9 +22,10 @@ import StoreKit
 /// - When the subscription auto-renews it arrives in the payment Queue as .purchased and the app stores the receipt and new subscription expiry date.
 /// - note that we cannot store the subscription receipt along with its expiry. The expiry for any receit must be determined by a current time remote verification via Apple. e.g. the saved subscription was then leter cancelled.
 ///Notes
-///- using a Sandbox test user a subscrioption is renewed just before the current one expires. (same as default live behaviour)
+///- using a Sandbox test user a subscription is renewed just before the current one expires. (same as default live behaviour). Auto renewed subscriptions appear to the payment queue observer as a new purchase. (at which point the app will store the new subscription receipt
 ///- But can clear purchase history on Sandbox user - then when the app starts and verifies its locally stored transaction receipt that verification finds no expiry date. i.e. the content is then blocked as unlicenced.
 ///- Use Settings->App Store->SanboxAccount on iPad to set testing sandbox user
+///- Subscriptions in the sandbox will auto-renew a maximum number of times (usually 6 for monthly subscriptions) before they automatically stop renewing, simulating the end of the subscription. 
 ///In sandbox testing (by design) -
 ///2-month subscriptions expire in about 5 minutes.
 ///3-month subscriptions expire in about 8 minutes.
@@ -119,19 +120,18 @@ public class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodabl
 /// - app sends list of configured subscription product ids to StoreKit and waits for
 public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelegate, SKPaymentTransactionObserver {
     @Published public var purchaseableProducts:[String: SKProduct] = [:] ///Product id's that are returned from a product request to StoreKit
-    //@Published
-    //public
     var emailLicenses = Set<FreeLicenseUser>()
     @Published public var isInPurchasingState = false
     //@Published private var hasCurrentSubscription:Bool = false
     
     private let localSubscriptionStorageKey = "subscription"
     public static let shared = LicenceManager()
-    
+    public static var subscriptionURLLogged = false
+
     //private let configuredProductIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024", "NZMEB_Grade_4_2024", "MT_NZMEB_Grade_00"]
     private let configuredProductIDs:[String] = ["MT_NZMEB_Subscription_Month_3", "MT_NZMEB_Subscription_Month_6", "MT_NZMEB_Subscription_Month_12"] ///Product ID's that are known to the app
-    //private let configuredProductIDs: Set<String> = ["MT_NZMEB_Subscription_Month_3"] ///Product ID's that are known to the app
-    //TOOD what about old licenses?
+    //TODO what about old licenses?
+    //Test with davidm1088
     
     private override init() {
         super.init()
@@ -172,27 +172,6 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         return nil
     }
     
-//    ///Does the grade have a license to purchase?
-//    public func isLicenseAvailable(grade:String) -> Bool {
-//        if self.availableProducts.keys.contains("MT_NZMEB_Grade_00") {
-//            return true
-//        }
-//        let now = Date()
-//        let calendar = Calendar.current
-//        let currentYear = calendar.component(.year, from: now)
-//        let gradeToCheck = grade.replacingOccurrences(of: " ", with: "_")
-//        for productId in self.availableProducts.keys {
-//            if productId.contains(gradeToCheck) {
-//                if productId.contains(String(currentYear)) {
-//                    if availableProducts[productId] != nil {
-//                        return true
-//                    }
-//                }
-//            }
-//        }
-//        return false
-//    }
-    
     public func isLicenseAvailableToPurchase(grade:String) -> Bool {
         return self.purchaseableProducts.keys.count > 0
     }
@@ -216,18 +195,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         Logger.logger.log(self, "Restoring transactions")
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
-    
 
-//    public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
-//        DispatchQueue.main.async {
-//            Logger.logger.log(self, "Products request reply, availabe products count:\(response.products.count)")
-//            for product in response.products {
-//                self.availableProducts[product.productIdentifier] = product
-//                Logger.logger.log(self, "  Available product ID:\(product.productIdentifier)")
-//            }
-//        }
-//    }
-    
     /// Response to requestProducts() - available products
     /// Sent immediately before -requestDidFinish
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
@@ -251,22 +219,6 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         }
     }
 
-//    ///Buy an In-App-Purchase for this grade for this calendar year
-//    public func buyProduct(grade: String) {
-//        let now = Date()
-//        let calendar = Calendar.current
-//        let currentYear = calendar.component(.year, from: now)
-//        let gradeToBuy = grade.replacingOccurrences(of: " ", with: "_")
-//        
-//        let productId = "NZMEB_\(gradeToBuy)_\(String(currentYear))"
-//        Logger.logger.log(self, "BuyProduct, product id \(productId)")
-//        if let product = self.purchaseableProducts[productId] {
-//            Logger.logger.log(self, "BuyProduct is available, add queue, product id \(productId)")
-//            let payment = SKPayment(product: product)
-//            SKPaymentQueue.default().add(payment)
-//        }
-//    }    
-    
     ///Buy a subscription
     public func buyProductSubscription(product: SKProduct) {
         Logger.logger.log(self, "BuyProductSubscription, product id \(product.productIdentifier)")
@@ -280,20 +232,43 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     
     ///Call Apple to verify the receipt and return the subscription expiry date
     func validateSubscriptionReceipt(ctx:String, receiptData: Data, onDone:@escaping (_:Date?)->Void) {
+        func isTestFlight() -> Bool {
+            guard let receiptURL = Bundle.main.appStoreReceiptURL else {
+                return false
+            }
+            
+            return receiptURL.lastPathComponent == "sandboxReceipt"
+        }
+
         let base64encodedReceipt = receiptData.base64EncodedString()
         let appSharedSecret = "1e1adf0415b046edbf2a1aa7e0d09d64" ///generated in App Store Connect under App Information
         let requestBody = ["receipt-data": base64encodedReceipt, "password": appSharedSecret, "exclude-old-transactions": true] as [String: Any]
-
+        
+        ///To verify subscription receipts for an app running on TestFlight, you should use the following URL for the receipt validation
+        ///if #debug is only true for an xcode run, not TestFlight
+        ///https://sandbox.itunes.apple.com/verifyReceipt
+        var url:URL? = nil
         #if DEBUG
-        guard let url = URL(string: "https://sandbox.itunes.apple.com/verifyReceipt") else {
-            return
+        url = URL(string: "https://sandbox.itunes.apple.com/verifyReceipt")
+        #else      
+        if isTestFlight() {
+            url = URL(string: "https://sandbox.itunes.apple.com/verifyReceipt")
         }
-        #else        
-        guard let url = URL(string: "https://buy.itunes.apple.com/verifyReceipt") else {
-        return
-        } //TODO
+        else {
+            url = URL(string: "https://buy.itunes.apple.com/verifyReceipt")
+        }
         #endif
 
+        // Use the function to adjust the validation URL at runtime
+
+        guard let url = url else {
+            Logger.logger.reportError(self, "No subscription validation URL was available")
+            return
+        }
+        if !LicenceManager.subscriptionURLLogged {
+            Logger.logger.log(self, "Subscription validation URL is \(url)")
+            LicenceManager.subscriptionURLLogged = true
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
