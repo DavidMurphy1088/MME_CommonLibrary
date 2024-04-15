@@ -130,8 +130,6 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
 
     //private let configuredProductIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024", "NZMEB_Grade_4_2024", "MT_NZMEB_Grade_00"]
     private let configuredProductIDs:[String] = ["MT_NZMEB_Subscription_Month_3", "MT_NZMEB_Subscription_Month_6", "MT_NZMEB_Subscription_Month_12"] ///Product ID's that are known to the app
-    //TODO what about old licenses?
-    //Test with davidm1088
     
     private override init() {
         super.init()
