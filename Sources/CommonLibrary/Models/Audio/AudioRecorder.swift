@@ -8,7 +8,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     public static let shared = AudioRecorder()
     var audioRecorder: AVAudioRecorder!
     var audioPlayer: AVAudioPlayer! //best for playing smaller local content
-    let logger = Logger.logger
+    let logger = AppLogger.logger
 
     ///use the same name for all recordings.
     var audioFilenameStatic = "Audio_Recording"
@@ -53,7 +53,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
 //                }
 //            }
         @unknown default:
-            Logger.logger.reportError(self, "Mic - Unknown permission status")
+            AppLogger.logger.reportError(self, "Mic - Unknown permission status")
         }
         return false
     }
@@ -80,7 +80,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             if audioRecorder == nil {
-                Logger.logger.reportError(self, "Recording, audio record is nil")
+                AppLogger.logger.reportError(self, "Recording, audio record is nil")
             }
             audioRecorder.delegate = self
             audioRecorder.record()
@@ -89,10 +89,10 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
                 setStatus("Recording started, status:\(audioRecorder.isRecording ? "OK" : "Error")")
             }
             else {
-                Logger.logger.reportError(self, "Recording, recorder is not recording")
+                AppLogger.logger.reportError(self, "Recording, recorder is not recording")
             }
         } catch let error {
-            Logger.logger.reportError(self, "Recording did not start", error)
+            AppLogger.logger.reportError(self, "Recording did not start", error)
             stopRecording()
         }
     }
@@ -103,12 +103,12 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     }
 
     public func stopRecording() {
-        Logger.logger.log(self, "Trying to stop recorder")
+        AppLogger.logger.log(self, "Trying to stop recorder")
         if audioRecorder == nil {
             //Logger.logger.reportError(self, "audioRecorder is nil at stop")
         }
         else {
-            Logger.logger.log(self, "Recording ended - wasRecording? -\(audioRecorder.isRecording) seconds:\(String(format: "%.1f", audioRecorder.currentTime))")
+            AppLogger.logger.log(self, "Recording ended - wasRecording? -\(audioRecorder.isRecording) seconds:\(String(format: "%.1f", audioRecorder.currentTime))")
             setStatus("Recorded time \(String(format: "%.1f", audioRecorder.currentTime)) seconds")
             audioRecorder.stop()
         }
@@ -122,7 +122,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
             let data = try Data(contentsOf: url)
             return data
         } catch let error {
-            Logger.logger.reportError(self, "Cant read data for file \(String(describing: audioFilename))", error)
+            AppLogger.logger.reportError(self, "Cant read data for file \(String(describing: audioFilename))", error)
             return nil
         }
     }
@@ -134,14 +134,14 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         do {
             self.audioPlayer = try AVAudioPlayer(contentsOf: url)
             if self.audioPlayer == nil {
-                Logger.logger.reportError(self, "At playback, cannot create audio player for \(url)")
+                AppLogger.logger.reportError(self, "At playback, cannot create audio player for \(url)")
                 return
             }
             self.audioPlayer.delegate = self
             self.audioPlayer.play()
             setStatus("Playback started, status:\(self.audioPlayer.isPlaying ? "OK" : "Error")")
         } catch let error {
-            Logger.logger.reportError(self, "At Playback, start playing error", error)
+            AppLogger.logger.reportError(self, "At Playback, start playing error", error)
         }
     }
     
@@ -149,20 +149,20 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
         do {
             self.audioPlayer = try AVAudioPlayer(data: data)
             if self.audioPlayer == nil {
-                Logger.logger.reportError(self, "playFromData, cannot create audio player")
+                AppLogger.logger.reportError(self, "playFromData, cannot create audio player")
                 return
             }
             
             ///Required else 2nd play fails...
             if !self.audioPlayer.prepareToPlay() {
-                Logger.logger.reportError(self, ".prepareToPlay failed")
+                AppLogger.logger.reportError(self, ".prepareToPlay failed")
                 return
             }
 
             self.playEndedNotify = onDone
             self.audioPlayer.delegate = self
             if !self.audioPlayer.play() {
-                Logger.logger.reportError(self, ".play failed")
+                AppLogger.logger.reportError(self, ".play failed")
                 return
             }
 
@@ -170,11 +170,11 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
                 setStatus("Audio playback started, status:\(self.audioPlayer.isPlaying ? "OK" : "Error")")
             }
             else {
-                Logger.logger.reportError(self, ".isPlaying is false")
+                AppLogger.logger.reportError(self, ".isPlaying is false")
             }
 
         } catch let error {
-            Logger.logger.reportError(self, "At playback, start playing error", error)
+            AppLogger.logger.reportError(self, "At playback, start playing error", error)
         }
     }
     
@@ -203,7 +203,7 @@ public class AudioRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDel
     
     public func playAudioFromCloudURL(urlString: String) {
         guard let url = URL(string: urlString) else {
-            Logger.logger.reportError(self, "Invalid URL")
+            AppLogger.logger.reportError(self, "Invalid URL")
             return
         }
 

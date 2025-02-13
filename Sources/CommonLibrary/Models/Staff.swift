@@ -107,11 +107,11 @@ public class NoteOffsetsInStaffByKey {
     
     func getValue(scaleDegree:Int, keyNum:Int) -> NoteStaffPlacement? {
         guard scaleDegree < self.noteOffsetByKey.count else {
-            Logger.logger.reportError(self, "Invalid degree \(scaleDegree)")
+            AppLogger.logger.reportError(self, "Invalid degree \(scaleDegree)")
             return nil
         }
         guard keyNum < 12 else {
-            Logger.logger.reportError(self, "Invalid key \(scaleDegree)")
+            AppLogger.logger.reportError(self, "Invalid key \(scaleDegree)")
             return nil
         }
         
@@ -136,7 +136,7 @@ public class NoteOffsetsInStaffByKey {
             return placement
         }
         else {
-            Logger.logger.reportError(self, "Invalid data at row:\(scaleDegree), col:\(keyNum)")
+            AppLogger.logger.reportError(self, "Invalid data at row:\(scaleDegree), col:\(keyNum)")
             return nil
         }
     }
@@ -203,7 +203,7 @@ public class Staff : ObservableObject, Identifiable {
             }
 
             guard let noteOffset = noteOffsetsInStaffByKey.getValue(scaleDegree: offsetFromTonic, keyNum: keyNumber) else {
-                Logger.logger.reportError(self, "No note offset data for note \(noteValue)")
+                AppLogger.logger.reportError(self, "No note offset data for note \(noteValue)")
                 break
             }
             var offsetFromMidLine = noteOffset.offsetFromStaffMidline

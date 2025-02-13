@@ -51,7 +51,7 @@ public class KeySignature {
             setAccidentals()
         }
         else {
-            Logger.logger.reportError(self, "Unknown Key \(keyName), \(type)")
+            AppLogger.logger.reportError(self, "Unknown Key \(keyName), \(type)")
         }
         //            if !(["C", "G", "D", "A", "E", "B", "A♭"].contains(keyName)) {
         //                Logger.logger.reportError(self, "Unknown Key \(keyName)")

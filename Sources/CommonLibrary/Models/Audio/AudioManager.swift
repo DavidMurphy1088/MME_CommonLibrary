@@ -15,21 +15,21 @@ extension AudioManager {
             /// Interruption began, pause or stop the audio
             /// ///The typical case for this app is that the user played a student video example. This causes the .begin, .end sequence of interruption
             let running = self.audioEngine?.isRunning
-            Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption started, engine running?:\(running)")
+            AppLogger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption started, engine running?:\(running)")
 
         case .ended:
             if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
                 let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                 let running = self.audioEngine?.isRunning
-                Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption ended, engine running?:\(running) Options:\(options)")
+                AppLogger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Interruption ended, engine running?:\(running) Options:\(options)")
                 if let engine = self.audioEngine {
                     if !engine.isRunning {
                         do {
                             try engine.start()
-                            Logger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Audio engine was restarted OK after interruption")
+                            AppLogger.logger.log(self, "AudioManager.handleAudioSessionInterruption. Audio engine was restarted OK after interruption")
                         }
                         catch {
-                            Logger.logger.reportError(self, "Could not start the audio engine after interruption: \(error)")
+                            AppLogger.logger.reportError(self, "Could not start the audio engine after interruption: \(error)")
                         }
                     }
                 }
@@ -39,7 +39,7 @@ extension AudioManager {
             }
 
         @unknown default:
-            Logger.logger.reportError(self, "AudioManager.handleAudioSessionInterruption. Interruption unknown type")
+            AppLogger.logger.reportError(self, "AudioManager.handleAudioSessionInterruption. Interruption unknown type")
             break
         }
     }
@@ -72,7 +72,7 @@ public class AudioManager {
         let last4 = String(uuidString.suffix(4))
         let audioID = String(audioEngine.hashValue)
         let audioID4 = audioID.suffix(4)
-        Logger.logger.log(self, "\(logEventNum) AudioManagerID:\(last4) AVAudioEngine:\(audioID4) ctx:\(ctx) \(msg)")
+        AppLogger.logger.log(self, "\(logEventNum) AudioManagerID:\(last4) AVAudioEngine:\(audioID4) ctx:\(ctx) \(msg)")
         logEventNum += 1
     }
     
@@ -101,10 +101,10 @@ public class AudioManager {
                     loadSoundFont(audioUnitSampler: sampler)
                 }
                 try audioEngine.start()
-                Logger.logger.log(self, "CheckReadyToPlay - Audio engine was restarted OK after interruption")
+                AppLogger.logger.log(self, "CheckReadyToPlay - Audio engine was restarted OK after interruption")
             }
             catch {
-                Logger.logger.reportError(self, "CheckReadyToPlay - Could not start the audio engine after interruption: \(error)")
+                AppLogger.logger.reportError(self, "CheckReadyToPlay - Could not start the audio engine after interruption: \(error)")
             }
         }
 
@@ -112,7 +112,7 @@ public class AudioManager {
             self.log(ctx, "CheckReadyToPlay - Audio engine is ready to play after reset")
         }
         else {
-            Logger.logger.reportError(self, "CheckReadyToPlay - Audio engine is not ready to play after reset")
+            AppLogger.logger.reportError(self, "CheckReadyToPlay - Audio engine is not ready to play after reset")
         }
     }
     
@@ -186,7 +186,7 @@ public class AudioManager {
             setAudioSessionPlayback("initAudio")
 
         } catch {
-            Logger.logger.reportError(self, "[\(ctx)] Could not start the audio engine: \(error)")
+            AppLogger.logger.reportError(self, "[\(ctx)] Could not start the audio engine: \(error)")
         }
     }
     
@@ -220,7 +220,7 @@ public class AudioManager {
             }
         }
         else {
-            Logger.logger.reportError(self, "Cannot loadSoundBankInstrument \(samplerFileName)")
+            AppLogger.logger.reportError(self, "Cannot loadSoundBankInstrument \(samplerFileName)")
         }
         log("loadSoundFont", "Sampler loaded sound font \(samplerFileName)")
     }
@@ -257,7 +257,7 @@ public class AudioManager {
             try audioSession.setActive(true)
             log(ctx, "SetAudioSessionPlayback. Set .playback")
         } catch {
-            Logger.logger.reportErrorString("[\(ctx)] SetAudioSessionPlayback. Set audio session playback failed", error)
+            AppLogger.logger.reportErrorString("[\(ctx)] SetAudioSessionPlayback. Set audio session playback failed", error)
         }
     }
     
@@ -268,7 +268,7 @@ public class AudioManager {
             try audioSession.setActive(true)
             log(ctx, "Set audio session for first call. Set .record")
         } catch {
-            Logger.logger.reportErrorString("[\(ctx)] Set audio session record failed", error)
+            AppLogger.logger.reportErrorString("[\(ctx)] Set audio session record failed", error)
         }
     }
     
@@ -298,7 +298,7 @@ public class AudioManager {
             }
         }
         else {
-            Logger.logger.reportError(self, "[\(ctx)] ScheduleTapPlayers, failed load AVAudioPlayer sound")
+            AppLogger.logger.reportError(self, "[\(ctx)] ScheduleTapPlayers, failed load AVAudioPlayer sound")
         }
         self.log(ctx, "ScheduleTapPlayers, scheduled \(tappingAudioPlayersCount) audio players")
     }

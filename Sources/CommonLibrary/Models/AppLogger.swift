@@ -21,8 +21,8 @@ public class LogMessage : Identifiable {
     }
 }
 
-public class Logger : ObservableObject {
-    public static var logger = Logger()
+public class AppLogger : ObservableObject {
+    public static var logger = AppLogger()
     @Published var loggedMsg:String? = nil
     @Published var errorNo:Int = 0
     @Published public var errorMsg:String? = nil

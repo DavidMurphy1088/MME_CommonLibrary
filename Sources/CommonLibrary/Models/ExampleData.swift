@@ -2,7 +2,7 @@ import Foundation
 
 public class ExampleData : ObservableObject {
     @Published public var dataStatus:RequestStatus = .waiting
-    var logger = Logger.logger
+    var logger = AppLogger.logger
     private let googleAPI = GoogleAPI.shared
     private let rootContentSection:ContentSection
     
@@ -27,7 +27,7 @@ public class ExampleData : ObservableObject {
                         let sheetRows = jsonData.values
                         //self.loadSheetData(sheetRows: sheetRows)
                         loadFunction(sheetRows)
-                        Logger.logger.log(self, "\(context) Loaded \(sheetRows.count) rows from sheet rows")
+                        AppLogger.logger.log(self, "\(context) Loaded \(sheetRows.count) rows from sheet rows")
                         self.setDataReady(context: context, way: status)
                     }
                     catch {
@@ -193,7 +193,7 @@ public class ExampleData : ObservableObject {
 
     func setDataReady(context:String, way:RequestStatus) {
         DispatchQueue.main.async {
-            Logger.logger.log(self, "\(context) data was set as \(way)")
+            AppLogger.logger.log(self, "\(context) data was set as \(way)")
             self.dataStatus = way
         }
     }

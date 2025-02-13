@@ -36,7 +36,7 @@ class MetronomeTickerPlayer {
         let clapURL = Bundle.module.url(forResource: name, withExtension: ext)
 
         if clapURL == nil {
-            Logger.logger.reportError(self, "Cannot load resource \(name)")
+            AppLogger.logger.reportError(self, "Cannot load resource \(name)")
         }
         for _ in 0..<numAudioPlayers {
             do {
@@ -47,10 +47,10 @@ class MetronomeTickerPlayer {
                 audioPlayer.rate = 2.0
             }
             catch  {
-                Logger.logger.reportError(self, "Cannot prepare AVAudioPlayer")
+                AppLogger.logger.reportError(self, "Cannot prepare AVAudioPlayer")
             }
         }
-        Logger.logger.log(self, "Loaded \(numAudioPlayers) audio players")
+        AppLogger.logger.log(self, "Loaded \(numAudioPlayers) audio players")
         return audioPlayers
     }
     

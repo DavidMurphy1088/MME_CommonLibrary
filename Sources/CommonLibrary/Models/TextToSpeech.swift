@@ -8,7 +8,7 @@ public class TextToSpeech { //}: AudioPlayerUser {
     var isSpeaking = false
     let dataCache = DataCache()
     var audioPlayer: AVAudioPlayer!
-    let logger = Logger.logger
+    let logger = AppLogger.logger
     
     public func stop() {
         if let audioPlayer = audioPlayer {
@@ -63,9 +63,9 @@ public class TextToSpeech { //}: AudioPlayerUser {
                 try ssmlContent += filterForSSML(tag.text()) + "<break time=\"1000ms\"/>"
             }
         } catch Exception.Error(let type, let message) {
-            Logger.logger.reportError(self, "Type: \(type), Message: \(message)")
+            AppLogger.logger.reportError(self, "Type: \(type), Message: \(message)")
         } catch {
-            Logger.logger.reportError(self,"Error")
+            AppLogger.logger.reportError(self,"Error")
         }
         ssmlContent += "</speak>"
 

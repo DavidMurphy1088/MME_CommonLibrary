@@ -7,7 +7,7 @@ class SpeechSynthesizer {
     //var voice:AVSpeechSynthesisVoice?
     var config = true
     var voiceToUse:AVSpeechSynthesisVoice?
-    var logger = Logger.logger
+    var logger = AppLogger.logger
     
     init() {
         voiceToUse = AVSpeechSynthesisVoice(identifier: "com.apple.voice.compact.en-AU.Karen")

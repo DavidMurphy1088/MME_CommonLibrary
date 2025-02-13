@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 import StoreKit
-
+import os
 ///https://developer.apple.com/documentation/storekit/in-app_purchase
 ///https://developer.apple.com/documentation/storekit/in-app_purchase/testing_at_all_stages_of_development_with_xcode_and_the_sandbox
 /// subscriptions https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/subscriptions_and_offers/handling_subscriptions_billing
@@ -16,9 +16,9 @@ import StoreKit
 /// - StoreKit takes over and shows the product info and confirmation to buy it and a popup when all done
 /// - Transaction arrives in the paymentQueue app observer paymentQueue(_ queue: SKPaymentQueue) as state purchasing, then state purchased
 /// - On purchased app calls Apple API to verify that the transaction receipt is valid. That verification then returns a subscription expiry date
-/// - App stores the receipt in its local storage since the tranaction will dispaper from the payment quueue soon
+/// - App stores the receipt in its local storage since the transaction will dispaper from the payment queue soon
 
-/// - On next startup the app retreives the receipt it last stored locally and again passes it to the Apple verification API to ensure the subscriptioin is still valid. e..g mayube the user cancelled the subscription after puchase
+/// - On next startup the app retreives the receipt it last stored locally and again passes it to the Apple verification API to ensure the subscriptioin is still valid. e.g. maybe the user cancelled the subscription after puchase
 /// - When the subscription auto-renews it arrives in the payment Queue as .purchased and the app stores the receipt and new subscription expiry date.
 /// - note that we cannot store the subscription receipt along with its expiry. The expiry for any receit must be determined by a current time remote verification via Apple. e.g. the saved subscription was then leter cancelled.
 ///Notes
@@ -31,6 +31,7 @@ import StoreKit
 ///3-month subscriptions expire in about 8 minutes.
 ///6-month subscriptions expire in about 15 minutes.
 ///1-year subscriptions expire in about 5 hours.
+///23Feb2025 NB🟢 - since the list of subscriptions is hard coded adding a new one in App Store Connect wont automatically be picked up by the app.
 
 public class FreeLicenseUser:Hashable {
     public var email:String
@@ -90,7 +91,7 @@ public class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodabl
             let encodedData = try encoder.encode(self)
             UserDefaults.standard.set(encodedData, forKey: "subscription")
         } catch {
-            Logger.logger.reportError(self, "Failed to encode SubscriptionReceipt: \(error)")
+            AppLogger.logger.reportError(self, "Failed to encode SubscriptionReceipt: \(error)")
         }
     }
     
@@ -109,7 +110,7 @@ public class SubscriptionTransactionReceipt: Encodable, Decodable { //, Encodabl
             let receipt = try decoder.decode(SubscriptionTransactionReceipt.self, from: encodedData)
             return receipt
         } catch {
-            Logger.logger.reportError(self, "Failed to decode SubscriptionReceipt: \(error)")
+            AppLogger.logger.reportError(self, "Failed to decode SubscriptionReceipt: \(error)")
             return nil
         }
     }
@@ -122,14 +123,12 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     @Published public var purchaseableProducts:[String: SKProduct] = [:] ///Product id's that are returned from a product request to StoreKit
     var emailLicenses = Set<FreeLicenseUser>()
     @Published public var isInPurchasingState = false
-    //@Published private var hasCurrentSubscription:Bool = false
     
     private let localSubscriptionStorageKey = "subscription"
     public static let shared = LicenceManager()
     public static var subscriptionURLLogged = false
 
-    //private let configuredProductIDs: Set<String> = ["NZMEB_Grade_1_2024", "NZMEB_Grade_2_2024", "NZMEB_Grade_3_2024", "NZMEB_Grade_4_2024", "MT_NZMEB_Grade_00"]
-    private let configuredProductIDs:[String] = ["MT_NZMEB_Subscription_Month_3", "MT_NZMEB_Subscription_Month_6", "MT_NZMEB_Subscription_Month_12"] ///Product ID's that are known to the app
+    private let configuredProductIDs:[String] = ["MT_NZMEB_Subscription_Month_1", "MT_NZMEB_Subscription_Month_12"] ///Product ID's that are known to the app
     
     private override init() {
         super.init()
@@ -151,7 +150,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
             //}
         }
     }
-            
+    
     public func emailIsLicensed(email:String) -> Bool {
         let toCheck:String = email.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         for emailInList in self.emailLicenses {
@@ -180,7 +179,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         for product in self.configuredProductIDs {
             let requested:Set<String> = [product]
             //Logger.logger.log(self, "Request purchaseable products from list of configured product IDs:\(configuredProductIDs)")
-            Logger.logger.log(self, "Request purchaseable products for configured product ID:\(requested)")
+            AppLogger.logger.log(self, "Request purchaseable products for configured product ID:\(requested)")
             //let request = SKProductsRequest(productIdentifiers: configuredProductIDs)
             let request = SKProductsRequest(productIdentifiers: requested)
             request.delegate = self
@@ -191,7 +190,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     ///Load the licenses that are paid for
     ///Called at app startup
     public func restoreTransactions() {
-        Logger.logger.log(self, "Restoring transactions")
+        AppLogger.logger.log(self, "Restoring transactions")
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
 
@@ -199,20 +198,21 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     /// Sent immediately before -requestDidFinish
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
-            Logger.logger.log(self, "Products request reply, availabe products count:\(response.products.count)")
+            let logger = Logger(subsystem: "Musicianship Trainer", category: "debug")
+            AppLogger.logger.log(self, "Products request reply, availabe products count:\(response.products.count)")
+            logger.debug("MusTrainer, product identifier get list")
             if response.products.count > 0 {
                 for product in response.products {
                     self.purchaseableProducts[product.productIdentifier] = product
-                    Logger.logger.log(self, "  Available product ID:\(product.productIdentifier)")
-
+                    logger.debug("MusTrainer, product identifier: \(product.productIdentifier)")
                 }
             } else {
-                Logger.logger.reportError(self, "No products from product request")
+                AppLogger.logger.reportError(self, "No products from product request")
             }
             
             if !response.invalidProductIdentifiers.isEmpty {
                 for invalidIdentifier in response.invalidProductIdentifiers {
-                    Logger.logger.reportError(self, "Invalid product \(invalidIdentifier)")
+                    AppLogger.logger.reportError(self, "Invalid product \(invalidIdentifier)")
                 }
             }
         }
@@ -220,13 +220,13 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
 
     ///Buy a subscription
     public func buyProductSubscription(product: SKProduct) {
-        Logger.logger.log(self, "BuyProductSubscription, product id \(product.productIdentifier)")
+        AppLogger.logger.log(self, "BuyProductSubscription, product id \(product.productIdentifier)")
         let payment = SKPayment(product: product)
         SKPaymentQueue.default().add(payment)
     }
     
     public func request(_ request: SKRequest, didFailWithError error: Error) {
-        Logger.logger.reportError(self, "didFailWithError", error)
+        AppLogger.logger.reportError(self, "didFailWithError", error)
     }
     
     ///Call Apple to verify the receipt and return the subscription expiry date
@@ -261,11 +261,11 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         // Use the function to adjust the validation URL at runtime
 
         guard let url = url else {
-            Logger.logger.reportError(self, "No subscription validation URL was available")
+            AppLogger.logger.reportError(self, "No subscription validation URL was available")
             return
         }
         if !LicenceManager.subscriptionURLLogged {
-            Logger.logger.log(self, "Subscription validation URL is \(url)")
+            AppLogger.logger.log(self, "Subscription validation URL is \(url)")
             LicenceManager.subscriptionURLLogged = true
         }
         var request = URLRequest(url: url)
@@ -276,19 +276,19 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
             let jsonData = try JSONSerialization.data(withJSONObject: requestBody, options: .prettyPrinted)
             request.httpBody = jsonData
         } catch {
-            Logger.logger.reportError(self, "Error creating verification JSON request body: \(error). Context:\(ctx)")
+            AppLogger.logger.reportError(self, "Error creating verification JSON request body: \(error). Context:\(ctx)")
             onDone(nil)
             return
         }
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.logger.reportError(self, "Receipt validation failed with error: \(error). Context:\(ctx)")
+                AppLogger.logger.reportError(self, "Receipt validation failed with error: \(error). Context:\(ctx)")
                 onDone(nil)
                 return
             }
             guard let data = data else {
-                Logger.logger.reportError(self, "No receipt validation data received to verify. Context:\(ctx)")
+                AppLogger.logger.reportError(self, "No receipt validation data received to verify. Context:\(ctx)")
                 onDone(nil)
                 return
             }
@@ -308,24 +308,24 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
                                     if let gmtDate = dateFormatter.date(from: expiresDate) {
                                         onDone(gmtDate)
                                     } else {
-                                        Logger.logger.reportError(self, "Failed to parse licence date \(expiresDate). Context:\(ctx)")
+                                        AppLogger.logger.reportError(self, "Failed to parse licence date \(expiresDate). Context:\(ctx)")
                                         onDone(nil)
                                     }
                                 }
                                 else {
-                                    Logger.logger.reportError(self, "Missing licence expiry date \(latestReceipt.keys). Context:\(ctx)")
+                                    AppLogger.logger.reportError(self, "Missing licence expiry date \(latestReceipt.keys). Context:\(ctx)")
                                     onDone(nil)
                                 }
                             }
                         }
                     }
                     else {
-                        Logger.logger.log(self, "Transaction verification returned no receipts. Context:\(ctx)")
+                        AppLogger.logger.log(self, "Transaction verification returned no receipts. Context:\(ctx)")
                         onDone(nil)
                     }
                 }
             } catch {
-                Logger.logger.reportError(self, error.localizedDescription)
+                AppLogger.logger.reportError(self, error.localizedDescription)
                 onDone(nil)
             }
         }
@@ -335,14 +335,14 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     ///Get the receipt info from the subscription transaction when its purchased or renewed
     private func extractTransactionReceipt() -> Data? {
         guard let receiptURL = Bundle.main.appStoreReceiptURL, FileManager.default.fileExists(atPath: receiptURL.path) else {
-            Logger.logger.reportError(self, "Receipt URL not found")
+            AppLogger.logger.reportError(self, "Receipt URL not found")
             return nil
         }
         do {
             let receiptData = try Data(contentsOf: receiptURL)
             return receiptData
         } catch {
-            Logger.logger.reportError(self, "Error fetching receipt data in URL \(receiptURL) from transaction: \(error.localizedDescription)")
+            AppLogger.logger.reportError(self, "Error fetching receipt data in URL \(receiptURL) from transaction: \(error.localizedDescription)")
             return nil
         }
     }
@@ -353,12 +353,12 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
             if let expiryDate = expiryDate {
                 let subscriptionReceipt = SubscriptionTransactionReceipt(name:name, data: receiptData, expiryDate: expiryDate)
                 subscriptionReceipt.save()
-                Logger.logger.log(self, "Stored new receipt locally:\(subscriptionReceipt.allDatesDescription()), context:\(ctx)")
+                AppLogger.logger.log(self, "Stored new receipt locally:\(subscriptionReceipt.allDatesDescription()), context:\(ctx)")
                 subscriptionReceipt.expiryDate = expiryDate
                 //LicenceManager.shared.setLicensedBySubscription(expiryDate: expiryDate)
             }
             else {
-                Logger.logger.reportError(self, "Receipt \(name) has no expiry date so clearing local storage")
+                AppLogger.logger.reportError(self, "Receipt \(name) has no expiry date so clearing local storage")
                 SubscriptionTransactionReceipt.clear()
             }
         })
@@ -367,21 +367,21 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
     ///Verify a subscription and save it if it has an expiry date. Otherwise clear any locally stored subscription.
     public func verifyStoredSubscriptionReceipt(ctx: String) {
         if let receipt = SubscriptionTransactionReceipt.load() {
-            Logger.logger.log(self, "A stored subscription transaction exists so verifying it. Context:\(ctx)")
+            AppLogger.logger.log(self, "A stored subscription transaction exists so verifying it. Context:\(ctx)")
             self.validateSubscriptionReceipt(ctx: "Verifying stored subscription. Context:\(ctx)", receiptData: receipt.data, onDone: {expiryDate in
                 if let expiryDate = expiryDate {
-                    Logger.logger.log(self, "Stored subscription transaction verified and so set app's licence expiry to:[\(receipt.allDatesDescription())], Context:\(ctx)")
+                    AppLogger.logger.log(self, "Stored subscription transaction verified and so set app's licence expiry to:[\(receipt.allDatesDescription())], Context:\(ctx)")
                     receipt.expiryDate = expiryDate
                     //LicenceManager.shared.setLicensedBySubscription(expiryDate: expiryDate)
                 }
                 else {
-                    Logger.logger.log(self, "Stored subscription has no expiry date. Context:\(ctx)")
+                    AppLogger.logger.log(self, "Stored subscription has no expiry date. Context:\(ctx)")
                     SubscriptionTransactionReceipt.clear()
                 }
             })
         }
         else {
-            Logger.logger.log(self, "No local subscription to verify. Context:\(ctx)")
+            AppLogger.logger.log(self, "No local subscription to verify. Context:\(ctx)")
             SubscriptionTransactionReceipt.clear()
         }
     }
@@ -399,10 +399,10 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
                 switch transaction.transactionState {
                 case .purchasing:
                     /// Transaction is being added to the server queue. Client should not complete the transaction.
-                    Logger.logger.log(self, "Purchasing: \(transaction.payment.productIdentifier)")
+                    AppLogger.logger.log(self, "Purchasing: \(transaction.payment.productIdentifier)")
                     self.isInPurchasingState = true
                 case .purchased:
-                    Logger.logger.log(self, "Purchased: \(transaction.payment.productIdentifier) ")
+                    AppLogger.logger.log(self, "Purchased: \(transaction.payment.productIdentifier) ")
                     //self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     SKPaymentQueue.default().finishTransaction(transaction)
                     if let receiptData = self.extractTransactionReceipt() {
@@ -412,7 +412,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
                     /// Transaction was restored from user's purchase history.  Client should complete the transaction.
                     let restored:SKPayment = transaction.payment
                     //print("==============>>>", restored.applicationUsername, restored)
-                    Logger.logger.log(self, "Purchased licences restored from history: \(transaction.payment.productIdentifier)")
+                    AppLogger.logger.log(self, "Purchased licences restored from history: \(transaction.payment.productIdentifier)")
                     //self.purchasedProductIds.insert(transaction.payment.productIdentifier)
                     SKPaymentQueue.default().finishTransaction(transaction)
                     if let receiptData = self.extractTransactionReceipt() {
@@ -420,7 +420,7 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
                     }
                 case .failed:
                     let err:String = transaction.error?.localizedDescription ?? ""
-                    Logger.logger.reportError(self, "paymentQueue.failed didFailWithError \(err) or the user cancelled the purchase")
+                    AppLogger.logger.reportError(self, "paymentQueue.failed didFailWithError \(err) or the user cancelled the purchase")
                     SKPaymentQueue.default().finishTransaction(transaction)
                 default:
                     break

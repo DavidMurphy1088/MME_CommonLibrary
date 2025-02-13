@@ -163,10 +163,10 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                     try data?.write(to: fileURL, options: .atomic)
                 }
             } else {
-                Logger.logger.reportError(self, "Failed answer save, no document URL")
+                AppLogger.logger.reportError(self, "Failed answer save, no document URL")
             }
         } catch {
-            Logger.logger.reportError(self, "Failed answer save \(error)")
+            AppLogger.logger.reportError(self, "Failed answer save \(error)")
         }
     }
     
@@ -187,7 +187,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
             }
         }
         else {
-            Logger.logger.reportError(self, "Failed answer read, no document URL")
+            AppLogger.logger.reportError(self, "Failed answer read, no document URL")
         }
     }
     
@@ -468,7 +468,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                     timeSignature = ts
                     continue
                 }
-                Logger.logger.reportError(self, "Unknown time signature tuple at \(i) :  \(self.getTitle()) \(tuple)")
+                AppLogger.logger.reportError(self, "Unknown time signature tuple at \(i) :  \(self.getTitle()) \(tuple)")
                 continue
             }
             
@@ -548,7 +548,7 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
                 }
                 continue
             }
-            Logger.logger.reportError(self, "Unknown tuple at \(i) :  \(self.getTitle()) \(tuple)")
+            AppLogger.logger.reportError(self, "Unknown tuple at \(i) :  \(self.getTitle()) \(tuple)")
         }
         if let score = score {
             return score
