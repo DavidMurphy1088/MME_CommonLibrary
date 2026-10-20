@@ -31,36 +31,21 @@ public class UIGlobalsCommon {
     public static let navigationFont =    Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 26 : 18)
     public static let correctAnswerFont = Font.custom("Courgette-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 32 : 18)
 
+    ///C3: replacement for the deprecated UIScreen.main. Returns the same full-screen bounds, taken from the app's window scene.
+    public static var screenBounds: CGRect {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+        return scene?.screen.bounds ?? CGRect(x: 0, y: 0, width: 1024, height: 768)
+    }
+
     public static func showDeviceOrientation(_ ctx:String) -> Bool {
-        let orientation = UIDevice.current.orientation
-        //UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-        print("============ showDeviceOrientation \(ctx) --> IS PORTRAIT",
-              orientation.isPortrait,
-              "IS LANDSCAPE", orientation.isLandscape,
-              "isGeneratingDeviceOrientationNotifications", UIDevice.current.isGeneratingDeviceOrientationNotifications,
-              "RAW", orientation.rawValue)
-        switch orientation {
-        case .portrait:
-            print("Portrait")
-        case .portraitUpsideDown:
-            print("Portrait Upside Down")
-        case .landscapeLeft:
-            print("Landscape Left")
-        case .landscapeRight:
-            print("Landscape Right")
-        case .faceUp:
-            print("Face Up")
-        case .faceDown:
-            print("Face Down")
-        default:
-            print("showDeviceOrientation Unknown")
-        }
+        ///C4: debug print output removed
         return true
     }
     
     public static func isLandscape() -> Bool {
         ///UIDevice.current.orientation is horrendously unreliable :(
-        return UIScreen.main.bounds.width > UIScreen.main.bounds.height
+        return UIGlobalsCommon.screenBounds.width > UIGlobalsCommon.screenBounds.height
     }
     
     public static var rhythmTapSoundOn = false

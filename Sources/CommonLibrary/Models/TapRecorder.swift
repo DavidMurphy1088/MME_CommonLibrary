@@ -43,10 +43,18 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         }
     }
     
-    public func makeTap(useSoundPlayer:Bool)  {
-        //dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        let date = Date()
-        self.tapTimes.append(date.timeIntervalSince1970)
+    ///Record a tap.
+    ///- timestamp: the time the finger actually touched the screen, taken from UITouch.timestamp.
+    ///  RATIONALE: Date() was read when this code ran, which is some variable time AFTER the touch
+    ///  (iOS -> SwiftUI gesture processing -> view callback). If the main thread is busy redrawing or
+    ///  starting a sound, that delay might be 5ms on one tap and 40ms on the next, which changes the
+    ///  measured gap between taps even when the student was perfectly even.
+    ///  UITouch.timestamp is stamped by iOS at the moment of the touch, so later delays don't matter.
+    ///  UITouch.timestamp is on the device uptime clock (seconds since boot), so all times recorded
+    ///  here, including the Stop time in stopRecording, use ProcessInfo.systemUptime to stay on the same clock.
+    ///  Default nil keeps any other caller working (falls back to "now" on the same clock).
+    public func makeTap(useSoundPlayer:Bool, timestamp:TimeInterval? = nil)  {
+        self.tapTimes.append(timestamp ?? ProcessInfo.processInfo.systemUptime)
         if useSoundPlayer {
             AudioManager.shared.playSound()
             //tapSoundPlayer.playSound()
@@ -60,7 +68,10 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     public func stopRecording(score:Score) -> ([Double]) {
         //tapSoundPlayer.stopAudio(ctx:"TapRecorder.stopRecording")
         //AudioManager.shared.stopAudio(ctx: "TapRecorder.stopRecording")
-        self.tapTimes.append(Date().timeIntervalSince1970) // record value of last tap made
+        ///RATIONALE: the Stop time ends the last note, so it must be on the SAME clock as the tap
+        ///timestamps (device uptime). Mixing Date() (wall clock) with UITouch.timestamp (uptime)
+        ///would make the last note's duration meaningless.
+        self.tapTimes.append(ProcessInfo.processInfo.systemUptime) // record value of last tap made
         self.tappedValues = []
         var last:Double? = nil
         for t in tapTimes {
@@ -111,7 +122,11 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     }
 
     ///Make a playable score of notes from the tap intervals
-    public func makeScoreFromTaps(questionScore:Score, tappedTempo:Int, tapValues: [Double]) -> Score {
+    ///- forgiveLastNoteDuration: true for echo clapping. The student only HEARS the rhythm, and a clap has no length,
+    ///  so the value of the last note can't be heard. Its duration (last tap -> Stop) is therefore not marked:
+    ///  if the student made the same number of taps as the question has notes, the last note is set to the question's
+    ///  last note value (+ trailing rests), whether they pressed Stop early or late. Every gap BETWEEN taps is still marked.
+    public func makeScoreFromTaps(questionScore:Score, tappedTempo:Int, tapValues: [Double], forgiveLastNoteDuration:Bool = false) -> Score {
         let outputScore = Score(key: questionScore.key, timeSignature: questionScore.timeSignature, linesPerStaff: 1)
         let staff = Staff(score: outputScore, type: .treble, staffNum: 0, linesInStaff: 1)
         outputScore.createStaff(num: 0, staff: staff)
@@ -128,6 +143,8 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
             }
         }
 
+        let questionNoteCount = questionScore.getAllTimeSlices().filter { $0.getTimeSliceNotes().count > 0 }.count
+
         for i in 0..<tapValues.count {
             let tapDuration = tapValues[i]
             var recordedTapDuration = tapDuration * Double(tappedTempo) / 60.0
@@ -138,7 +155,12 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
                     ///So instead of using the tapped value, let the last note value be the last question note (+any trailing rests) value so the rhythm is not marked wrong
                     ///But only allow an extra delay of 2.0 beats. i.e. they can't delay hitting stop for too long
                     ///Also if student ends too quickly that neeeds to be reported as a rhythm error so only modify the tapped value if they are too long
-                    if let lastValue = lastValue {
+                    if forgiveLastNoteDuration, tapValues.count == questionNoteCount, let lastValue = lastValue {
+                        ///Echo clap: the last note's length can't be heard, so don't mark when Stop was pressed
+                        tappedValue = lastValue
+                        recordedTapDuration = lastValue
+                    }
+                    else if let lastValue = lastValue {
                         ///let the delay till the end of tapping be a percentage of the last note value
                         //let endTappingTolerance = 1.50
                         //let maxEndTapValue = max(lastQuestionNote!.getValue() * (endTappingTolerance), 2.0)
@@ -221,7 +243,6 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
                             tempos.append(tempo)
                             let sum = tempos.reduce(0, +)
                             let average = sum / Double(tempos.count)
-                            print("========= AVG TEMP === Tempos", tempos, "AVG:------>", average)
 
                             //if tempos.count > 4 {
                             if tempos.count > 3 {
@@ -249,7 +270,6 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
         }
         let sum = tempos.reduce(0, +)
         let average = sum / Double(tempos.count)
-        print("   ========= AVG Tempos", tempos, "AVG:------>", average)
         return Int(average)
     }
     
@@ -261,10 +281,11 @@ public class TapRecorder : NSObject, AVAudioPlayerDelegate, AVAudioRecorderDeleg
     }
     
     //Read the user's tapped rhythm and return a score representing the ticks they ticked
-    public func getTappedAsAScore(timeSignatue:TimeSignature, questionScore:Score, tapValues:[Double]) -> Score {
+    public func getTappedAsAScore(timeSignatue:TimeSignature, questionScore:Score, tapValues:[Double], forgiveLastNoteDuration:Bool = false) -> Score {
         //let recordedTempo = getTempoFromRecordingStart(tapValues: tapValues, questionScore: questionScore)
         let recordedTempo = getTempoFromRecordingAverage(tapValues: tapValues, questionScore: questionScore)
-        let tappedScore = self.makeScoreFromTaps(questionScore: questionScore, tappedTempo: recordedTempo, tapValues: tapValues) //, tapValues: self.tapValues1)
+        let tappedScore = self.makeScoreFromTaps(questionScore: questionScore, tappedTempo: recordedTempo, tapValues: tapValues,
+                                                 forgiveLastNoteDuration: forgiveLastNoteDuration)
         tappedScore.tempo = recordedTempo
         return tappedScore
     }

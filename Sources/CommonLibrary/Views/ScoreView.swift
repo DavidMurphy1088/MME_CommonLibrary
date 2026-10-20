@@ -56,16 +56,16 @@ public struct ScoreView: View {
         //https://www.hackingwithswift.com/quick-start/swiftui/how-to-detect-device-rotation
         //var lineSpacing:Double
 //        if self.staffLayoutSize.lineSpacing == 0 {
-//            //if UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : UIScreen.main.bounds.width / 64.0
+//            //if UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : UIGlobalsCommon.screenBounds.width / 64.0
 //            if UIDevice.current.userInterfaceIdiom == .phone {
 //                lineSpacing = 10.0
 //            }
 //            else {
 //                if !UIGlobalsCommon.isLandscape() == .portrait {
-//                    lineSpacing = UIScreen.main.bounds.width / 64.0
+//                    lineSpacing = UIGlobalsCommon.screenBounds.width / 64.0
 //                }
 //                else {
-//                    lineSpacing = UIScreen.main.bounds.width / 128.0
+//                    lineSpacing = UIGlobalsCommon.screenBounds.width / 128.0
 //                }
 //            }
 //        }
@@ -81,13 +81,13 @@ public struct ScoreView: View {
 //        }
         //self.staffLayoutSize.setLineSpacing(lineSpacing) ????????? WHY
 
-        //lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : UIScreen.main.bounds.width / 64.0
+        //lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : UIGlobalsCommon.screenBounds.width / 64.0
         //score.lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 10.0 : geometryWidth / 64.0
         //score.lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 5.0 : 15
 
         //??????????????????????????????
         //score.lineSpacing = UIDevice.current.userInterfaceIdiom == .phone ? 5.0 : 8
-//        print("\n👉 👉 setOrientationLineSize \(logCtr) \twidth::", UIScreen.main.bounds.width, "height:", UIScreen.main.bounds.height, "\tline spacing", score.lineSpacing)
+//        print("\n👉 👉 setOrientationLineSize \(logCtr) \twidth::", UIGlobalsCommon.screenBounds.width, "height:", UIGlobalsCommon.screenBounds.height, "\tline spacing", score.lineSpacing)
 //        UIGlobals.showDeviceOrientation()
         logCtr += 1
     }

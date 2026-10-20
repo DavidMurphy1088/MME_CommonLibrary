@@ -270,8 +270,8 @@ public class Metronome: ObservableObject  {
                                                     AudioManager.shared.playPitch(midiPitch: note.midiNumber)
                                                 }
                                                 note.setHilite(hilite: true)
-                                                DispatchQueue.global(qos: .background).async {
-                                                    Thread.sleep(forTimeInterval: 0.5)
+                                                ///B2: un-highlight after 0.5s without starting a sleeping background thread for every note
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                                     note.setHilite(hilite: false)
                                                 }
                                             }

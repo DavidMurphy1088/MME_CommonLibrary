@@ -151,7 +151,14 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
         }
     }
     
+    ///Prefix that grants a free licence for any email entered in Configuration, e.g. "@david" (a single leading @).
+    ///Applies to ALL builds (Xcode, TestFlight and App Store), so anyone who learns it gets full access.
+    public static let freeLicencePrefix = "@"
+
     public func emailIsLicensed(email:String) -> Bool {
+        if email.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(LicenceManager.freeLicencePrefix) {
+            return true
+        }
         let toCheck:String = email.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         for emailInList in self.emailLicenses {
             if emailInList.email.uppercased().trimmingCharacters(in: .whitespacesAndNewlines) == toCheck {
@@ -296,33 +303,49 @@ public class LicenceManager: NSObject, ObservableObject, SKProductsRequestDelega
             do {
                 if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                     if let latestReceipts = json["latest_receipt_info"] as? [Any] {
-                        //let log = "Validating subscription receipt for \(ctx)"
-                        //Logger.logger.log(self, log)
-                        for i in 0..<latestReceipts.count {
-                            if let latestReceipt = latestReceipts[i] as? [String: Any] {
-                               // print(latestReceipt.keys)
-                                if let expiresDate = latestReceipt["expires_date"] as? String {
-                                    let dateFormatter = DateFormatter()
-                                    dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss 'Etc/GMT'"
-                                    dateFormatter.timeZone = TimeZone(abbreviation: "GMT")
-                                    if let gmtDate = dateFormatter.date(from: expiresDate) {
-                                        onDone(gmtDate)
-                                    } else {
-                                        AppLogger.logger.reportError(self, "Failed to parse licence date \(expiresDate). Context:\(ctx)")
-                                        onDone(nil)
-                                    }
+                        ///A5: find the LATEST expiry across all receipts and call onDone exactly once.
+                        ///Previously onDone was called once per receipt, so whichever receipt was processed last won,
+                        ///which is not necessarily the latest expiry (a renewed subscriber could appear expired).
+                        var latestExpiry:Date? = nil
+                        for receipt in latestReceipts {
+                            guard let latestReceipt = receipt as? [String: Any] else {
+                                continue
+                            }
+                            var expiry:Date? = nil
+                            ///Prefer expires_date_ms (milliseconds since 1970, sent as a string); fall back to the text date
+                            if let msString = latestReceipt["expires_date_ms"] as? String, let ms = Double(msString) {
+                                expiry = Date(timeIntervalSince1970: ms / 1000.0)
+                            }
+                            else if let expiresDate = latestReceipt["expires_date"] as? String {
+                                let dateFormatter = DateFormatter()
+                                dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+                                dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss 'Etc/GMT'"
+                                dateFormatter.timeZone = TimeZone(abbreviation: "GMT")
+                                expiry = dateFormatter.date(from: expiresDate)
+                                if expiry == nil {
+                                    AppLogger.logger.reportError(self, "Failed to parse licence date \(expiresDate). Context:\(ctx)")
                                 }
-                                else {
-                                    AppLogger.logger.reportError(self, "Missing licence expiry date \(latestReceipt.keys). Context:\(ctx)")
-                                    onDone(nil)
+                            }
+                            else {
+                                AppLogger.logger.reportError(self, "Missing licence expiry date \(latestReceipt.keys). Context:\(ctx)")
+                            }
+                            if let expiry = expiry {
+                                if latestExpiry == nil || expiry > latestExpiry! {
+                                    latestExpiry = expiry
                                 }
                             }
                         }
+                        onDone(latestExpiry)
                     }
                     else {
                         AppLogger.logger.log(self, "Transaction verification returned no receipts. Context:\(ctx)")
                         onDone(nil)
                     }
+                }
+                else {
+                    ///A5: response wasn't a JSON object - still call back once
+                    AppLogger.logger.reportError(self, "Receipt validation response was not readable. Context:\(ctx)")
+                    onDone(nil)
                 }
             } catch {
                 AppLogger.logger.reportError(self, error.localizedDescription)

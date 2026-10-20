@@ -133,7 +133,7 @@ public class AudioManager {
             do {
                 try AVAudioSession.sharedInstance().setActive(false)
             } catch {
-                print("Error deactivating audio session: \(error)")
+                AppLogger.logger.reportError(self, "Error deactivating audio session: \(error)")   ///C4: was print()
             }
         }
         self.playerNodeIndex = 0

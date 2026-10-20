@@ -10,6 +10,15 @@ public protocol PianoUserProtocol: View {
     func getKeyDisplayView(key:PianoKey) -> KeyDisplayView
     func getActionHandler(piano:Piano) -> KeyActionHandler
     func receiveNotificationOfKeyPress(key:PianoKey) -> Void
+    ///Key press with the time the finger actually touched the key (from UITouch.timestamp, converted to a Date).
+    ///Default implementation (below) forwards to receiveNotificationOfKeyPress(key:) for users that don't need the time.
+    func receiveNotificationOfKeyPress(key:PianoKey, at time:Date) -> Void
+}
+
+public extension PianoUserProtocol {
+    func receiveNotificationOfKeyPress(key:PianoKey, at time:Date) {
+        receiveNotificationOfKeyPress(key: key)
+    }
 }
 
 public enum KeyColor {
@@ -122,6 +131,17 @@ public class Piano: ObservableObject {
         return false
     }
 
+    ///Handle a finger-down on a key reported by PianoKeyTouchPad (one call per finger-down).
+    ///RATIONALE: unlike processGesture there is no 0.20s filter. That filter used ONE lastGestureTime for the whole
+    ///piano, so two DIFFERENT notes played less than 0.2s apart (fast quavers/semiquavers) dropped the second note,
+    ///which also misaligned every following note and pitch in the marking.
+    public func processKeyDown(key:PianoKey) {
+        if self.soundNotes {
+            self.playNote(midi: key.midi)
+        }
+        setWasLastKeyPressed(pressedKey: key)
+    }
+
     public func processGesture(key:PianoKey, gesture: DragGesture.Value) -> Bool {
         var doTap = false
         if let lastTime = lastGestureTime {
@@ -185,18 +205,7 @@ public class Piano: ObservableObject {
     }
     
     func debug1(_ ctx:String, midi:Int? = nil) {
-        for key in self.keys {
-            var show = true
-            if let midi = midi {
-                show = key.midi == midi
-            }
-            if show {
-                print("  ", "midi", key.midi,
-                      //"\tinScale", key.inScale,
-                      //"\tCorrectFinger", key.correctFinger ?? "_", "\tReqFinger", key.requiresFingerPrompt,
-                      "\tpressed", key.wasPressed)
-            }
-        }
+        ///C4: debug print output removed
     }
 
 }

@@ -45,13 +45,7 @@ class DataCache {
     private let enabled = true
     
     func showCaches() {
-        print("\n----CACHES")
-        for (key, value) in self.dataCache {
-            print("  Cache - Key: \(key), Value: \(value)")
-        }
-//        for (key, value) in UserDefaults.standard.dictionaryRepresentation() {
-//            print("  User def - Key: \(key), Value: \(value)")
-//        }
+        ///C4: debug print output removed
     }
     
     func getCacheEntry(_ key:String) -> DataCacheEntry? {
@@ -92,6 +86,10 @@ public class GoogleAPI {
     public static let shared = GoogleAPI()
     let dataCache = DataCache()
     var accessToken:String?
+    ///A3: when the stored access token expires. The token is reused until shortly before this time.
+    private var accessTokenExpiry:Date?
+    ///A3: token is read/written from several threads (main and background folder-walk loops)
+    private let accessTokenLock = NSLock()
     let logger = AppLogger.logger
     
     public struct GoogleFile : Codable {
@@ -218,8 +216,14 @@ public class GoogleAPI {
     ///The generated key is used to make the signed (by JWT) access token request
 
     func getAccessToken(onDone: @escaping (_ accessToken:String?) -> Void) {
-        if self.accessToken != nil {
-            onDone(accessToken)
+        ///A3: reuse the stored token while it is still valid. Previously self.accessToken was never stored,
+        ///so every Drive call signed a new JWT and requested a new token.
+        accessTokenLock.lock()
+        let storedToken = self.accessToken
+        let storedExpiry = self.accessTokenExpiry
+        accessTokenLock.unlock()
+        if let token = storedToken, let expiry = storedExpiry, expiry > Date() {
+            onDone(token)
             return
         }
         struct GoogleClaims: Claims {
@@ -232,12 +236,14 @@ public class GoogleAPI {
         
         guard let projectEmail = self.getAPIBundleData(key: "projectEmail") else {
             self.logger.reportError(self, "No project email")
+            onDone(nil)   ///Always call back so callers don't wait forever
             return
         }
 
         let myHeader = Header(typ: "JWT")
         let myClaims = GoogleClaims(iss: projectEmail,
-                                    scope: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents",
+                                    ///B4: read-only scopes - the app only reads Drive files and Docs
+                                    scope: "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly",
                                     aud: "https://oauth2.googleapis.com/token",
                                     exp: Date(timeIntervalSinceNow: 3600),
                                     iat: Date())
@@ -256,15 +262,18 @@ public class GoogleAPI {
                 privateKey = decode.private_key
             } catch {
                 self.logger.reportError(self, "Cannot find OAuth key")
+                onDone(nil)   ///Always call back so callers don't wait forever
                 return
             }
         }
         guard let privateKey = privateKey  else {
             self.logger.reportError(self, "No private key")
+            onDone(nil)   ///Always call back so callers don't wait forever
             return
         }
         guard let privateKeyData = privateKey.data(using: .utf8) else {
             self.logger.reportError(self, "No private key data")
+            onDone(nil)   ///Always call back so callers don't wait forever
             return
         }
         var signedJWT = ""
@@ -272,6 +281,7 @@ public class GoogleAPI {
             signedJWT = try jwt.sign(using: .rs256(privateKey: privateKeyData))
         } catch  {
             self.logger.reportError(self, "Cannot sign JWT \(error)")
+            onDone(nil)   ///Always call back so callers don't wait forever
             return
         }
         
@@ -292,26 +302,36 @@ public class GoogleAPI {
                    method: .post,
                    parameters: params,
                    encoding: URLEncoding.httpBody,
-                   headers: headers).responseJSON
+                   headers: headers).responseData
         {response in
-            
+            ///C3: responseJSON is deprecated - get the raw data and decode it with JSONSerialization (same result)
             switch response.result {
-            case .success(let value):
-                let json = value as? [String: Any]
+            case .success(let responseData):
+                let json = (try? JSONSerialization.jsonObject(with: responseData)) as? [String: Any]
                 if let json = json {
                     let accessToken = json["access_token"] as? String
                     if let accessToken = accessToken {
+                        ///A3: store the token. Google tokens last 'expires_in' seconds (normally 3600).
+                        ///Treat it as expired 5 minutes early so a request never starts with a token about to lapse.
+                        let lifetime = (json["expires_in"] as? Double) ?? Double((json["expires_in"] as? Int) ?? 3600)
+                        self.accessTokenLock.lock()
+                        self.accessToken = accessToken
+                        self.accessTokenExpiry = Date(timeIntervalSinceNow: max(60, lifetime - 300))
+                        self.accessTokenLock.unlock()
                         onDone(accessToken)
                     }
                     else {
                         self.logger.reportError(self, "Cannot find access token: \(json)")
+                        onDone(nil)
                     }
                 }
                 else {
                     self.logger.reportError(self, "Cannot load JSON")
+                    onDone(nil)
                 }
             case .failure(let error):
                 self.logger.reportError(self, "Error getting access token: \(error)")
+                onDone(nil)
             }
         }
     }
@@ -376,6 +396,8 @@ public class GoogleAPI {
 
         var folderId = rootFolderId
         DispatchQueue.global(qos: .background).async {
+            ///A1: set when a folder in the path is missing, so the walk stops instead of carrying on in the previous folder
+            var folderNotFound = false
             while pathIndex < pathSegments.count + 1 {
                 let semaphore = DispatchSemaphore(value: 0)
                 if pathIndex == pathSegments.count {
@@ -392,6 +414,10 @@ public class GoogleAPI {
                             if reportError {
                                 self.logger.reportError(self, "No data for file:[\(name)] in path:[\(cacheKey)]")
                             }
+                            else {
+                                ///B8: still record it in the log (visible in System Log), without flagging it as an error on screen
+                                self.logger.log(self, "No data for file:[\(name)] in path:[\(cacheKey)]")
+                            }
                             self.dataCache.setFromExternalData(key: cacheKey, data: nil)
                             onDone(.failed, nil)
                         }
@@ -404,14 +430,26 @@ public class GoogleAPI {
                             folderId = folder.id
                         }
                         else {
+                            folderNotFound = true
                             if reportError {
                                 self.logger.reportError(self, "Cannot find folder for path \(pathSegments[pathIndex]) for filename:\(name), key:\(cacheKey)")
+                            }
+                            else {
+                                ///B8: still record it in the log (visible in System Log), without flagging it as an error on screen
+                                self.logger.log(self, "Cannot find folder for path \(pathSegments[pathIndex]) for filename:\(name), key:\(cacheKey)")
                             }
                         }
                         semaphore.signal()
                     })
                 }
                 semaphore.wait()
+                if folderNotFound {
+                    ///A1: stop here and report the failure exactly once (same handling as a missing file),
+                    ///rather than searching the next name in the wrong (previous) folder.
+                    self.dataCache.setFromExternalData(key: cacheKey, data: nil)
+                    onDone(.failed, nil)
+                    break
+                }
                 pathIndex += 1
             }
         }
@@ -450,10 +488,20 @@ public class GoogleAPI {
         if loadedFromExternal {
             return
         }
+
+        ///If the audio was already handed to the caller from the saved cache (above), the load below is only a refresh.
+        ///A failed refresh must NOT be reported to the caller - it has already got (and is playing) the audio.
+        ///Without this, a refresh failure made the exam screen show "Exam failed to Load" while the narration played.
+        let servedFromCache = (data != nil)
+        let reportFailure = {
+            if !servedFromCache {
+                onDone(.failed, false, nil)
+            }
+        }
         
         let rootFolderId = getAPIBundleData(key: "GoogleDriveDataFolderID") //NZMEB
         guard let rootFolderId = rootFolderId else {
-            onDone(.failed, false, nil)
+            reportFailure()
             self.logger.reportError(self, "No folder Id")
             return
         }
@@ -462,12 +510,17 @@ public class GoogleAPI {
 
         var folderId = rootFolderId
         DispatchQueue.global(qos: .background).async {
+            ///A1: set when a folder in the path is missing, so the walk stops instead of carrying on in the previous folder
+            var folderNotFound = false
             while pathIndex < pathSegments.count + 1 {
                 let semaphore = DispatchSemaphore(value: 0)
                 if pathIndex == pathSegments.count {
                     let request = DataRequest(callType: .filesInFolder, id: folderId, context: "getDocumentByName.filesInFolder:\(fileName)", targetExampleKey: nil)
                     
                     self.getDataByID(request: request) { status, data in
+                        ///Last step: release the loop below (semaphore.wait). Previously this step never signalled,
+                        ///so the background thread running this loop was left blocked forever on every audio fetch.
+                        semaphore.signal()
                         let fileId = self.getFileIDFromName(name:fileName, reportError: reportError, data: data) //{status, data  in
                         if let fileId = fileId {
                             let request = DataRequest(callType: .file, id: fileId, context: "getFileDataByName:\(fileName)", targetExampleKey: nil)
@@ -476,10 +529,14 @@ public class GoogleAPI {
                                     self.dataCache.setFromExternalData(key: cacheKey, data: data)
                                     onDone(status, false, data)
                                 }
+                                else {
+                                    ///Download failed: tell the caller so it doesn't wait forever
+                                    reportFailure()
+                                }
                             }
                         }
                         else {
-                            onDone(.failed, false, nil)
+                            reportFailure()
                             self.dataCache.setFromExternalData(key: cacheKey, data :nil)
                             self.logger.reportError(self, "filename:\(fileName) at key:\(cacheKey) does not exist")
                         }
@@ -491,15 +548,27 @@ public class GoogleAPI {
                             folderId = folder.id
                         }
                         else {
+                            folderNotFound = true
                             if reportError {
-                                onDone(.failed, false, nil)
                                 self.logger.reportError(self, "Cannot find folder for path \(pathSegments[pathIndex]) for filename:\(fileName), key:\(cacheKey)")
+                            }
+                            else {
+                                ///B8: still record it in the log (visible in System Log), without flagging it as an error on screen
+                                self.logger.log(self, "Cannot find folder for path \(pathSegments[pathIndex]) for filename:\(fileName), key:\(cacheKey)")
                             }
                         }
                         semaphore.signal()
                     })
                 }
                 semaphore.wait()
+                if folderNotFound {
+                    ///A1: stop and report the failure exactly once, whether or not reportError is set
+                    ///(previously it only reported when reportError was true, then kept searching in the wrong folder
+                    ///and could call onDone a second time).
+                    self.dataCache.setFromExternalData(key: cacheKey, data: nil)
+                    reportFailure()
+                    break
+                }
                 pathIndex += 1
             }
         }
@@ -549,6 +618,10 @@ public class GoogleAPI {
             guard let fileId = fileId else {
                 if reportError {
                     self.logger.reportError(self, "File name not found, name:[\(name)] in folderID:[\(folderId)]")
+                }
+                else {
+                    ///B8: still record it in the log (visible in System Log), without flagging it as an error on screen
+                    self.logger.log(self, "File name not found, name:[\(name)] in folderID:[\(folderId)]")
                 }
                 onDone(.failed, nil)
                 return
@@ -604,6 +677,10 @@ public class GoogleAPI {
                         onDone(.failed, nil)
                     }
                 }
+                else {
+                    ///Reading the document failed: tell the caller so it doesn't wait forever
+                    onDone(.failed, nil)
+                }
             }
         }
     }
@@ -632,6 +709,10 @@ public class GoogleAPI {
             if reportError {
                 self.logger.reportError(self, "File name \(name) not found in folder")
             }
+            else {
+                ///B8: still record it in the log (visible in System Log), without flagging it as an error on screen
+                self.logger.log(self, "File name \(name) not found in folder")
+            }
         }
         catch {
             self.logger.reportError(self, "failed load")
@@ -642,8 +723,10 @@ public class GoogleAPI {
     ///Get data from Google API using the access token already received
     func getDataByID(request:DataRequest, onDone: @escaping (_ status:RequestStatus, _ data:Data?) -> Void) {
         getAccessToken() { accessToken in
+            ///Every exit calls onDone so callers (and the folder-walking loops waiting on semaphores) never wait forever
             guard let accessToken = accessToken else {
                 self.logger.reportError(self, "No access token")
+                onDone(.failed, nil)
                 return
             }
             let headers: HTTPHeaders = ["Authorization": "Bearer \(accessToken)",
@@ -653,9 +736,11 @@ public class GoogleAPI {
 
             switch request.callType {
             case .file:
-                url = "https://www.googleapis.com/drive/v3/files/\(request.id)?alt=media"
+                ///A4: supportsAllDrives lets files in shared drives (e.g. MME) be read as well as My Drive files
+                url = "https://www.googleapis.com/drive/v3/files/\(request.id)?alt=media&supportsAllDrives=true"
             case .filesInFolder:
-                url = "https://www.googleapis.com/drive/v3/files?q='\(request.id)'+in+parents"
+                ///A4: without these flags Drive leaves shared-drive items out of folder listings (the cause of the June–Oct help outage)
+                url = "https://www.googleapis.com/drive/v3/files?q='\(request.id)'+in+parents&supportsAllDrives=true&includeItemsFromAllDrives=true"
                 //https://www.googleapis.com/drive/v3/files?q='<FOLDER_ID>'+in+parents
 
             case .googleDoc:
@@ -663,9 +748,14 @@ public class GoogleAPI {
             }
             guard let url = url else {
                 self.logger.reportError(self, "No URL for request")
+                onDone(.failed, nil)
                 return
             }
-            AF.request(url, headers: headers).response { response in
+            ///A2: validate(statusCode:) makes any HTTP status outside 200–299 (e.g. 401, 403, 404, 500) a failure.
+            ///Without it, Google's error replies were treated as successful data and failed silently later.
+            ///NB: only the status code is checked. Plain .validate() also checks the reply's content type against the
+            ///Accept header (a Word document type), which rejected Google's normal JSON folder listings.
+            AF.request(url, headers: headers).validate(statusCode: 200..<300).response { response in
                 switch response.result {
                 case .success(let data):
                     if let data = data {
@@ -673,9 +763,17 @@ public class GoogleAPI {
                     }
                     else {
                         self.logger.reportError(self, "File by ID has no data")
+                        onDone(.failed, nil)
                     }
                 case .failure(let error):
-                    self.logger.reportError(self, "Error getting drive file by ID \(error.localizedDescription)")
+                    ///A2: log the HTTP status and the start of Google's error message so the real cause is visible
+                    let status = response.response?.statusCode ?? 0
+                    var detail = ""
+                    if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                        detail = String(text.prefix(300))
+                    }
+                    self.logger.reportError(self, "Drive request failed. HTTP \(status) \(request.context): \(error.localizedDescription) \(detail)")
+                    onDone(.failed, nil)
                 }
             }
         }

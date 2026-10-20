@@ -255,8 +255,6 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
 
     
     public func debug() {
-        let spacer = String(repeating: " ", count: 4 * (level))
-        print(spacer, "--->", "path:[\(self.getPath())]", "\tname:", self.name, "\ttype:[\(self.type)]")
 //        let sorted:[ContentSection] = subSections.sorted { (c1, c2) -> Bool in
 //            //return c1.loadedRow < c2.loadedRow
 //            return c1.name < c2.name
@@ -598,7 +596,11 @@ public class ContentSection: ObservableObject, Identifiable { //Codable,
 
         GoogleAPI.shared.getAudioDataByFileName(pathSegments: pathSegments, fileName: filename, reportError: true) {status, fromCache, data in
             if status == .failed {
-                onLoaded(.failed)
+                ///Only report a failure if no audio has been received yet - once narration is playing
+                ///a later failure (e.g. a background refresh) must not switch the screen to "Exam failed to Load"
+                if !dataRecevied {
+                    onLoaded(.failed)
+                }
             }
             else {
                 if !dataRecevied {

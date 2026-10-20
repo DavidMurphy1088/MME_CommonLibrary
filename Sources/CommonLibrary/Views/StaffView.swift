@@ -72,7 +72,7 @@ struct TimeSignatureView: View {
         let desiredPixelHeight: CGFloat = 48.0
         let scaleFactor: CGFloat = 72.0 // 72 points per inch
         let points = (desiredPixelHeight * 90.0) / scaleFactor
-        let scalingFactor = height / UIScreen.main.bounds.size.height
+        let scalingFactor = height / UIGlobalsCommon.screenBounds.size.height
         return points * scalingFactor
     }
 

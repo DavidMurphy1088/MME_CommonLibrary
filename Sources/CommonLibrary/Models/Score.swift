@@ -237,59 +237,7 @@ public class Score : ObservableObject {
     }
 
     public func debugScore5(_ ctx:String, withBeam:Bool, toleranceLevel:Int) {
-        let tolerance = RhythmTolerance.getTolerancePercent(toleranceLevel)
-        print("\nSCORE DEBUG =====", ctx, "\tKey", key.keySig.accidentalCount, 
-              //"StaffCount", self.staffs.count,
-                "toleranceLevel:\(toleranceLevel)",
-                "toleranceLevel:\(tolerance)"
-        )
-        for t in self.getAllTimeSlices() {
-            if t.entries.count == 0 {
-                print("ZERO ENTRIES")
-                continue
-            }
-            if t.getTimeSliceNotes().count > 0 {
-                let note = t.getTimeSliceNotes()[0]
-                    if withBeam {
-                        print("  Seq", t.sequence, 
-                              "type:", type(of: t.entries[0]),
-                              "midi:", note.midiNumber,
-                              "beat:", t.beatNumber,
-                              "Value:", t.getValue() ,
-                              "stemDirection", note.stemDirection,
-                              "stemLength", note.stemLength,
-                              "writtenAccidental", note.writtenAccidental ?? 0,
-                              "\t[beamType:", note.beamType,"]",
-                              "beamEndNoteSeq:", note.beamEndNote?.timeSlice.sequence ?? "_",
-                              "]")
-                    }
-                    else {
-                        print("  Seq", t.sequence,
-                              "[type:", type(of: t.entries[0]), "]",
-                              "[midi:",note.midiNumber, "]",
-                              "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo ?? 0),"]",
-                              "[Note Value:", note.getValue(),"]",
-                              "[status]",t.statusTag,
-                              "[beat]",t.beatNumber,
-                              "[writtenAccidental:",note.writtenAccidental ?? "","]",
-                              "[Staff:",note.staffNum,"]"
-                        )
-                    }
-            }
-            else {
-                //let rest = t.
-                print("  Seq", t.sequence,
-                      "[type:", type(of: t.entries[0]), "]",
-                      "[rest:","R ", "]",
-                      "[TapDuration Seconds:",String(format: "%.4f", t.tapSecondsNormalizedToTempo ?? 0),"]",
-                      "[Note Value:", t.getValue(),"]",
-                      "[status]",t.statusTag,
-                      "[beat]",t.beatNumber,
-                      "[writtenAccidental:","_","]",
-                      "[Staff:","_","]"
-                    )
-            }
-        }
+        ///C4: debug print output removed
     }
     
     public func setHiddenStaff(num:Int, isHidden:Bool) {
