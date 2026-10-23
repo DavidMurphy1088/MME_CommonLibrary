@@ -32,6 +32,10 @@ public class Answer : ObservableObject, Identifiable, Codable {
     ///Sight reading
     public var sightReadingNotePitches:[Int] = []
     public var sightReadingNoteTimes:[Date] = []
+    ///Sight reading only: true if the answer was played on the on-screen keyboard and marked right/wrong.
+    ///nil/false for acoustic piano recordings (cannot be marked) and for answers saved before this was added.
+    ///Optional so previously saved answers still load.
+    public var sightReadingGraded:Bool?
 
     public init() {
         id = UUID()
@@ -49,6 +53,7 @@ public class Answer : ObservableObject, Identifiable, Codable {
         a.recordedData = self.recordedData
         a.sightReadingNotePitches = self.sightReadingNotePitches
         a.sightReadingNoteTimes = self.sightReadingNoteTimes
+        a.sightReadingGraded = self.sightReadingGraded
         return a
     }
     

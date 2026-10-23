@@ -197,11 +197,40 @@ public class Piano: ObservableObject {
         }
     }
 
+    ///How long a key's note may ring before it is stopped, if no other key is pressed first (seconds)
+    let maxNoteRingSeconds:Double = 0.75
+    ///The note currently sounding from this keyboard
+    private var soundingMidi:Int?
+    ///Counts presses of each key, so a delayed stop only applies to the press that scheduled it
+    private var pressCountByMidi:[Int:Int] = [:]
+
+    ///Play a note from an on-screen key press.
+    ///How long the note rings:
+    ///  - The previous note stops as soon as the next key is pressed (smooth, joined notes, so each note
+    ///    sounds for as long as the student actually held it in time).
+    ///  - Any note still sounding after maxNoteRingSeconds is stopped, so a last or isolated note doesn't ring on.
+    ///Stopping a note lets the piano sound fade naturally (sampler release), it is not cut off dead.
+    ///Only on-screen key presses come here; score playback (Metronome) is not affected.
     public func playNote(midi:Int) {
-        //if let midiSampler = self.midiSampler {
-            AudioManager.shared.playPitch(midiPitch: midi)
-            //midiSampler.startNote(UInt8(midi), withVelocity:64, onChannel:UInt8(0))
-        //}
+        if let previous = soundingMidi {
+            ///Stop the previous note. Also done when the same key is pressed again so it restarts cleanly.
+            AudioManager.shared.stopPitch(note: previous)
+        }
+        AudioManager.shared.playPitch(midiPitch: midi)
+        soundingMidi = midi
+
+        let pressCount = (pressCountByMidi[midi] ?? 0) + 1
+        pressCountByMidi[midi] = pressCount
+        DispatchQueue.main.asyncAfter(deadline: .now() + maxNoteRingSeconds) { [weak self] in
+            guard let self = self else { return }
+            ///Only stop if this key hasn't been pressed again since (a newer press has its own timer)
+            if self.pressCountByMidi[midi] == pressCount {
+                AudioManager.shared.stopPitch(note: midi)
+                if self.soundingMidi == midi {
+                    self.soundingMidi = nil
+                }
+            }
+        }
     }
     
     func debug1(_ ctx:String, midi:Int? = nil) {
